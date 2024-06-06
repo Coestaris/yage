@@ -1,0 +1,57 @@
+---
+BasedOnStyle: WebKit
+AlignConsecutiveAssignments: 'true'
+AlignConsecutiveDeclarations: 'true'
+AlignConsecutiveMacros: 'true'
+AlignTrailingComments: 'true'
+AccessModifierOffset: '-2'
+AllowShortBlocksOnASingleLine: 'false'
+AllowShortCaseLabelsOnASingleLine: 'false'
+AlignAfterOpenBracket: AlwaysBreak
+AlignEscapedNewlines: Right
+AlignOperands: 'true'
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakTemplateDeclarations: 'No'
+BinPackParameters: 'false'
+BraceWrapping:
+  AfterCaseLabel:  true
+  AfterClass:      true
+  AfterControlStatement: true
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterObjCDeclaration: true
+  AfterStruct:     true
+  AfterUnion:      true
+  AfterExternBlock: false
+  BeforeCatch:     true
+  BeforeElse:      true
+  IndentBraces:    false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: Custom
+ColumnLimit: '80'
+ConstructorInitializerIndentWidth: '0'
+ContinuationIndentWidth: '6'
+IndentCaseLabels: 'true'
+IndentWidth: '2'
+Language: Cpp
+NamespaceIndentation: None
+PointerAlignment: Middle
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: 'true'
+SpaceInEmptyParentheses: 'false'
+Standard: Cpp11
+UseTab: Never
+SortIncludes: 'false'
+---
+Language: Proto
+BasedOnStyle: Google
+UseTab: Never
+---
+...
