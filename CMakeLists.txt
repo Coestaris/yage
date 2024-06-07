@@ -83,10 +83,14 @@ else ()
     message(FATAL_ERROR "Unsupported backend")
 endif ()
 
+include(cmake/utils.cmake)
+
 foreach (src_file ${SRC_FILES})
     file(GLOB_RECURSE src_files ${src_file})
     list(APPEND PLAIN_SRC_FILES ${src_files})
 endforeach ()
+
+util_add_short_filename_property(${PLAIN_SRC_FILES})
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 add_executable(yage ${PLAIN_SRC_FILES})

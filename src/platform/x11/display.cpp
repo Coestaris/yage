@@ -7,7 +7,7 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "x11_display.hpp"
+#include "display.hpp"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -28,11 +28,11 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-yage::platform::x11::x11_display::x11_display()
+yage::platform::x11::display::display()
 {
 }
 
-void yage::platform::x11::x11_display::open()
+void yage::platform::x11::display::open()
 {
   Window   window;
   Screen * screen;

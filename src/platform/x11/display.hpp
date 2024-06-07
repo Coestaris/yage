@@ -21,10 +21,10 @@ namespace yage::platform::x11
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class x11_display : public yage::core::display
+class display : public yage::core::display
 {
 public:
-  x11_display();
+  display();
   void open() override;
 };
 

@@ -20,39 +20,56 @@ namespace yage::core
 {
 
 /* Defines ================================================================== */
-#define LOG_DEBUG 0
-#define LOG_INFO  1
-#define LOG_WARN  2
-#define LOG_ERROR 3
-#define LOG_FATAL 4
-
 /* Macros =================================================================== */
+#if __USE_SHORT_FILE__
+#define log(__level, __fmt, ...)                                               \
+  yage::core::get_global_logger()->_log(                                       \
+        __level, __fmt, __SHORT_FILE__, __LINE__, ##__VA_ARGS__)
+#else
 #define log(__level, __fmt, ...)                                               \
   yage::core::get_global_logger()->_log(                                       \
         __level, __fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+#endif
+
+#define LOG_DEBUG yage::core::LOG_LEVEL_DEBUG
+#define LOG_INFO  yage::core::LOG_LEVEL_INFO
+#define LOG_WARN  yage::core::LOG_LEVEL_WARN
+#define LOG_ERROR yage::core::LOG_LEVEL_ERROR
+#define LOG_FATAL yage::core::LOG_LEVEL_FATAL
 
 /* Types ==================================================================== */
+enum log_level
+{
+  LOG_LEVEL_DEBUG = 0,
+  LOG_LEVEL_INFO  = 1,
+  LOG_LEVEL_WARN  = 2,
+  LOG_LEVEL_ERROR = 3,
+  LOG_LEVEL_FATAL = 4,
+};
+
 class logger
 {
 private:
-  int min_level = 0;
+  log_level min_level = LOG_LEVEL_DEBUG;
 
 private:
   virtual void print(const char * msg) = 0;
 
   virtual void format(
-        char *       dst,
-        std::size_t  size,
-        const char * fmt,
-        const char * file,
-        int          line,
-        va_list      args);
+        char *                dst,
+        std::size_t           size,
+        const char *          fmt,
+        yage::core::log_level level,
+        const char *          file,
+        int                   line,
+        va_list               args);
 
 public:
-  void set_level(int level);
-  int  get_level() const;
+  void      set_level(log_level level);
+  log_level get_level() const;
 
-  void _log(int level, const char * fmt, const char * file, int line, ...);
+  __attribute__((format(printf, 3, 6))) void
+  _log(log_level level, const char * fmt, const char * file, int line, ...);
   virtual void flush() = 0;
 };
 
