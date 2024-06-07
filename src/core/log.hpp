@@ -8,14 +8,11 @@
 
 #pragma once
 
+/* Includes ================================================================= */
 #include <cstdarg>
 #include <cstdio>
 #include <memory>
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-/* Includes ================================================================= */
 namespace yage::core
 {
 
@@ -65,6 +62,8 @@ private:
         va_list               args);
 
 public:
+  virtual ~logger() = default;
+
   void      set_level(log_level level);
   log_level get_level() const;
 
@@ -92,11 +91,7 @@ public:
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-void     set_global_logger(logger * logger);
-logger * get_global_logger();
+void                    set_global_logger(logger * logger);
+std::shared_ptr<logger> get_global_logger();
 
 }
-
-#ifdef __cplusplus
-}
-#endif

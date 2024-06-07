@@ -8,6 +8,7 @@
 
 /* Includes ================================================================= */
 #include "log.hpp"
+#include "threads.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -40,7 +41,8 @@ static const char * level_specifiers[]
 /* Static functions ========================================================= */
 static struct
 {
-  yage::core::logger * logger;
+  std::shared_ptr<yage::core::logger> logger;
+
 } ctx = { .logger = nullptr };
 
 /* Shared functions ========================================================= */
@@ -67,10 +69,19 @@ void yage::core::logger::format(
     tv.tv_sec++;
   }
 
-  /* Get thread id */
-  int id = 0;
-  /* Get PID */
   int pid = getpid();
+
+  std::shared_ptr<yage::core::thread_pool> pool = get_global_thread_pool();
+
+  std::string task_name;
+  if (pool)
+  {
+    task_name = pool->get_name();
+  }
+  else
+  {
+    task_name = "root";
+  }
 
   if (level >= (int)(sizeof(level_specifiers) / sizeof(level_specifiers[0])))
     throw std::runtime_error("Invalid log level");
@@ -80,8 +91,9 @@ void yage::core::logger::format(
   snprintf(
         format, sizeof(format),
         "[" COLOR_GREEN "%s.%d" COLOR_RESET "][" COLOR_YELLOW
-        "%d:%u" COLOR_RESET "][%s] %s [" COLOR_CYAN "%s:%d" COLOR_RESET "] ",
-        time_str, ms, pid, id, level_specifiers[level], fmt, file, line);
+        "%d:%s" COLOR_RESET "][%s] %s [" COLOR_CYAN "%s:%d" COLOR_RESET "] ",
+        time_str, ms, pid, task_name.c_str(), level_specifiers[level], fmt,
+        file, line);
 
   /* Format the message */
   vsnprintf(dst, size, format, args);
@@ -119,10 +131,10 @@ yage::core::log_level yage::core::logger::get_level() const
 
 void yage::core::set_global_logger(yage::core::logger * logger)
 {
-  ctx.logger = logger;
+  ctx.logger = std::shared_ptr<yage::core::logger>(logger);
 }
 
-yage::core::logger * yage::core::get_global_logger()
+std::shared_ptr<yage::core::logger> yage::core::get_global_logger()
 {
   if (!ctx.logger)
     throw std::runtime_error("No logger set");
