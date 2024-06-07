@@ -18,6 +18,7 @@ namespace yage::core
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
+#if 1
 #if __USE_SHORT_FILE__
 #define log(__level, __fmt, ...)                                               \
   yage::core::get_global_logger()->_log(                                       \
@@ -26,6 +27,12 @@ namespace yage::core
 #define log(__level, __fmt, ...)                                               \
   yage::core::get_global_logger()->_log(                                       \
         __level, __fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+#endif
+#else
+#define log(__level, __fmt, ...)                                               \
+  do                                                                           \
+  {                                                                            \
+  } while (0)
 #endif
 
 #define LOG_DEBUG yage::core::LOG_LEVEL_DEBUG
@@ -91,7 +98,7 @@ public:
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-void                    set_global_logger(logger * logger);
-std::shared_ptr<logger> get_global_logger();
+void     set_global_logger(logger * logger);
+logger * get_global_logger();
 
 }

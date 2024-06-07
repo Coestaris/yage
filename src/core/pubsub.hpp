@@ -61,6 +61,8 @@ private:
   std::mutex                               queue_mutex;
 
 protected:
+  virtual void on_event(const yage::core::event<data_type> & event) = 0;
+
   void process_events()
   {
     queue_mutex.lock();
@@ -94,7 +96,7 @@ private:
    * because we can't directly store a virtual object */
   std::vector<subscriber<data_type> *> subscribers;
 
-protected:
+public:
   void publish(const yage::core::event<data_type> & data)
   {
     /* Go through list of subscribers, and send them the data */
@@ -104,7 +106,6 @@ protected:
     }
   }
 
-public:
   /* Check how many subscribers the publisher has */
   size_t get_subscriber_count()
   {
@@ -115,6 +116,8 @@ public:
    * existence of a subscriber by enforcing a reference. */
   void subscribe(subscriber<data_type> & subscriber)
   {
+    log(LOG_DEBUG, "Subscribing %p to %p", &subscriber, this);
+
     /* Because we store pointers, and have a reference,
      * we need to make it a pointer so we add '&' */
     subscribers.push_back(&subscriber);
@@ -122,6 +125,8 @@ public:
 
   void unsubscribe(subscriber<data_type> & subscriber)
   {
+    log(LOG_DEBUG, "Unsubscribing %p from %p", &subscriber, this);
+
     /* Remove the subscriber from the list */
     subscribers.erase(
           std::remove(subscribers.begin(), subscribers.end(), &subscriber),

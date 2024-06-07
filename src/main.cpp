@@ -17,9 +17,9 @@
 /* Macros =================================================================== */
 /* Types ==================================================================== */
 class Worker1 : public yage::core::sync_subscriber<char>,
-                public yage::core::worker
+                public yage::core::worker<void>
 {
-private:
+public:
   void on_event(const yage::core::event<char> & event) override
   {
     log(LOG_DEBUG, "Worker1 Received event: %d", event.getData());
@@ -27,10 +27,9 @@ private:
 
   void run() override
   {
-    for (size_t i = 0; i < 3; i++)
+    while (true)
     {
-      log(LOG_DEBUG, "Worker1 is working");
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      process_events();
     }
   }
 
@@ -41,9 +40,10 @@ public:
   }
 };
 
-class Worker2 : public yage::core::subscriber<char>, public yage::core::worker
+class Worker2 : public yage::core::subscriber<char>,
+                public yage::core::worker<void>
 {
-private:
+public:
   void on_event(const yage::core::event<char> & event) override
   {
     log(LOG_DEBUG, "Worker2 Received event: %d", event.getData());
@@ -51,11 +51,8 @@ private:
 
   void run() override
   {
-    for (size_t i = 0; i < 2; i++)
-    {
-      log(LOG_DEBUG, "Worker2 is working");
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    while (true)
+      ;
   }
 
 public:
@@ -65,20 +62,41 @@ public:
   }
 };
 
-class Worker3 : public yage::core::publisher<char>, public yage::core::worker
+class Parent : public yage::core::worker<void, int>
 {
-  void run() override
+private:
+  yage::core::publisher<char> mouse_moved_pub;
+  yage::core::publisher<char> key_entered_pub;
+
+public:
+  void run(int arg) override
   {
-    for (size_t i = 0; i < 5; i++)
+    while (1)
     {
-      log(LOG_DEBUG, "Publisher is working");
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      /* Read non-blocking from stdin */
+      char c = getchar();
+      if (c != EOF)
+      {
+        log(LOG_DEBUG, "Worker3 is publishing event: %d", c);
+        mouse_moved_pub.publish(yage::core::event<char>(c));
+        key_entered_pub.publish(yage::core::event<char>(c + 1));
+      }
     }
   }
 
+  yage::core::publisher<char> & get_mouse_moved_pub()
+  {
+    return mouse_moved_pub;
+  }
+
+  yage::core::publisher<char> & get_key_entered_pub()
+  {
+    return key_entered_pub;
+  }
+
 public:
-  Worker3()
-  : worker("Publisher")
+  Parent()
+  : worker("Parent")
   {
   }
 };
@@ -97,15 +115,18 @@ int main(int argc, char * argv[])
   yage::core::thread_pool pool(3);
   set_global_thread_pool(&pool);
 
-  Worker1 worker1;
-  Worker2 worker2;
-  Worker3 worker3;
+  Parent parent;
+  Worker1 w1;
+  Worker2 w2;
 
-  pool.enqueue(worker1);
-  pool.enqueue(worker2);
-  pool.enqueue(worker3);
+  parent.get_mouse_moved_pub().subscribe(w1);
+  parent.get_key_entered_pub().subscribe(w2);
 
-  pool.join();
+  pool.add_task(w1);
+  pool.add_task(w2);
+  pool.add_task(parent, 400);
+
+  pool.wait_all();
 
   return 0;
 }

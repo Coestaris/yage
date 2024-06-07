@@ -9,14 +9,21 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include <utility>
 #include <vector>
 #include <thread>
 #include <functional>
 #include <condition_variable>
 #include <queue>
 #include <mutex>
+#include <any>
+#include <atomic>
+#include <stdexcept>
+#include <memory>
+#include <cassert>
 #include <map>
 #include <string>
+
 #include "log.hpp"
 
 namespace yage::core
@@ -25,24 +32,74 @@ namespace yage::core
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class worker
+class functor
+{
+private:
+  std::function<void()> func;
+
+public:
+  functor(std::function<void()> func)
+  : func(std::move(func))
+  {
+  }
+
+  void run()
+  {
+    func();
+  }
+
+  bool has_result()
+  {
+    return false;
+  }
+
+  std::any get_result()
+  {
+    return true;
+  }
+};
+
+template <typename FuncRetType, typename... FuncTypes> class worker
 {
 private:
   std::string name;
+  std::any    result;
+  bool        void_func;
+  bool        completed;
+
+protected:
+  virtual FuncRetType run(FuncTypes... args) = 0;
 
 public:
-  worker(std::string & name)
-  : name(name)
-  {
-  }
   worker(const char * name)
   : name(name)
+  , void_func(true)
+  , completed(false)
+  {
+  }
+  worker(std::string & name)
+  : name(name)
+  , void_func(std::is_void_v<FuncRetType>)
+  , completed(false)
   {
   }
 
-  virtual ~worker() = default;
+  template <typename... Args> FuncRetType do_work(Args &&... args)
+  {
+    completed = false;
 
-  virtual void run() = 0;
+    if constexpr (std::is_void_v<FuncRetType>)
+    {
+      run(args...);
+      completed = true;
+    }
+    else
+    {
+      result    = run(args...);
+      completed = true;
+      return result;
+    }
+  }
 
   std::string get_name() const
   {
@@ -50,151 +107,77 @@ public:
   }
 };
 
-/* Class that represents a simple thread pool
- * Took an idea from: https://www.geeksforgeeks.org/thread-pool-in-cpp/ */
 class thread_pool
 {
-
 private:
-  /* Vector to store worker threads */
+  enum class task_status
+  {
+    in_q,
+    completed
+  };
+
+  struct task_info
+  {
+    task_status status = task_status::in_q;
+    std::string name;
+    std::any    result;
+  };
+
   std::vector<std::thread> threads;
 
-  std::map<std::thread::id, std::string> names;
+  std::queue<std::pair<functor, uint64_t>> queue;
+  std::mutex                               q_mtx;
+  std::condition_variable                  q_cv;
 
-  /* Queue of tasks */
-  std::queue<std::tuple<std::function<void()>, std::string>> tasks;
+  std::unordered_map<uint64_t, task_info>        tasks_info;
+  std::unordered_map<std::thread::id, task_info> tasks_info_by_thread;
+  std::condition_variable                        tasks_info_cv;
+  std::mutex                                     tasks_info_mtx;
+  std::mutex                                     tasks_info_by_thread_mtx;
 
-  /* Mutex to synchronize access to shared data */
-  std::mutex queue_mutex;
+  std::condition_variable wait_all_cv;
 
-  /* Condition variable to signal changes in the state of the tasks queue */
-  std::condition_variable cv;
+  std::atomic<bool>     quite { false };
+  std::atomic<uint64_t> last_idx { 0 };
+  std::atomic<uint64_t> cnt_completed_tasks { 0 };
 
-  std::thread::id root_thread_id = std::this_thread::get_id();
-
-  /* Flag to indicate whether the thread pool should stop or not */
-  bool stop = false;
+  void run(int index);
 
 public:
-  /* Constructor to create a thread pool with a given number of threads */
-  thread_pool(size_t num_threads = std::thread::hardware_concurrency())
+  thread_pool(const size_t num_threads);
+  ~thread_pool();
+
+  template <typename FuncRetType, typename... FuncTypes, typename... Args>
+  uint64_t add_task(worker<FuncRetType, FuncTypes...> & worker, Args &&... args)
   {
-    /* Creating worker threads */
-    for (size_t i = 0; i < num_threads; ++i)
-    {
-      threads.emplace_back([this]() -> void {
-        while (true)
-        {
-          std::function<void()> task;
-          std::string           name;
+    log(LOG_DEBUG, "Adding task %s", worker.get_name().c_str());
 
-          /* The reason for putting the below code here is to unlock the queue
-           * before executing the task so that other threads can perform
-           * enqueue tasks */
-          {
-            /* Locking the queue so that data can be shared safely */
-            std::unique_lock<std::mutex> lock(queue_mutex);
+    const uint64_t task_id = last_idx++;
 
-            /* Waiting until there is a task to execute or pool is stopped */
-            cv.wait(lock, [this] { return !tasks.empty() || stop; });
+    std::unique_lock<std::mutex> lock(tasks_info_mtx);
+    tasks_info[task_id]      = task_info();
+    tasks_info[task_id].name = worker.get_name();
+    functor func([&worker, args...]() { worker.do_work(args...); });
 
-            /* exit the thread in case the pool is
-             * stopped and there are no tasks */
-            if (stop && tasks.empty())
-            {
-              return;
-            }
+    lock.unlock();
 
-            /* Get the next worker from the queue */
-            auto tuple = tasks.front();
-            task       = std::move(std::get<0>(tuple));
-            name       = std::get<1>(tuple);
-            tasks.pop();
-
-            names[std::this_thread::get_id()] = name;
-          }
-
-          task();
-
-          {
-            /* Locking the queue so that data can be shared safely */
-            std::unique_lock<std::mutex> lock(queue_mutex);
-
-            names.erase(std::this_thread::get_id());
-          }
-        }
-      });
-    }
+    std::lock_guard<std::mutex> q_lock(q_mtx);
+    queue.emplace(func, task_id);
+    q_cv.notify_one();
+    return task_id;
   }
 
-  /* Destructor to stop the thread pool */
-  ~thread_pool()
-  {
-    join();
-  }
-
-  std::string get_name()
-  {
-    std::unique_lock<std::mutex> lock(queue_mutex);
-    auto                         id = std::this_thread::get_id();
-    if (id == root_thread_id)
-    {
-      return "root";
-    }
-    else if (names.find(id) != names.end())
-    {
-      return names[id];
-    }
-
-    return "???";
-  }
-
-  void join()
-  {
-    {
-      /* Lock the queue to update the stop flag safely */
-      std::unique_lock<std::mutex> lock(queue_mutex);
-      stop = true;
-    }
-
-    /* Notify all threads */
-    cv.notify_all();
-
-    /* joining all worker threads to ensure they have completed their tasks */
-    for (auto & thread : threads)
-    {
-      if (thread.joinable())
-        thread.join();
-    }
-  }
-
-  void enqueue(worker & worker)
-  {
-    log(LOG_DEBUG, "Enqueue task %s", worker.get_name().c_str());
-
-    {
-      std::unique_lock<std::mutex> lock(queue_mutex);
-      if (!tasks.empty())
-      {
-        log(LOG_WARN, "Task queue is not empty: %lu", tasks.size());
-      }
-
-      std::function<void()> task_wrapper = [&worker]() -> void {
-        log(LOG_INFO, "Task %s is running", worker.get_name().c_str());
-        worker.run();
-        log(LOG_INFO, "Task %s is done", worker.get_name().c_str());
-      };
-
-      tasks.emplace(std::move(task_wrapper), worker.get_name());
-    }
-
-    cv.notify_one();
-  }
+  void                    wait(const uint64_t task_id);
+  std::any                wait_result(const uint64_t task_id);
+  template <class T> void wait_result(const uint64_t task_id, T & value);
+  void                    wait_all();
+  bool                    calculated(const uint64_t task_id);
+  std::string             get_current_task_name();
 };
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-void                         set_global_thread_pool(thread_pool * pool);
-std::shared_ptr<thread_pool> get_global_thread_pool();
+void          set_global_thread_pool(thread_pool * pool);
+thread_pool * get_global_thread_pool();
 
 }

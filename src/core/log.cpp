@@ -41,7 +41,7 @@ static const char * level_specifiers[]
 /* Static functions ========================================================= */
 static struct
 {
-  std::shared_ptr<yage::core::logger> logger;
+  yage::core::logger * logger;
 
 } ctx = { .logger = nullptr };
 
@@ -71,27 +71,28 @@ void yage::core::logger::format(
 
   int pid = getpid();
 
-  std::shared_ptr<yage::core::thread_pool> pool = get_global_thread_pool();
-
-  std::string task_name;
-  if (pool)
+  std::string               task_name;
+  yage::core::thread_pool * pool = get_global_thread_pool();
+  if (!pool)
   {
-    task_name = pool->get_name();
+    task_name = "???";
   }
   else
   {
-    task_name = "root";
+    task_name = pool->get_current_task_name();
   }
 
   if (level >= (int)(sizeof(level_specifiers) / sizeof(level_specifiers[0])))
+  {
     throw std::runtime_error("Invalid log level");
+  }
 
   /* Format the format string */
   char format[1024];
   snprintf(
         format, sizeof(format),
         "[" COLOR_GREEN "%s.%d" COLOR_RESET "][" COLOR_YELLOW
-        "%d:%s" COLOR_RESET "][%s] %s [" COLOR_CYAN "%s:%d" COLOR_RESET "] ",
+        "%d:%10s" COLOR_RESET "][%s] %s [" COLOR_CYAN "%s:%d" COLOR_RESET "] ",
         time_str, ms, pid, task_name.c_str(), level_specifiers[level], fmt,
         file, line);
 
@@ -131,10 +132,10 @@ yage::core::log_level yage::core::logger::get_level() const
 
 void yage::core::set_global_logger(yage::core::logger * logger)
 {
-  ctx.logger = std::shared_ptr<yage::core::logger>(logger);
+  ctx.logger = logger;
 }
 
-std::shared_ptr<yage::core::logger> yage::core::get_global_logger()
+yage::core::logger * yage::core::get_global_logger()
 {
   if (!ctx.logger)
     throw std::runtime_error("No logger set");
