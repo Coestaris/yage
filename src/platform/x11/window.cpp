@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file X11Display.cpp
+ * @file window.cpp
  * @date 06-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
@@ -28,11 +28,11 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-yage::platform::x11::display::display()
+yage::platform::x11::window::display()
 {
 }
 
-void yage::platform::x11::display::open()
+void yage::platform::x11::window::open()
 {
   Window   window;
   Screen * screen;

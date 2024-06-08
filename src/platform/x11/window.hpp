@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 /* Includes ================================================================= */
-#include "core/display.hpp"
+#include "graphics/window.hpp"
 
 namespace yage::platform::x11
 {
@@ -21,7 +21,7 @@ namespace yage::platform::x11
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class display : public yage::core::display
+class window : public yage::graphics::window
 {
 public:
   display();

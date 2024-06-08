@@ -9,94 +9,59 @@
 /* Includes ================================================================= */
 #include <thread>
 #include <csignal>
+#include <utility>
 #include "core/log.hpp"
 #include "core/pubsub.hpp"
 #include "core/threads.hpp"
+#include "platform/win/window.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class Worker1 : public yage::core::sync_subscriber<char>,
-                public yage::core::worker<void>
-{
-public:
-  void on_event(const yage::core::event<char> & event) override
-  {
-    log(LOG_DEBUG, "Worker1 Received event: %d", event.getData());
-  }
-
-  void run() override
-  {
-    while (true)
-    {
-      process_events();
-    }
-  }
-
-public:
-  Worker1()
-  : worker("Worker1")
-  {
-  }
-};
-
-class Worker2 : public yage::core::subscriber<char>,
-                public yage::core::worker<void>
-{
-public:
-  void on_event(const yage::core::event<char> & event) override
-  {
-    log(LOG_DEBUG, "Worker2 Received event: %d", event.getData());
-  }
-
-  void run() override
-  {
-    while (true)
-      ;
-  }
-
-public:
-  Worker2()
-  : worker("Worker2")
-  {
-  }
-};
-
-class Parent : public yage::core::worker<void, int>
+class renderer_worker : public yage::core::worker<void>
 {
 private:
-  yage::core::publisher<char> mouse_moved_pub;
-  yage::core::publisher<char> key_entered_pub;
+  std::string              win_title;
+  yage::graphics::settings win_settings;
+  yage::graphics::geometry win_geometry;
+
+  yage::graphics::window * window;
 
 public:
-  void run(int arg) override
+  void run() override
   {
-    while (1)
+    window = new yage::platform::win::window(win_settings);
+    if (window->open(win_title, win_geometry, false) != yage::core::error::OK)
     {
-      /* Read non-blocking from stdin */
-      char c = getchar();
-      if (c != EOF)
+      log(LOG_ERROR, "Failed to open window");
+      return;
+    }
+
+    while (true)
+    {
+      if (!window->is_open())
       {
-        log(LOG_DEBUG, "Worker3 is publishing event: %d", c);
-        mouse_moved_pub.publish(yage::core::event<char>(c));
-        key_entered_pub.publish(yage::core::event<char>(c + 1));
+        log(LOG_DEBUG, "Window is closed. Exiting renderer worker");
+        break;
+      }
+
+      if (window->update() != yage::core::error::OK)
+      {
+        log(LOG_ERROR, "Failed to update window");
+        break;
       }
     }
   }
 
-  yage::core::publisher<char> & get_mouse_moved_pub()
-  {
-    return mouse_moved_pub;
-  }
-
-  yage::core::publisher<char> & get_key_entered_pub()
-  {
-    return key_entered_pub;
-  }
-
 public:
-  Parent()
-  : worker("Parent")
+  renderer_worker(
+        yage::graphics::settings settings,
+        std::string              title,
+        yage::graphics::geometry geometry)
+  : yage::core::worker<void>("renderer")
+  , win_title(std::move(title))
+  , win_settings(std::move(settings))
+  , win_geometry(geometry)
   {
   }
 };
@@ -110,21 +75,15 @@ int main(int argc, char * argv[])
   logger.set_level(LOG_DEBUG);
   set_global_logger(&logger);
 
-  log(LOG_INFO, "Starting application");
-
   yage::core::thread_pool pool(3);
   set_global_thread_pool(&pool);
 
-  Parent parent;
-  Worker1 w1;
-  Worker2 w2;
+  std::string              title    = "Hello, World!";
+  yage::graphics::geometry geometry = { 0, 0, 800, 600 };
+  yage::graphics::settings settings;
+  renderer_worker          renderer(settings, title, geometry);
 
-  parent.get_mouse_moved_pub().subscribe(w1);
-  parent.get_key_entered_pub().subscribe(w2);
-
-  pool.add_task(w1);
-  pool.add_task(w2);
-  pool.add_task(parent, 400);
+  pool.add_task(renderer);
 
   pool.wait_all();
 

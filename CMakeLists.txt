@@ -51,6 +51,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-unused-variab
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -lpthread")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-private-field -Wno-unused-const-variable -Wno-unused-value -Wno-unused-local-typedefs")
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0 -DUSE_DEBUG")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3 -O0 -DUSE_DEBUG")
+else ()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
+endif ()
+
 # Setup common source files
 set(SRC_FILES
     src/core/*.cpp
@@ -86,11 +94,12 @@ endif ()
 include(cmake/utils.cmake)
 
 foreach (src_file ${SRC_FILES})
-    file(GLOB_RECURSE src_files ${src_file})
+    file(GLOB src_files ${src_file})
     list(APPEND PLAIN_SRC_FILES ${src_files})
 endforeach ()
 
 util_add_short_filename_property(${PLAIN_SRC_FILES})
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
-add_executable(yage ${PLAIN_SRC_FILES})
+add_executable(yage ${PLAIN_SRC_FILES}
+        src/graphics/graphics.hpp)

@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file y_log.hpp
+ * @file log.hpp
  * @date 06-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *

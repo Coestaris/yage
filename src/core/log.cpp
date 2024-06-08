@@ -7,13 +7,13 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "log.hpp"
-#include "threads.hpp"
+#include "core/log.hpp"
+#include "core/threads.hpp"
+#include "core/time.hpp"
 
 #include <iostream>
 #include <cstring>
 #include <thread>
-#include <sys/time.h>
 #include <csignal>
 
 /* Defines ================================================================== */
@@ -32,10 +32,10 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 static const char * level_specifiers[]
-      = { COLOR_BOLD COLOR_MAGENTA "debug" COLOR_RESET,
-          COLOR_BOLD COLOR_CYAN " info" COLOR_RESET,
-          COLOR_BOLD COLOR_YELLOW " warn" COLOR_RESET,
-          COLOR_BOLD COLOR_RED "error" COLOR_RESET,
+      = { COLOR_BOLD              COLOR_MAGENTA "debug" COLOR_RESET,
+          COLOR_BOLD              COLOR_CYAN " info" COLOR_RESET,
+          COLOR_BOLD              COLOR_YELLOW " warn" COLOR_RESET,
+          COLOR_BOLD              COLOR_RED "error" COLOR_RESET,
           COLOR_BOLD COLOR_RED_BG COLOR_BLACK_FG "fatal" COLOR_RESET };
 
 /* Static functions ========================================================= */
@@ -57,17 +57,9 @@ void yage::core::logger::format(
       va_list               args)
 {
   /* Get time in format MM-DD-YYYY HH:MM:SS.MS */
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  struct tm * tm = localtime(&tv.tv_sec);
-  char        time_str[32];
-  strftime(time_str, sizeof(time_str), "%m-%d-%Y %H:%M:%S", tm);
-  int ms = tv.tv_usec / 1000;
-  if (ms >= 1000)
-  {
-    ms -= 1000;
-    tv.tv_sec++;
-  }
+  char      time_str[32];
+  struct tm tm = yage::core::get_time();
+  strftime(time_str, sizeof(time_str), "%m-%d-%Y %H:%M:%S", &tm);
 
   int pid = getpid();
 
@@ -93,8 +85,8 @@ void yage::core::logger::format(
         format, sizeof(format),
         "[" COLOR_GREEN "%s.%d" COLOR_RESET "][" COLOR_YELLOW
         "%d:%10s" COLOR_RESET "][%s] %s [" COLOR_CYAN "%s:%d" COLOR_RESET "] ",
-        time_str, ms, pid, task_name.c_str(), level_specifiers[level], fmt,
-        file, line);
+        time_str, (int)yage::core::get_ms(), pid, task_name.c_str(),
+        level_specifiers[level], fmt, file, line);
 
   /* Format the message */
   vsnprintf(dst, size, format, args);

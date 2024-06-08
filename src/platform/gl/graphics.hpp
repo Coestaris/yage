@@ -1,36 +1,40 @@
 /** ========================================================================
- *
- * @file display.hpp
- * @date 06-06-2024
- * @author Maxim Kurylko <vk_vm@ukr.net>
- *
- *  ========================================================================= */
+*
+* @file graphics.hpp
+* @date 06-06-2024
+* @author Maxim Kurylko <vk_vm@ukr.net>
+*
+*  ========================================================================= */
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Includes ================================================================= */
+#include <vector>
+#include <string>
 
-namespace yage::core
+#include "graphics/graphics.hpp"
+
+namespace yage::platform::gl
 {
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class display
+class graphics : public yage::graphics::graphics
 {
+private:
+  std::vector<std::string> extensions;
+
+  void cache_extensions();
+  void print_extensions();
+  bool has_extension(const char * extension);
+
 public:
-  virtual void open() = 0;
+  yage::core::error init(int bits_per_pixel, int width, int height);
+  yage::core::error update();
 };
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-
 }
 
-#ifdef __cplusplus
-}
-#endif

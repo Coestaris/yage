@@ -10,4 +10,5 @@ link_libraries(${OPENGL_LIBRARIES})
 
 set(SRC_FILES ${SRC_FILES}
         src/platform/x11/*.cpp
+        src/platform/gl/*.cpp
 )

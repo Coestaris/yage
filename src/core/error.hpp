@@ -23,6 +23,8 @@ enum error
 {
   OK,
   ERR_UNKNOWN,
+  NOT_IMPLEMENTED,
+  EXTERNAL_API_ERROR
 };
 
 /* Variables ================================================================ */
