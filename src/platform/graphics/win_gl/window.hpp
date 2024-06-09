@@ -9,11 +9,12 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "graphics/window.hpp"
-#include "platform/gl/graphics.hpp"
 #include <windows.h>
 
-namespace yage::platform::win
+#include "graphics/window.hpp"
+#include "platform/graphics/gl/graphics.hpp"
+
+namespace yage::platform::graphics::win_gl
 {
 
 /* Defines ================================================================== */
@@ -26,7 +27,7 @@ class window : public yage::graphics::window
   HWND      hWnd = NULL; /* Holds Our Window Handle */
   HINSTANCE hInstance;   /* Holds The Instance Of The Application */
   bool      opened;
-  yage::platform::gl::graphics context;
+  yage::platform::graphics::gl::graphics context;
 
 public:
   window(yage::graphics::settings & settings)

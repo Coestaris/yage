@@ -66,7 +66,9 @@ LRESULT CALLBACK WndProc(
   return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-yage::core::error yage::platform::win::window::open(
+/* TODO: can be moved to common part,
+ * since have a lot of common code with DirectX */
+yage::core::error yage::platform::graphics::win_gl::window::open(
       std::string & title, yage::graphics::geometry & geometry, bool fullscreen)
 {
   log(LOG_INFO, "Opening window: %s. Geometry: %d %d %d %d. Fullscreen: %d",
@@ -264,7 +266,7 @@ yage::core::error yage::platform::win::window::open(
   return yage::core::error::OK;
 }
 
-yage::core::error yage::platform::win::window::close()
+yage::core::error yage::platform::graphics::win_gl::window::close()
 {
   if (hRC)
   {
@@ -309,14 +311,13 @@ yage::core::error yage::platform::win::window::close()
   return yage::core::error::OK;
 }
 
-yage::graphics::graphics * yage::platform::win::window::get_graphics()
+yage::graphics::graphics *
+yage::platform::graphics::win_gl::window::get_graphics()
 {
   return &context;
 }
-yage::core::error yage::platform::win::window::update()
+yage::core::error yage::platform::graphics::win_gl::window::update()
 {
-  context.update();
-
   /* Read messages to make Windows happy */
   MSG msg;
   if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -340,7 +341,7 @@ yage::core::error yage::platform::win::window::update()
   return yage::core::error::OK;
 }
 
-bool yage::platform::win::window::is_open()
+bool yage::platform::graphics::win_gl::window::is_open()
 {
   return opened;
 }

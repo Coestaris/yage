@@ -9,6 +9,8 @@ include_directories(${OPENGL_INCLUDE_DIR})
 link_libraries(${OPENGL_LIBRARIES})
 
 set(SRC_FILES ${SRC_FILES}
-        src/platform/x11/*.cpp
-        src/platform/gl/*.cpp
+        src/platform/graphics/x11/*.cpp
+        src/platform/graphics/gl/*.cpp
 )
+
+add_definitions(-DYAGE_PLATFORM_X11)

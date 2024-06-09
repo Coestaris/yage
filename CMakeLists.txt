@@ -62,6 +62,8 @@ endif ()
 # Setup common source files
 set(SRC_FILES
     src/core/*.cpp
+    src/platform/*.cpp
+    src/platform/graphics/*.cpp
     src/*.cpp
 )
 
@@ -78,15 +80,15 @@ endif ()
 
 # Add backend specific files
 if (BACKEND_X11_GL)
-    include(cmake/x11_gl.cmake)
+    include(cmake/graphics/x11_gl.cmake)
 elseif (BACKEND_WAYLAND_GL)
-    include(cmake/wayland_gl.cmake)
+    include(cmake/graphics/wayland_gl.cmake)
 elseif (BACKEND_DARWIN)
-    include(cmake/darwin.cmake)
+    include(cmake/graphics/darwin.cmake)
 elseif (BACKEND_WIN_GL)
-    include(cmake/windows_gl.cmake)
+    include(cmake/graphics/windows_gl.cmake)
 elseif (BACKEND_WIN_DX)
-    include(cmake/windows_dx.cmake)
+    include(cmake/graphics/windows_dx.cmake)
 else ()
     message(FATAL_ERROR "Unsupported backend")
 endif ()

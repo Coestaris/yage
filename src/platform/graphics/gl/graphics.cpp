@@ -25,17 +25,6 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 #if USE_DEBUG
-// void APIENTRY GLDebugMessageCallback2(
-//       GLenum         source,
-//       GLenum         type,
-//       GLuint         id,
-//       GLenum         severity,
-//       GLsizei        length,
-//       const GLchar * message,
-//       const void *   userParam)
-//{
-// }
-
 void APIENTRY GLDebugMessageCallback(
       GLenum         source,
       GLenum         type,
@@ -161,7 +150,7 @@ yage::core::error g_dyn_call(const char * func, Args... args)
 }
 
 /* Shared functions ========================================================= */
-void yage::platform::gl::graphics::cache_extensions()
+void yage::platform::graphics::gl::graphics::cache_extensions()
 {
   const GLubyte * ext = glGetString(GL_EXTENSIONS);
 
@@ -179,7 +168,7 @@ void yage::platform::gl::graphics::cache_extensions()
   delete[] copy;
 }
 
-void yage::platform::gl::graphics::print_extensions()
+void yage::platform::graphics::gl::graphics::print_extensions()
 {
   log(LOG_INFO, "gl extensions: %llu", extensions.size());
 #define MAX_EXTENSIONS 3
@@ -197,14 +186,15 @@ void yage::platform::gl::graphics::print_extensions()
   }
 }
 
-bool yage::platform::gl::graphics::has_extension(const char * extension)
+bool yage::platform::graphics::gl::graphics::has_extension(
+      const char * extension)
 {
   return std::find(extensions.begin(), extensions.end(), extension)
          != extensions.end();
 }
 
-yage::core::error
-yage::platform::gl::graphics::init(int bits_per_pixel, int width, int height)
+yage::core::error yage::platform::graphics::gl::graphics::init(
+      int bits_per_pixel, int width, int height)
 {
   log(LOG_INFO, "gl vendor: %s", glGetString(GL_VENDOR));
   log(LOG_INFO, "gl renderer: %s", glGetString(GL_RENDERER));
@@ -240,11 +230,27 @@ yage::platform::gl::graphics::init(int bits_per_pixel, int width, int height)
 
   return yage::core::error::OK;
 }
-yage::core::error yage::platform::gl::graphics::update()
+yage::core::error yage::platform::graphics::gl::graphics::clear()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  return yage::core::error::OK;
+}
 
+yage::core::error yage::platform::graphics::gl::graphics::present()
+{
+  return yage::core::error::OK;
+}
+
+yage::core::error yage::platform::graphics::gl::graphics::draw_line(
+      int x1, int y1, int x2, int y2)
+{
+  return yage::core::error::OK;
+}
+
+yage::core::error yage::platform::graphics::gl::graphics::draw_rect(
+      int x, int y, int width, int height)
+{
   /* Draw a triangle */
   glBegin(GL_TRIANGLES);          // Drawing Using Triangles
   glColor3f(1.0f, 0.0f, 0.0f);    // Set The Color To Red
@@ -254,6 +260,5 @@ yage::core::error yage::platform::gl::graphics::update()
   glColor3f(0.0f, 0.0f, 1.0f);    // Set The Color To Blue
   glVertex3f(1.0f, -1.0f, 0.0f);  // Bottom Right
   glEnd();                        // Finished Drawing The Triangle
-
   return yage::core::error::OK;
 }

@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file X11Display.hpp
+ * @file window.hpp
  * @date 06-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
