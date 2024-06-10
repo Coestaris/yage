@@ -27,7 +27,7 @@ private:
   Window                                 win;
   Display *                              display;
   XVisualInfo *                          visual;
-  GLXContext                             glx_context = 0;
+  GLXContext                             glx_context = nullptr;
   yage::platform::graphics::gl::graphics context;
 
 public:
@@ -39,12 +39,12 @@ public:
   yage::core::error
   open(std::string &              title,
        yage::graphics::geometry & geometry,
-       bool                       fullscreen);
+       bool                       fullscreen) override;
 
-  yage::core::error          update();
-  yage::core::error          close();
-  bool                       is_open();
-  yage::graphics::graphics * get_graphics();
+  yage::core::error          update() override;
+  yage::core::error          close() override;
+  bool                       is_open() override;
+  yage::graphics::graphics * get_graphics() override;
 };
 
 /* Variables ================================================================ */
