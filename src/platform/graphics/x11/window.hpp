@@ -8,14 +8,13 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Includes ================================================================= */
+#include <X11/Xutil.h>
+#include <GL/glx.h>
 #include "graphics/window.hpp"
+#include "platform/graphics/gl/graphics.hpp"
 
-namespace yage::platform::x11
+namespace yage::platform::graphics::x11
 {
 
 /* Defines ================================================================== */
@@ -23,16 +22,32 @@ namespace yage::platform::x11
 /* Types ==================================================================== */
 class window : public yage::graphics::window
 {
+private:
+  XSetWindowAttributes                   windowAttribs;
+  Window                                 win;
+  Display *                              display;
+  XVisualInfo *                          visual;
+  GLXContext                             glx_context = 0;
+  yage::platform::graphics::gl::graphics context;
+
 public:
-  display();
-  void open() override;
+  window(yage::graphics::settings & settings)
+  : yage::graphics::window(settings)
+  {
+  }
+
+  yage::core::error
+  open(std::string &              title,
+       yage::graphics::geometry & geometry,
+       bool                       fullscreen);
+
+  yage::core::error          update();
+  yage::core::error          close();
+  bool                       is_open();
+  yage::graphics::graphics * get_graphics();
 };
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
 
 }
-
-#ifdef __cplusplus
-}
-#endif

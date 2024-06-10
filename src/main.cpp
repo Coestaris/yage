@@ -13,6 +13,7 @@
 #include "core/log.hpp"
 #include "core/pubsub.hpp"
 #include "core/threads.hpp"
+#include "core/os_events.hpp"
 
 #include "platform/graphics/platform.hpp"
 #include "core/time.hpp"
@@ -67,7 +68,8 @@ public:
   }
 };
 
-class renderer_worker : public yage::core::worker<void>
+class renderer_worker : public yage::core::worker<void>,
+                        public yage::core::signal_subscriber
 {
 private:
   std::string              win_title;
@@ -78,6 +80,12 @@ private:
 
 public:
   frequency_keeper keeper;
+
+  void on_event(const yage::core::event<int> & event) override
+  {
+    log(LOG_DEBUG, "Received stop signal: %d. Closing window", event.getData());
+    window->close();
+  }
 
   void run() override
   {
@@ -91,6 +99,8 @@ public:
 
     while (true)
     {
+      process_events();
+
       float frame_interval = keeper.call();
 
       if (!window->is_open())
@@ -150,12 +160,12 @@ public:
   {
     while (true)
     {
-      if (!renderer->is_running())
-      {
-        log(LOG_DEBUG,
-            "Renderer worker is not running. Exiting statistic worker");
-        break;
-      }
+      //      if (!renderer->is_running())
+      //      {
+      //        log(LOG_DEBUG,
+      //            "Renderer worker is not running. Exiting statistic worker");
+      //        break;
+      //      }
 
       std::this_thread::sleep_for(std::chrono::seconds(1));
       log(LOG_INFO, "Draw time: %.2f ms, FPS: %.2f", renderer->get_draw_time(),
@@ -169,6 +179,8 @@ public:
 /* Shared functions ========================================================= */
 int main(int argc, char * argv[])
 {
+  yage::core::os_events events;
+
   yage::core::stdout_logger logger;
   logger.set_level(LOG_DEBUG);
   set_global_logger(&logger);
@@ -186,6 +198,7 @@ int main(int argc, char * argv[])
   renderer_worker          renderer(window, title, geometry, max_fps);
 
   pool.add_task(renderer);
+  events.on_stop_signal.subscribe(renderer);
 
   statistic_worker statistic(&renderer);
   pool.add_task(statistic);

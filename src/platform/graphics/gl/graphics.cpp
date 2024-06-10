@@ -9,12 +9,14 @@
 /* Includes ================================================================= */
 #include <GL/gl.h>
 #include <GL/glext.h>
+#include <GL/glx.h>
+
 #include <vector>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
 #include <functional>
-#include <GL/glu.h>
+#include <cstring>
 
 #include "graphics.hpp"
 #include "core/log.hpp"
@@ -135,7 +137,11 @@ void APIENTRY GLDebugMessageCallback(
 template <typename... Args>
 yage::core::error g_dyn_call(const char * func, Args... args)
 {
+#if WIN32
   auto proc = wglGetProcAddress(func);
+#else
+  auto proc = glXGetProcAddress((const GLubyte *)func);
+#endif
   if (proc)
   {
     auto f = (void (*)(Args...))(void *)proc;
@@ -154,6 +160,12 @@ void yage::platform::graphics::gl::graphics::cache_extensions()
 {
   const GLubyte * ext = glGetString(GL_EXTENSIONS);
 
+  if (!ext)
+  {
+    log(LOG_ERROR, "Failed to get gl extensions");
+    return;
+  }
+
   size_t len  = strlen((const char *)ext);
   char * copy = new char[len + 1];
   strcpy(copy, (const char *)ext);
@@ -170,7 +182,7 @@ void yage::platform::graphics::gl::graphics::cache_extensions()
 
 void yage::platform::graphics::gl::graphics::print_extensions()
 {
-  log(LOG_INFO, "gl extensions: %llu", extensions.size());
+  log(LOG_INFO, "gl extensions: %zu", extensions.size());
 #define MAX_EXTENSIONS 3
   std::stringbuf buf;
   std::ostream   os(&buf);
@@ -181,8 +193,7 @@ void yage::platform::graphics::gl::graphics::print_extensions()
     {
       os << std::setw(40) << extensions[i + j] << " ";
     }
-    log(LOG_DEBUG, " [%4llu-%4llu] %s", i, i + MAX_EXTENSIONS,
-        buf.str().c_str());
+    log(LOG_DEBUG, " [%4zu-%4zu] %s", i, i + MAX_EXTENSIONS, buf.str().c_str());
   }
 }
 

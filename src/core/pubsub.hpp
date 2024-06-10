@@ -12,6 +12,8 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include "core/log.hpp"
+
 #include <iostream>
 #include <string>
 #include <mutex>
