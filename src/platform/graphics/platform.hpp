@@ -8,10 +8,6 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Includes ================================================================= */
 #include "graphics/window.hpp"
 
@@ -26,7 +22,3 @@ namespace yage::platform::graphics
 yage::graphics::window * create_window(yage::graphics::settings & settings);
 
 }
-
-#ifdef __cplusplus
-}
-#endif

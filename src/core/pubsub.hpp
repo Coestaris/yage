@@ -19,6 +19,7 @@
 #include <mutex>
 #include <queue>
 #include <vector>
+#include <functional>
 
 namespace yage::core
 {
@@ -43,6 +44,19 @@ public:
   }
 };
 
+template <> class event<void>
+{
+public:
+  event()
+  {
+  }
+
+  void getData() const
+  {
+    // No data to return for void specialization
+  }
+};
+
 /* An interface for objects that want to 'be' subscribers */
 template <typename data_type> class subscriber
 {
@@ -56,14 +70,35 @@ public:
   }
 };
 
-template <typename data_type> class sync_subscriber : public subscriber<data_type>
+template <typename data_type> class lambda_subscriber
+: public subscriber<data_type>
+{
+private:
+  std::function<void(const yage::core::event<data_type> &)> lambda;
+
+public:
+  void on_event(const yage::core::event<data_type> & event) override
+  {
+    lambda(event);
+  }
+
+  lambda_subscriber(
+        std::function<void(const yage::core::event<data_type> &)> lambda)
+  : lambda(lambda)
+  {
+  }
+};
+
+template <typename data_type> class sync_subscriber
+: public subscriber<data_type>
 {
 private:
   std::queue<yage::core::event<data_type>> event_queue;
   std::mutex                               queue_mutex;
 
 protected:
-  virtual void on_event(const yage::core::event<data_type> & event) = 0;
+  virtual void on_event(const yage::core::event<data_type> & event) override
+        = 0;
 
   void process_events()
   {
@@ -99,6 +134,19 @@ private:
   std::vector<subscriber<data_type> *> subscribers;
 
 public:
+  /* Allow access list of data instead of event */
+  template <typename... Args> void publish(Args &&... args)
+  {
+    /* Create an event object */
+    yage::core::event<data_type> event(std::forward<Args>(args)...);
+
+    /* Go through list of subscribers, and send them the data */
+    for (auto & subscriber : subscribers)
+    {
+      subscriber->publish(event);
+    }
+  }
+
   void publish(const yage::core::event<data_type> & data)
   {
     /* Go through list of subscribers, and send them the data */

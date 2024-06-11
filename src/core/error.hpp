@@ -8,10 +8,6 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Includes ================================================================= */
 namespace yage::core
 {
@@ -31,7 +27,3 @@ enum error
 /* Prototypes =============================================================== */
 
 }
-
-#ifdef __cplusplus
-}
-#endif
