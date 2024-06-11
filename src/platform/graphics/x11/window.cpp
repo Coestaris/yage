@@ -190,6 +190,9 @@ yage::core::error yage::platform::graphics::x11::window::open(
         KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask
               | PointerMotionMask);
 
+  wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", False);
+  XSetWMProtocols(display, win, &wmDeleteMessage, 1);
+
   opened = true;
 
   return yage::core::error::OK;
@@ -410,9 +413,6 @@ yage::core::error yage::platform::graphics::x11::window::update()
   {
     return yage::core::error::OK;
   }
-
-  Atom wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", False);
-  XSetWMProtocols(display, win, &wmDeleteMessage, 1);
 
   while (XPending(display))
   {

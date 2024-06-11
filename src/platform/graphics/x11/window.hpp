@@ -31,6 +31,8 @@ private:
   yage::platform::graphics::gl::graphics context;
   bool                                   opened = false;
 
+  Atom wmDeleteMessage;
+
 public:
   window(yage::graphics::settings & settings)
   : yage::graphics::window(settings)
