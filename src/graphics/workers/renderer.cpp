@@ -20,7 +20,7 @@
 void yage::graphics::workers::renderer::on_event(
       const yage::core::event<int> & event)
 {
-  log(LOG_DEBUG, "Received stop signal: %d. Closing window", event.getData());
+  log(LOG_DEBUG, "Received stop signal: %d. Closing window", event.get_data());
   window->close();
 }
 
@@ -34,8 +34,9 @@ void yage::graphics::workers::renderer::run()
 
   yage::core::lambda_subscriber<yage::graphics::key> key_pressed_handler(
         [&](yage::core::event<yage::graphics::key> event) {
-          log(LOG_DEBUG, "Key pressed: %s",
-              yage::graphics::key_to_string(event.getData()).c_str());
+          log(LOG_DEBUG, "Key pressed: %s at %f",
+              yage::graphics::key_to_string(event.get_data()).c_str(),
+              event.get_time());
         });
   window->get_key_pressed().subscribe(key_pressed_handler);
 
@@ -45,11 +46,12 @@ void yage::graphics::workers::renderer::run()
               [&](yage::core::event<std::pair<
                         yage::graphics::mouse_button,
                         yage::graphics::mouse_position>> event) {
-                log(LOG_DEBUG, "Mouse pressed: %s at (%d, %d)",
+                log(LOG_DEBUG, "Mouse pressed: %s at (%d, %d) at %f",
                     yage::graphics::mouse_button_to_string(
-                          event.getData().first)
+                          event.get_data().first)
                           .c_str(),
-                    event.getData().second.x, event.getData().second.y);
+                    event.get_data().second.x, event.get_data().second.y,
+                    event.get_time());
               });
   window->get_mouse_pressed().subscribe(mouse_pressed_handler);
 

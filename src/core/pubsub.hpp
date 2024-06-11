@@ -13,6 +13,7 @@
 
 /* Includes ================================================================= */
 #include "core/log.hpp"
+#include "time.hpp"
 
 #include <iostream>
 #include <string>
@@ -31,29 +32,45 @@ template <typename data_type> class event
 {
 private:
   data_type data;
+  float     time;
 
 public:
   event(data_type data)
   : data(data)
+  , time(yage::core::get_ms())
   {
   }
 
-  data_type getData() const
+  data_type get_data() const
   {
     return data;
+  }
+
+  float get_time() const
+  {
+    return time;
   }
 };
 
 template <> class event<void>
 {
+private:
+  float time;
+
 public:
   event()
+  : time(yage::core::get_ms())
   {
   }
 
-  void getData() const
+  void get_data() const
   {
     // No data to return for void specialization
+  }
+
+  float get_time() const
+  {
+    return time;
   }
 };
 
