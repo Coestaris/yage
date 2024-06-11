@@ -184,15 +184,44 @@ yage::core::error yage::platform::graphics::x11::window::open(
   XClearWindow(display, win);
   XMapRaised(display, win);
 
+  opened = true;
+
   return yage::core::error::OK;
 }
 
 yage::core::error yage::platform::graphics::x11::window::update()
 {
+  if (!opened)
+  {
+    return yage::core::error::OK;
+  }
+
+  Atom wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", False);
+  XSetWMProtocols(display, win, &wmDeleteMessage, 1);
+
   XEvent ev;
   while (XPending(display))
   {
     XNextEvent(display, &ev);
+    /* Handle close event */
+
+    switch (ev.type)
+    {
+      case Expose:
+        printf("Expose\n");
+        break;
+
+      case ClientMessage:
+        if ((long)ev.xclient.data.l[0] == (long)wmDeleteMessage)
+        {
+          close();
+          return yage::core::error::OK;
+        }
+        break;
+
+      default:
+        break;
+    }
   }
 
   glXSwapBuffers(display, win);
@@ -202,21 +231,23 @@ yage::core::error yage::platform::graphics::x11::window::update()
 
 yage::core::error yage::platform::graphics::x11::window::close()
 {
-  /* Cleanup GLX */
+  log(LOG_DEBUG, "Destroying X11 window");
   glXDestroyContext(display, glx_context);
 
-  /* Cleanup X11 */
-//  XFree(visual);
-//  XFreeColormap(display, windowAttribs.colormap);
+  log(LOG_DEBUG, "Closing X11 display");
+  XFree(visual);
+  XFreeColormap(display, windowAttribs.colormap);
   XDestroyWindow(display, win);
   XCloseDisplay(display);
+
+  opened = false;
 
   return yage::core::error::OK;
 }
 
 bool yage::platform::graphics::x11::window::is_open()
 {
-  return true;
+  return opened;
 }
 
 yage::graphics::graphics * yage::platform::graphics::x11::window::get_graphics()

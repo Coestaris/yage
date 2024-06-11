@@ -160,12 +160,12 @@ public:
   {
     while (true)
     {
-      //      if (!renderer->is_running())
-      //      {
-      //        log(LOG_DEBUG,
-      //            "Renderer worker is not running. Exiting statistic worker");
-      //        break;
-      //      }
+      if (!renderer->is_running())
+      {
+        log(LOG_DEBUG,
+            "Renderer worker is not running. Exiting statistic worker");
+        break;
+      }
 
       std::this_thread::sleep_for(std::chrono::seconds(1));
       log(LOG_INFO, "Draw time: %.2f ms, FPS: %.2f", renderer->get_draw_time(),

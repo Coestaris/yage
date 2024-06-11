@@ -66,6 +66,7 @@ private:
   std::any    result;
   bool        void_func;
   bool        completed;
+  bool        running;
 
 protected:
   virtual FuncRetType run(FuncTypes... args) = 0;
@@ -104,6 +105,16 @@ public:
   std::string get_name() const
   {
     return name;
+  }
+
+  void set_running(bool run)
+  {
+    this->running = run;
+  }
+
+  bool is_running()
+  {
+    return running;
   }
 };
 
@@ -157,7 +168,11 @@ public:
     std::unique_lock<std::mutex> lock(tasks_info_mtx);
     tasks_info[task_id]      = task_info();
     tasks_info[task_id].name = worker.get_name();
-    functor func([&worker, args...]() { worker.do_work(args...); });
+    functor func([&worker, args...]() {
+      worker.set_running(true);
+      worker.do_work(args...);
+      worker.set_running(false);
+    });
 
     lock.unlock();
 

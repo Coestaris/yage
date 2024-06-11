@@ -91,12 +91,12 @@ void handler(int signal, siginfo_t * info, void * context)
   backtrace_symbols_fd(array, size, 2);
 
   /* unregister and let the default action occur */
-  sigaction(SIGSEGV, &action, NULL);
+  sigaction(SIGSEGV, &action, nullptr);
 
-  struct sigaction sa;
-  sigaction(SIGABRT, NULL, &sa);
+  struct sigaction sa = {};
+  sigaction(SIGABRT, nullptr, &sa);
   sa.sa_handler = SIG_DFL;
-  sigaction(SIGABRT, &sa, NULL);
+  sigaction(SIGABRT, &sa, nullptr);
   abort();
 }
 
@@ -118,11 +118,11 @@ yage::core::os_events::os_events()
   action.sa_flags     = SA_SIGINFO;
   sigemptyset(&action.sa_mask);
 
-  sigaction(SIGILL, &action, NULL);
-  sigaction(SIGABRT, &action, NULL);
-  sigaction(SIGBUS, &action, NULL);
-  sigaction(SIGFPE, &action, NULL);
-  sigaction(SIGSEGV, &action, NULL);
+  sigaction(SIGILL, &action, nullptr);
+  sigaction(SIGABRT, &action, nullptr);
+  sigaction(SIGBUS, &action, nullptr);
+  sigaction(SIGFPE, &action, nullptr);
+  sigaction(SIGSEGV, &action, nullptr);
 }
 
 void yage::core::os_events::update()

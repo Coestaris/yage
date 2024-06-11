@@ -29,6 +29,7 @@ private:
   XVisualInfo *                          visual;
   GLXContext                             glx_context = nullptr;
   yage::platform::graphics::gl::graphics context;
+  bool                                   opened = false;
 
 public:
   window(yage::graphics::settings & settings)
