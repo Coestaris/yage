@@ -22,7 +22,7 @@ class graphics
 {
 public:
   virtual yage::core::error clear() = 0;
-  virtual yage::core::error present() = 0;
+  virtual yage::core::error flush() = 0;
 
   virtual yage::core::error draw_line(int x1, int y1, int x2, int y2) = 0;
   virtual yage::core::error draw_rect(int x, int y, int width, int height) = 0;

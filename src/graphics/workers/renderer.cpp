@@ -70,16 +70,20 @@ void yage::graphics::workers::renderer::run()
     }
 
     float draw_start = yage::core::get_ms();
+
     graphics->clear();
     graphics->draw_rect(0, 0, 800, 600);
+    graphics->flush();
+
+    /* Perform moving average.
+     * Note that some GL backends may have their own vsync,
+     * so this may not work as expected. */
+    draw_time = draw_time * 0.9f + (yage::core::get_ms() - draw_start) * 0.1f;
 
     if (window->update() != yage::core::error::OK)
     {
       log(LOG_ERROR, "Failed to update window");
       break;
     }
-
-    /* perform moving average */
-    draw_time = draw_time * 0.9f + (yage::core::get_ms() - draw_start) * 0.1f;
   }
 }

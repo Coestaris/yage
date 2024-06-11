@@ -33,7 +33,7 @@ public:
   yage::core::error init(int bits_per_pixel, int width, int height);
 
   yage::core::error clear() override;
-  yage::core::error present() override;
+  yage::core::error flush() override;
 
   yage::core::error draw_line(int x1, int y1, int x2, int y2) override;
   yage::core::error draw_rect(int x, int y, int width, int height) override;

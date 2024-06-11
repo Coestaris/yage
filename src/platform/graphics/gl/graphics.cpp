@@ -248,8 +248,10 @@ yage::core::error yage::platform::graphics::gl::graphics::clear()
   return yage::core::error::OK;
 }
 
-yage::core::error yage::platform::graphics::gl::graphics::present()
+yage::core::error yage::platform::graphics::gl::graphics::flush()
 {
+  glFlush();
+
   return yage::core::error::OK;
 }
 
