@@ -10,6 +10,7 @@
 #include "renderer.hpp"
 #include "core/time.hpp"
 #include "core/pubsub.hpp"
+#include "core/io/keyboard.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -32,26 +33,67 @@ void yage::graphics::workers::renderer::run()
     return;
   }
 
-  yage::core::lambda_subscriber<yage::graphics::key> key_pressed_handler(
-        [&](yage::core::event<yage::graphics::key> event) {
+  yage::core::lambda_subscriber<yage::core::io::key> key_pressed_handler(
+        [this](yage::core::event<yage::core::io::key> event) {
+          auto key = event.get_data();
           log(LOG_DEBUG, "Key pressed: %s at %f",
-              yage::graphics::key_to_string(event.get_data()).c_str(),
-              event.get_time());
+              yage::core::io::key_to_string(key).c_str(), event.get_time());
+
+          if (key == yage::core::io::key::LEFT)
+          {
+            x -= 10.0f;
+          }
+          else if (key == yage::core::io::key::RIGHT)
+          {
+            x += 10.0f;
+          }
+          else if (key == yage::core::io::key::UP)
+          {
+            y -= 10.0f;
+          }
+          else if (key == yage::core::io::key::DOWN)
+          {
+            y += 10.0f;
+          }
+
+          if (key == yage::core::io::key::ESCAPE)
+          {
+            window->close();
+          }
         });
   window->get_key_pressed().subscribe(key_pressed_handler);
 
-  yage::core::lambda_subscriber<
-        std::pair<yage::graphics::mouse_button, yage::graphics::mouse_position>>
+  yage::core::lambda_subscriber<yage::core::io::key> key_released_handler(
+        [&](yage::core::event<yage::core::io::key> event) {
+          auto key = event.get_data();
+          log(LOG_DEBUG, "Key released: %s at %f",
+              yage::core::io::key_to_string(key).c_str(), event.get_time());
+        });
+  window->get_key_released().subscribe(key_released_handler);
+
+  yage::core::lambda_subscriber<wchar_t> char_entered_handler(
+        [&](yage::core::event<wchar_t> event) {
+          log(LOG_DEBUG, "Char entered: %c at %f", event.get_data(),
+              event.get_time());
+        });
+  window->get_char_entered().subscribe(char_entered_handler);
+
+  yage::core::lambda_subscriber<yage::graphics::mouse_scroll_data>
+        mouse_scrolled_handler(
+              [&](yage::core::event<yage::graphics::mouse_scroll_data> event) {
+                auto data = event.get_data();
+                log(LOG_DEBUG, "Mouse scrolled: (%f, %f) at %f", data.amount_x,
+                    data.amount_y, event.get_time());
+              });
+  window->get_mouse_scrolled().subscribe(mouse_scrolled_handler);
+
+  yage::core::lambda_subscriber<yage::graphics::mouse_click_data>
         mouse_pressed_handler(
-              [&](yage::core::event<std::pair<
-                        yage::graphics::mouse_button,
-                        yage::graphics::mouse_position>> event) {
-                log(LOG_DEBUG, "Mouse pressed: %s at (%d, %d) at %f",
-                    yage::graphics::mouse_button_to_string(
-                          event.get_data().first)
-                          .c_str(),
-                    event.get_data().second.x, event.get_data().second.y,
-                    event.get_time());
+              [&](yage::core::event<yage::graphics::mouse_click_data> event) {
+                auto data = event.get_data();
+                log(LOG_DEBUG, "Mouse pressed: %s at (%f, %f) at %f",
+                    yage::core::io::mouse_to_string(data.button).c_str(),
+                    data.x, data.y, event.get_time());
               });
   window->get_mouse_pressed().subscribe(mouse_pressed_handler);
 
@@ -72,7 +114,8 @@ void yage::graphics::workers::renderer::run()
     float draw_start = yage::core::get_ms();
 
     graphics->clear();
-    graphics->draw_rect(0, 0, 800, 600);
+    graphics->draw_rect(x, y, 200, 200);
+    graphics->draw_rect(330, 390, 300, 100);
     graphics->flush();
 
     /* Perform moving average.

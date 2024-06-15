@@ -31,6 +31,9 @@ private:
   float                    draw_time = 0.0f;
   frequency_keeper         keeper;
 
+  // TODO: temporary
+  float x = 0.0f, y = 0.0f;
+
 public:
   void on_event(const yage::core::event<int> & event) override;
   void run() override;

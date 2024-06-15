@@ -62,6 +62,7 @@ endif ()
 # Setup common source files
 set(SRC_FILES
     src/core/*.cpp
+    src/core/io/*.cpp
     src/graphics/*.cpp
     src/graphics/workers/*.cpp
     src/platform/*.cpp

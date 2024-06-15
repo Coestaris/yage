@@ -11,11 +11,14 @@
 /* Includes ================================================================= */
 #include <string>
 
+#include "graphics/image.hpp"
+#include "graphics/graphics.hpp"
+#include "graphics/keyboard.hpp"
+
 #include "core/error.hpp"
 #include "core/pubsub.hpp"
-#include "graphics/graphics.hpp"
-#include "graphics/input.hpp"
-#include "image.hpp"
+#include "core/io/mouse.hpp"
+#include "core/io/keyboard.hpp"
 
 namespace yage::graphics
 {
@@ -35,32 +38,43 @@ struct geometry
   int height;
 };
 
-// clang-format off
-using key_pressed_publisher
-      = yage::core::publisher<yage::graphics::key>;
-using key_released_publisher
-      = yage::core::publisher<yage::graphics::key>;
-using mouse_moved_publisher
-      = yage::core::publisher<yage::graphics::mouse_position>;
-using mouse_pressed_publisher
-      = yage::core::publisher<std::pair<yage::graphics::mouse_button, yage::graphics::mouse_position>>;
-using mouse_released_publisher
-      = yage::core::publisher<std::pair<yage::graphics::mouse_button, yage::graphics::mouse_position>>;
-using mouse_scrolled_publisher
-      = yage::core::publisher<std::pair<int, int>>;
-using mouse_double_clicked_publisher
-      = yage::core::publisher<std::pair<yage::graphics::mouse_button, yage::graphics::mouse_position>>;
-using window_closed_publisher
-      = yage::core::publisher<void>;
+struct mouse_moved_data
+{
+  float x;
+  float y;
+};
+
+struct mouse_click_data
+{
+  yage::core::io::mouse button;
+  float                 x;
+  float                 y;
+};
+
+struct mouse_scroll_data
+{
+  float amount_x;
+  float amount_y;
+};
+
+using key_pressed_publisher    = yage::core::publisher<yage::core::io::key>;
+using key_released_publisher   = yage::core::publisher<yage::core::io::key>;
+using char_entered_publisher   = yage::core::publisher<wchar_t>;
+using mouse_moved_publisher    = yage::core::publisher<mouse_moved_data>;
+using mouse_pressed_publisher  = yage::core::publisher<mouse_click_data>;
+using mouse_released_publisher = yage::core::publisher<mouse_click_data>;
+using mouse_scrolled_publisher = yage::core::publisher<mouse_scroll_data>;
+using mouse_double_clicked_publisher = yage::core::publisher<mouse_click_data>;
+using window_closed_publisher        = yage::core::publisher<void>;
 using window_resized_publisher
       = yage::core::publisher<yage::graphics::geometry>;
-// clang-format on
 
 class window
 {
 protected:
   key_pressed_publisher          key_pressed;
   key_released_publisher         key_released;
+  char_entered_publisher         char_entered;
   mouse_moved_publisher          mouse_moved;
   mouse_pressed_publisher        mouse_pressed;
   mouse_released_publisher       mouse_released;
@@ -102,6 +116,7 @@ public:
 
   __DECLARE_EXPORT_EVENT_METHODS(key_pressed)
   __DECLARE_EXPORT_EVENT_METHODS(key_released)
+  __DECLARE_EXPORT_EVENT_METHODS(char_entered)
   __DECLARE_EXPORT_EVENT_METHODS(mouse_moved)
   __DECLARE_EXPORT_EVENT_METHODS(mouse_pressed)
   __DECLARE_EXPORT_EVENT_METHODS(mouse_released)

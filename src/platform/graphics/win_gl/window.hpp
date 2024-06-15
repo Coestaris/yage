@@ -29,6 +29,8 @@ class window : public yage::graphics::window
   bool      opened;
   yage::platform::graphics::gl::graphics context;
 
+  static LRESULT CALLBACK wnd_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 public:
   window(yage::graphics::settings & settings)
   : yage::graphics::window(settings)

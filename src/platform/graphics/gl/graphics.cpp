@@ -9,17 +9,15 @@
 /* Includes ================================================================= */
 #include <GL/gl.h>
 #include <GL/glext.h>
-#include <GL/glx.h>
 
-#include <vector>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
-#include <functional>
 #include <cstring>
 
-#include "graphics.hpp"
 #include "core/log.hpp"
+#include "platform/graphics/gl/graphics.hpp"
+#include "platform/graphics/gl/glplatform.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -134,27 +132,6 @@ void APIENTRY GLDebugMessageCallback(
 }
 #endif
 
-template <typename... Args>
-yage::core::error g_dyn_call(const char * func, Args... args)
-{
-#if WIN32
-  auto proc = wglGetProcAddress(func);
-#else
-  auto proc = glXGetProcAddress((const GLubyte *)func);
-#endif
-  if (proc)
-  {
-    auto f = (void (*)(Args...))(void *)proc;
-    f(args...);
-    return yage::core::error::OK;
-  }
-  else
-  {
-    log(LOG_ERROR, "Function %s not found", func);
-    return yage::core::error::NOT_IMPLEMENTED;
-  }
-}
-
 /* Shared functions ========================================================= */
 void yage::platform::graphics::gl::graphics::cache_extensions()
 {
@@ -182,7 +159,7 @@ void yage::platform::graphics::gl::graphics::cache_extensions()
 
 void yage::platform::graphics::gl::graphics::print_extensions()
 {
-  log(LOG_INFO, "gl extensions: %zu", extensions.size());
+  log(LOG_INFO, "gl extensions: %Iu", extensions.size());
 #define MAX_EXTENSIONS 3
   std::stringbuf buf;
   std::ostream   os(&buf);
@@ -193,7 +170,7 @@ void yage::platform::graphics::gl::graphics::print_extensions()
     {
       os << std::setw(40) << extensions[i + j] << " ";
     }
-    log(LOG_DEBUG, " [%4zu-%4zu] %s", i, i + MAX_EXTENSIONS, buf.str().c_str());
+    log(LOG_DEBUG, " [%4Iu-%4Iu] %s", i, i + MAX_EXTENSIONS, buf.str().c_str());
   }
 }
 
@@ -239,6 +216,12 @@ yage::core::error yage::platform::graphics::gl::graphics::init(
   glDepthFunc(GL_LEQUAL);  // The Type Of Depth Testing To Do
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
+  /* Setup orthographic projection */
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0, width, height, 0, -1, 1);
+  glMatrixMode(GL_MODELVIEW);
+
   return yage::core::error::OK;
 }
 yage::core::error yage::platform::graphics::gl::graphics::clear()
@@ -256,22 +239,24 @@ yage::core::error yage::platform::graphics::gl::graphics::flush()
 }
 
 yage::core::error yage::platform::graphics::gl::graphics::draw_line(
-      int x1, int y1, int x2, int y2)
+      float x1, float y1, float x2, float y2)
 {
   return yage::core::error::OK;
 }
 
 yage::core::error yage::platform::graphics::gl::graphics::draw_rect(
-      int x, int y, int width, int height)
+      float x, float y, float width, float height)
 {
-  /* Draw a triangle */
-  glBegin(GL_TRIANGLES);          // Drawing Using Triangles
-  glColor3f(1.0f, 0.0f, 0.0f);    // Set The Color To Red
-  glVertex3f(0.0f, 1.0f, 0.0f);   // Top
-  glColor3f(0.0f, 1.0f, 0.0f);    // Set The Color To Green
-  glVertex3f(-1.0f, -1.0f, 0.0f); // Bottom Left
-  glColor3f(0.0f, 0.0f, 1.0f);    // Set The Color To Blue
-  glVertex3f(1.0f, -1.0f, 0.0f);  // Bottom Right
-  glEnd();                        // Finished Drawing The Triangle
+  /* Draw a rectangle */
+  glBegin(GL_QUADS);                 // Start Drawing A Quad
+  glColor3f(1.0f, 0.0f, 0.0f);       // Set The Color To Red
+  glVertex2f(x, y);                  // Top Left
+  glColor3f(0.0f, 1.0f, 0.0f);       // Set The Color To Green
+  glVertex2f(x + width, y);          // Top Right
+  glColor3f(0.0f, 0.0f, 1.0f);       // Set The Color To Blue
+  glVertex2f(x + width, y + height); // Bottom Right
+  glColor3f(1.0f, 1.0f, 0.0f);       // Set The Color To Yellow
+  glVertex2f(x, y + height);         // Bottom Left
+  glEnd();                           // Finished Drawing The Quad
   return yage::core::error::OK;
 }

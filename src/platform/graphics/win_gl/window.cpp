@@ -23,7 +23,6 @@
 
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM); // Declaration For WndProc
 
 static void log_pfd(PIXELFORMATDESCRIPTOR * pdf)
 {
@@ -56,16 +55,6 @@ static void log_pfd(PIXELFORMATDESCRIPTOR * pdf)
   log(LOG_DEBUG, "    dwDamageMask = %lu", pdf->dwDamageMask);
 }
 
-LRESULT CALLBACK WndProc(
-      HWND   hWnd,   // Handle For This Window
-      UINT   uMsg,   // Message For This Window
-      WPARAM wParam, // Additional Message Information
-      LPARAM lParam) // Additional Message Information
-{
-  // Pass All Unhandled Messages To DefWindowProc
-  return DefWindowProc(hWnd, uMsg, wParam, lParam);
-}
-
 /* TODO: can be moved to common part,
  * since have a lot of common code with DirectX */
 yage::core::error yage::platform::graphics::win_gl::window::open(
@@ -88,7 +77,7 @@ yage::core::error yage::platform::graphics::win_gl::window::open(
   WNDCLASS wc;
   /* Redraw On Size, And Own DC For Window. */
   wc.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-  wc.lpfnWndProc   = (WNDPROC)WndProc;
+  wc.lpfnWndProc   = (WNDPROC)wnd_proc;
   wc.cbClsExtra    = 0;
   wc.cbWndExtra    = 0;
   wc.hInstance     = hInstance;
@@ -249,6 +238,9 @@ yage::core::error yage::platform::graphics::win_gl::window::open(
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
+  /* Set GWLP_USERDATA to this pointer */
+  SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)this);
+
   ShowWindow(hWnd, SW_SHOW); /* Show The Window */
   SetForegroundWindow(hWnd); /* Slightly Higher Priority */
   SetFocus(hWnd);            /* Sets Keyboard Focus To The Window */
@@ -268,6 +260,9 @@ yage::core::error yage::platform::graphics::win_gl::window::open(
 
 yage::core::error yage::platform::graphics::win_gl::window::close()
 {
+  yage::core::event<void> event;
+  window_closed.publish(event);
+
   if (hRC)
   {
     /* Try to Release The DC And RC Contexts? */
@@ -318,16 +313,15 @@ yage::platform::graphics::win_gl::window::get_graphics()
 }
 yage::core::error yage::platform::graphics::win_gl::window::update()
 {
+  if (!opened)
+  {
+    return yage::core::error::OK;
+  }
+
   /* Read messages to make Windows happy */
   MSG msg;
   if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
   {
-    if (msg.message == WM_QUIT)
-    {
-      close();
-      return yage::core::error::OK;
-    }
-
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
@@ -344,4 +338,281 @@ yage::core::error yage::platform::graphics::win_gl::window::update()
 bool yage::platform::graphics::win_gl::window::is_open()
 {
   return opened;
+}
+
+static yage::core::io::key convert_key(WPARAM winkey)
+{
+  static const std::unordered_map<WPARAM, yage::core::io::key> keymap = {
+    /* Control keys */
+    { VK_RETURN, yage::core::io::key::ENTER },
+    { VK_DELETE, yage::core::io::key::DEL },
+    { VK_BACK, yage::core::io::key::BACKSPACE },
+    { VK_ESCAPE, yage::core::io::key::ESCAPE },
+    { VK_TAB, yage::core::io::key::TAB },
+    { VK_SPACE, yage::core::io::key::SPACE },
+    { VK_SNAPSHOT, yage::core::io::key::PAUSE },
+    { VK_PAUSE, yage::core::io::key::SYS_REQ },
+    { VK_SCROLL, yage::core::io::key::SCROLL_LOCK },
+    { VK_HOME, yage::core::io::key::HOME },
+    { VK_LEFT, yage::core::io::key::LEFT },
+    { VK_UP, yage::core::io::key::UP },
+    { VK_RIGHT, yage::core::io::key::RIGHT },
+    { VK_DOWN, yage::core::io::key::DOWN },
+    { VK_PRIOR, yage::core::io::key::PAGE_UP },
+    { VK_NEXT, yage::core::io::key::PAGE_DOWN },
+    { VK_END, yage::core::io::key::END },
+
+    /* Special keys */
+    { VK_OEM_1, yage::core::io::key::SK1 },
+    { VK_OEM_2, yage::core::io::key::SK2 },
+    { VK_OEM_102, yage::core::io::key::SK3 },
+    { VK_OEM_4, yage::core::io::key::SK4 },
+    { VK_OEM_5, yage::core::io::key::SK3 },
+    { VK_OEM_6, yage::core::io::key::SK5 },
+    { VK_OEM_7, yage::core::io::key::SK6 },
+    { VK_OEM_3, yage::core::io::key::SK7 },
+    { VK_OEM_COMMA, yage::core::io::key::SK8 },
+    { VK_OEM_PERIOD, yage::core::io::key::SK9 },
+    { VK_OEM_MINUS, yage::core::io::key::SK10 },
+    { VK_OEM_PLUS, yage::core::io::key::SK11 },
+
+    /* Letters */
+    { 'A', yage::core::io::key::A },
+    { 'B', yage::core::io::key::B },
+    { 'C', yage::core::io::key::C },
+    { 'D', yage::core::io::key::D },
+    { 'E', yage::core::io::key::E },
+    { 'F', yage::core::io::key::F },
+    { 'G', yage::core::io::key::G },
+    { 'H', yage::core::io::key::H },
+    { 'I', yage::core::io::key::I },
+    { 'J', yage::core::io::key::J },
+    { 'K', yage::core::io::key::K },
+    { 'L', yage::core::io::key::L },
+    { 'M', yage::core::io::key::M },
+    { 'N', yage::core::io::key::N },
+    { 'O', yage::core::io::key::O },
+    { 'P', yage::core::io::key::P },
+    { 'Q', yage::core::io::key::Q },
+    { 'R', yage::core::io::key::R },
+    { 'S', yage::core::io::key::S },
+    { 'T', yage::core::io::key::T },
+    { 'U', yage::core::io::key::U },
+    { 'V', yage::core::io::key::V },
+    { 'W', yage::core::io::key::W },
+    { 'X', yage::core::io::key::X },
+    { 'Y', yage::core::io::key::Y },
+    { 'Z', yage::core::io::key::Z },
+
+    /* Numbers */
+    { '0', yage::core::io::key::K0 },
+    { '1', yage::core::io::key::K1 },
+    { '2', yage::core::io::key::K2 },
+    { '3', yage::core::io::key::K3 },
+    { '4', yage::core::io::key::K4 },
+    { '5', yage::core::io::key::K5 },
+    { '6', yage::core::io::key::K6 },
+    { '7', yage::core::io::key::K7 },
+    { '8', yage::core::io::key::K8 },
+    { '9', yage::core::io::key::K9 },
+
+    /* Misc functions */
+    { VK_SELECT, yage::core::io::key::SELECT },
+    { VK_PRINT, yage::core::io::key::PRINT },
+    { VK_EXECUTE, yage::core::io::key::EXECUTE },
+    { VK_INSERT, yage::core::io::key::INSERT },
+    { VK_MENU, yage::core::io::key::MENU },
+    { VK_CANCEL, yage::core::io::key::CANCEL },
+    { VK_HELP, yage::core::io::key::HELP },
+    { VK_CANCEL, yage::core::io::key::BREAK },
+    { VK_NUMLOCK, yage::core::io::key::NUM_LOCK },
+    { VK_CLEAR, yage::core::io::key::CLEAR },
+
+    /* Keypad functions */
+    { VK_MULTIPLY, yage::core::io::key::KP_MULTIPLY },
+    { VK_ADD, yage::core::io::key::KP_ADD },
+    { VK_SEPARATOR, yage::core::io::key::KP_SEPARATOR },
+    { VK_SUBTRACT, yage::core::io::key::KP_SUBTRACT },
+    { VK_DECIMAL, yage::core::io::key::KP_DECIMAL },
+    { VK_DIVIDE, yage::core::io::key::KP_DIVIDE },
+    { VK_NUMPAD0, yage::core::io::key::KP_0 },
+    { VK_NUMPAD1, yage::core::io::key::KP_1 },
+    { VK_NUMPAD2, yage::core::io::key::KP_2 },
+    { VK_NUMPAD3, yage::core::io::key::KP_3 },
+    { VK_NUMPAD4, yage::core::io::key::KP_4 },
+    { VK_NUMPAD5, yage::core::io::key::KP_5 },
+    { VK_NUMPAD6, yage::core::io::key::KP_6 },
+    { VK_NUMPAD7, yage::core::io::key::KP_7 },
+    { VK_NUMPAD8, yage::core::io::key::KP_8 },
+    { VK_NUMPAD9, yage::core::io::key::KP_9 },
+
+    /* Function keys */
+    { VK_F1, yage::core::io::key::F1 },
+    { VK_F2, yage::core::io::key::F2 },
+    { VK_F3, yage::core::io::key::F3 },
+    { VK_F4, yage::core::io::key::F4 },
+    { VK_F5, yage::core::io::key::F5 },
+    { VK_F6, yage::core::io::key::F6 },
+    { VK_F7, yage::core::io::key::F7 },
+    { VK_F8, yage::core::io::key::F8 },
+    { VK_F9, yage::core::io::key::F9 },
+    { VK_F10, yage::core::io::key::F10 },
+    { VK_F11, yage::core::io::key::F11 },
+    { VK_F12, yage::core::io::key::F12 },
+
+    /* Key state modifier keys */
+    { VK_SHIFT, yage::core::io::key::SHIFT_L },
+    { VK_LSHIFT, yage::core::io::key::SHIFT_L },
+    { VK_RSHIFT, yage::core::io::key::SHIFT_R },
+    { VK_CONTROL, yage::core::io::key::CONTROL_L },
+    { VK_LCONTROL, yage::core::io::key::CONTROL_L },
+    { VK_RCONTROL, yage::core::io::key::CONTROL_R },
+    { VK_CAPITAL, yage::core::io::key::CAPS_LOCK },
+    { VK_LWIN, yage::core::io::key::META_L },
+    { VK_RWIN, yage::core::io::key::META_R },
+    { VK_LMENU, yage::core::io::key::ALT_L },
+    { VK_RMENU, yage::core::io::key::ALT_R },
+  };
+
+#if USE_DEBUG
+  if (keymap.find(winkey) == keymap.end())
+  {
+    log(LOG_WARN, "Key not found: 0x%llx (%c)", winkey, (char)winkey);
+  }
+#endif
+
+  return keymap.at(winkey);
+}
+
+static yage::core::io::mouse convert_button(WPARAM winbutton)
+{
+  static const std::unordered_map<WPARAM, yage::core::io::mouse> buttonmap
+        = { { WM_LBUTTONDOWN, yage::core::io::mouse::LEFT },
+            { WM_RBUTTONDOWN, yage::core::io::mouse::RIGHT },
+            { WM_MBUTTONDOWN, yage::core::io::mouse::MIDDLE },
+            { WM_XBUTTONDOWN, yage::core::io::mouse::X1 },
+            { WM_LBUTTONUP, yage::core::io::mouse::LEFT },
+            { WM_RBUTTONUP, yage::core::io::mouse::RIGHT },
+            { WM_MBUTTONUP, yage::core::io::mouse::MIDDLE },
+            { WM_XBUTTONUP, yage::core::io::mouse::X1 } };
+
+#if USE_DEBUG
+  if (buttonmap.find(winbutton) == buttonmap.end())
+  {
+    log(LOG_WARN, "Button not found: 0x%llx", winbutton);
+  }
+#endif
+  return buttonmap.at(winbutton);
+}
+
+LRESULT CALLBACK yage::platform::graphics::win_gl::window::wnd_proc(
+      HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  /* Get The Window Context */
+  auto * win = (yage::platform::graphics::win_gl::window *)GetWindowLongPtr(
+        hWnd, GWLP_USERDATA);
+
+  /* Handle key presses */
+  switch (uMsg)
+  {
+    case WM_KEYDOWN:
+    {
+      win->key_pressed.publish(convert_key(wParam));
+      break;
+    }
+
+    case WM_KEYUP:
+    {
+      win->key_released.publish(convert_key(wParam));
+      break;
+    }
+
+    case WM_SYSCHAR:
+    case WM_CHAR:
+    {
+      auto character = (wchar_t)wParam;
+      win->char_entered.publish(character);
+      break;
+    }
+
+      /* Handle scrolling */
+    case WM_MOUSEWHEEL:
+    {
+      auto amount = GET_WHEEL_DELTA_WPARAM(wParam);
+      struct yage::graphics::mouse_scroll_data scroll_data
+            = { 0, (float)amount / WHEEL_DELTA };
+
+      win->mouse_scrolled.publish(scroll_data);
+      break;
+    }
+
+    /* Handle mouse clicks */
+    case WM_LBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_XBUTTONDOWN:
+    {
+      struct yage::graphics::mouse_click_data click_data
+            = { convert_button(uMsg), 0, 0 };
+
+      POINT p;
+      if (GetCursorPos(&p))
+      {
+        ScreenToClient(hWnd, &p);
+        click_data.x = (float)p.x;
+        click_data.y = (float)p.y;
+      }
+
+      win->mouse_pressed.publish(click_data);
+      break;
+    }
+
+    case WM_LBUTTONUP:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONUP:
+    case WM_XBUTTONUP:
+    {
+      struct yage::graphics::mouse_click_data click_data
+            = { convert_button(uMsg), 0, 0 };
+
+      POINT p;
+      if (GetCursorPos(&p))
+      {
+        ScreenToClient(hWnd, &p);
+        click_data.x = (float)p.x;
+        click_data.y = (float)p.y;
+      }
+
+      win->mouse_released.publish(click_data);
+      break;
+    }
+
+    case WM_MOUSEMOVE:
+    {
+      struct yage::graphics::mouse_moved_data click_data = { 0, 0 };
+
+      POINT p;
+      if (GetCursorPos(&p))
+      {
+        ScreenToClient(hWnd, &p);
+        click_data.x = (float)p.x;
+        click_data.y = (float)p.y;
+      }
+
+      win->mouse_moved.publish(click_data);
+      break;
+    }
+
+    case WM_CLOSE:
+    {
+      win->close();
+    }
+
+    default:
+    {
+      break;
+    }
+  }
+
+  return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
