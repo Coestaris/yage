@@ -35,8 +35,8 @@ public:
   yage::core::error clear() override;
   yage::core::error flush() override;
 
-  yage::core::error draw_line(float x1, float y1, float x2, float y2) override;
-  yage::core::error draw_rect(float x, float y, float width, float height) override;
+  yage::core::error draw_line(yage::core::float2 a, yage::core::float2 b) override;
+  yage::core::error draw_rect(yage::core::float2 position, yage::core::float2 dim) override;
 };
 
 /* Variables ================================================================ */

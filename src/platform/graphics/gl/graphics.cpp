@@ -200,10 +200,8 @@ yage::core::error yage::platform::graphics::gl::graphics::init(
 
   if (has_extension("GL_KHR_debug"))
   {
-    g_dyn_call(
-          "glDebugMessageControl", GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0,
-          nullptr, GL_TRUE);
-    g_dyn_call("glDebugMessageCallback", GLDebugMessageCallback, nullptr);
+    gl_call("glDebugMessageControl", GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    gl_call("glDebugMessageCallback", GLDebugMessageCallback, nullptr);
   }
   else
   {
@@ -239,24 +237,24 @@ yage::core::error yage::platform::graphics::gl::graphics::flush()
 }
 
 yage::core::error yage::platform::graphics::gl::graphics::draw_line(
-      float x1, float y1, float x2, float y2)
+      yage::core::float2 a, yage::core::float2 b)
 {
   return yage::core::error::OK;
 }
 
 yage::core::error yage::platform::graphics::gl::graphics::draw_rect(
-      float x, float y, float width, float height)
+      yage::core::float2 position, yage::core::float2 dim)
 {
   /* Draw a rectangle */
-  glBegin(GL_QUADS);                 // Start Drawing A Quad
-  glColor3f(1.0f, 0.0f, 0.0f);       // Set The Color To Red
-  glVertex2f(x, y);                  // Top Left
-  glColor3f(0.0f, 1.0f, 0.0f);       // Set The Color To Green
-  glVertex2f(x + width, y);          // Top Right
-  glColor3f(0.0f, 0.0f, 1.0f);       // Set The Color To Blue
-  glVertex2f(x + width, y + height); // Bottom Right
-  glColor3f(1.0f, 1.0f, 0.0f);       // Set The Color To Yellow
-  glVertex2f(x, y + height);         // Bottom Left
-  glEnd();                           // Finished Drawing The Quad
+  glBegin(GL_QUADS);                                  // Start Drawing A Quad
+  glColor3f(1.0f, 0.0f, 0.0f);                        // Set The Color To Red
+  glVertex2f(position.x, position.y);                 // Top Left
+  glColor3f(0.0f, 1.0f, 0.0f);                        // Set The Color To Green
+  glVertex2f(position.x + dim.x, position.y);         // Top Right
+  glColor3f(0.0f, 0.0f, 1.0f);                        // Set The Color To Blue
+  glVertex2f(position.x + dim.x, position.y + dim.y); // Bottom Right
+  glColor3f(1.0f, 1.0f, 0.0f);                        // Set The Color To Yellow
+  glVertex2f(position.x, position.y + dim.y);         // Bottom Left
+  glEnd(); // Finished Drawing The Quad
   return yage::core::error::OK;
 }

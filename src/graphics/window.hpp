@@ -13,7 +13,6 @@
 
 #include "graphics/image.hpp"
 #include "graphics/graphics.hpp"
-#include "graphics/keyboard.hpp"
 
 #include "core/error.hpp"
 #include "core/pubsub.hpp"
@@ -87,6 +86,8 @@ public:
   window(settings & settings)
   {
   }
+  virtual ~window() = default;
+
   virtual yage::core::error
   open(std::string & title, geometry & geometry, bool fullscreen)
         = 0;

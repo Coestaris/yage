@@ -125,7 +125,8 @@ yage::core::error yage::platform::graphics::win_gl::window::open(
   else
   {
     dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE; /* Window Extended Style */
-    dwStyle   = WS_OVERLAPPEDWINDOW;                /* Windows Style */
+    dwStyle   = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+              | WS_MAXIMIZEBOX; /* Windows Style */
   }
 
   log(LOG_DEBUG,
@@ -260,6 +261,11 @@ yage::core::error yage::platform::graphics::win_gl::window::open(
 
 yage::core::error yage::platform::graphics::win_gl::window::close()
 {
+  if (!opened)
+  {
+    return yage::core::error::OK;
+  }
+
   yage::core::event<void> event;
   window_closed.publish(event);
 
