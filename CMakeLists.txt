@@ -64,7 +64,7 @@ set(SRC_FILES
     src/core/*.cpp
     src/core/io/*.cpp
     src/graphics/*.cpp
-    src/graphics/workers/*.cpp
+    src/graphics/threads/*.cpp
     src/platform/*.cpp
     src/platform/graphics/*.cpp
     src/*.cpp

@@ -15,6 +15,7 @@
 #include "core/io/keyboard.hpp"
 #include "graphics/shader_compiler.hpp"
 #include "platform/graphics/platform.hpp"
+#include "graphics/threads/threads.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -30,8 +31,10 @@ static bool compile_shader()
   //  std::string vertex_shader_path   = resources_directory + "/triangle.vsh";
   //  std::string fragment_shader_path = resources_directory + "/triangle.fsh";
 
-  std::string vertex_shader_path   = R"(/home/taris/work/yage/resources/triangle.vsh)";
-  std::string fragment_shader_path = R"(/home/taris/work/yage/resources/triangle.fsh)";
+  std::string vertex_shader_path
+        = R"(/home/taris/work/yage/resources/triangle.vsh)";
+  std::string fragment_shader_path
+        = R"(/home/taris/work/yage/resources/triangle.fsh)";
 
   log(LOG_INFO, "Reading vertex shader source from: %s",
       vertex_shader_path.c_str());
@@ -125,16 +128,12 @@ static bool compile_shader()
 }
 
 /* Shared functions ========================================================= */
-void yage::graphics::workers::renderer::on_event(
-      const yage::core::event<int> & event)
+void yage::graphics::threads::renderer::run()
 {
-  log(LOG_DEBUG, "Received stop signal: %d. Closing window", event.get_data());
-  window->close();
-}
-
-void yage::graphics::workers::renderer::run()
-{
-  if (window->open(win_title, win_geometry, false) != yage::core::error::OK)
+  if (args.window->open(
+            const_cast<std::string &>(args.title),
+            const_cast<geometry &>(args.geometry), false)
+      != yage::core::error::OK)
   {
     log(LOG_ERROR, "Failed to open window");
     return;
@@ -146,15 +145,17 @@ void yage::graphics::workers::renderer::run()
     return;
   }
 
-  yage::graphics::graphics * graphics = window->get_graphics();
+  yage::graphics::graphics * graphics = args.window->get_graphics();
 
   while (true)
   {
-    process_events();
+    /* Stage 1: Sync with updater before frame */
+    profiler->passed(PROF_POINT_RENDERER_PRE_FRAME);
+    pre_frame_sync->wait();
 
-    float frame_interval = keeper.call();
-
-    if (!window->is_open())
+    /* Stage 2: Draw the frame using data from previous frame */
+    profiler->passed(PROF_POINT_RENDERER_DRAW_START);
+    if (!args.window->is_open())
     {
       log(LOG_DEBUG, "Window is closed. Exiting renderer worker");
       break;
@@ -163,19 +164,29 @@ void yage::graphics::workers::renderer::run()
     float draw_start = yage::core::get_ms();
 
     graphics->clear();
-    graphics->draw_rect({ x, y }, { 200, 200 });
+    graphics->draw_rect({ 0, 10 }, { 200, 200 });
     graphics->draw_rect({ 330, 390 }, { 300, 100 });
     graphics->flush();
 
+    /* Stage 3: Sync with updater after frame */
+    profiler->passed(PROF_POINT_RENDERER_DRAW_END);
+    post_frame_sync->wait();
+
+    /* Stage 4: Copy data from updater to renderer (for next frame) */
+    /* TODO: Implement data copying */
+
+    /* Stage 5: Wait for vsync */
     /* Perform moving average.
      * Note that some GL backends may have their own vsync,
      * so this may not work as expected. */
     draw_time = draw_time * 0.9f + (yage::core::get_ms() - draw_start) * 0.1f;
-
-    if (window->update() != yage::core::error::OK)
+    profiler->passed(PROF_POINT_RENDERER_UPDATE_START);
+    if (args.window->update() != yage::core::error::OK)
     {
       log(LOG_ERROR, "Failed to update window");
       break;
     }
+
+    keeper.call();
   }
 }

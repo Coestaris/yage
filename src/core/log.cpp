@@ -8,7 +8,7 @@
 
 /* Includes ================================================================= */
 #include "core/log.hpp"
-#include "core/threads.hpp"
+#include "core/named_thread.hpp"
 #include "core/time.hpp"
 
 #include <iostream>
@@ -32,10 +32,10 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 static const char * level_specifiers[]
-      = { COLOR_BOLD              COLOR_MAGENTA "debug" COLOR_RESET,
-          COLOR_BOLD              COLOR_CYAN " info" COLOR_RESET,
-          COLOR_BOLD              COLOR_YELLOW " warn" COLOR_RESET,
-          COLOR_BOLD              COLOR_RED "error" COLOR_RESET,
+      = { COLOR_BOLD COLOR_MAGENTA "debug" COLOR_RESET,
+          COLOR_BOLD COLOR_CYAN " info" COLOR_RESET,
+          COLOR_BOLD COLOR_YELLOW " warn" COLOR_RESET,
+          COLOR_BOLD COLOR_RED "error" COLOR_RESET,
           COLOR_BOLD COLOR_RED_BG COLOR_BLACK_FG "fatal" COLOR_RESET };
 
 /* Static functions ========================================================= */
@@ -63,15 +63,10 @@ void yage::core::logger::format(
 
   int pid = getpid();
 
-  std::string               task_name;
-  yage::core::thread_pool * pool = get_global_thread_pool();
-  if (!pool)
+  std::string task_name = named_thread::get_thread_name();
+  if (task_name.empty())
   {
     task_name = "???";
-  }
-  else
-  {
-    task_name = pool->get_current_task_name();
   }
 
   if (level >= (int)(sizeof(level_specifiers) / sizeof(level_specifiers[0])))

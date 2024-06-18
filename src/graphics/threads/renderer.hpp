@@ -9,33 +9,34 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "core/threads.hpp"
+#include "core/named_thread.hpp"
 #include "core/pubsub.hpp"
 #include "core/os_events.hpp"
 #include "graphics/window.hpp"
 #include "graphics/frequency_keeper.hpp"
+#include "threads.hpp"
+#include "core/sync_point.hpp"
+#include "core/profiler.hpp"
 
-namespace yage::graphics::workers
+namespace yage::graphics::threads
 {
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class renderer : public yage::core::worker<void>,
-                        public yage::core::signal_subscriber
+class renderer : public yage::core::named_thread
 {
 private:
-  std::string              win_title;
-  yage::graphics::geometry win_geometry;
-  yage::graphics::window * window;
-  float                    draw_time = 0.0f;
-  frequency_keeper         keeper;
+  open_window_arguments args;
+  frequency_keeper      keeper;
 
-  // TODO: temporary
-  float x = 0.0f, y = 0.0f;
+  yage::core::profiler * profiler;
+  yage::core::sync_point * pre_frame_sync;
+  yage::core::sync_point * post_frame_sync;
+
+  float draw_time = 0.0f;
 
 public:
-  void on_event(const yage::core::event<int> & event) override;
   void run() override;
 
   float get_draw_time() const
@@ -50,15 +51,16 @@ public:
 
 public:
   renderer(
-        yage::graphics::window * window,
-        std::string              title,
-        yage::graphics::geometry geometry,
-        int                      max_fps)
-  : yage::core::worker<void>("renderer")
-  , win_title(std::move(title))
-  , win_geometry(geometry)
-  , window(window)
-  , keeper(max_fps)
+        yage::core::profiler * profiler,
+        yage::core::sync_point * pre_frame_sync,
+        yage::core::sync_point * post_frame_sync,
+        open_window_arguments &  args)
+  : yage::core::named_thread("renderer")
+  , args(args)
+  , keeper(args.max_fps)
+  , profiler(profiler)
+  , pre_frame_sync(pre_frame_sync)
+  , post_frame_sync(post_frame_sync)
   {
   }
 };

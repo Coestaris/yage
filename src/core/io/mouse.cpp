@@ -2,8 +2,7 @@
  *
  * @file mouse.cpp
  * @date 11-06-2024
- * @author Maxim Kurylko <kurylko.m@ajax.systems>
- * @copyright Ajax Systems
+ * @author Maxim Kurylko <vk_vm@ukr.net>
  *
  *  ========================================================================= */
 

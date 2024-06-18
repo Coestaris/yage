@@ -181,9 +181,26 @@ yage::core::error yage::platform::graphics::x11::window::open(
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
+  // loads the XMODIFIERS environment variable to see what IME to use
+  XSetLocaleModifiers("");
+
+  XIM xim = XOpenIM(display, 0, 0, 0);
+  if (!xim)
+  {
+    // fallback to internal input method
+    XSetLocaleModifiers("@im=none");
+    xim = XOpenIM(display, 0, 0, 0);
+  }
+
   /* Show the window */
   XClearWindow(display, win);
   XMapRaised(display, win);
+
+  xic = XCreateIC(
+        xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow,
+        win, XNFocusWindow, win, NULL);
+
+  XSetICFocus(xic);
 
   XSelectInput(
         display, win,
@@ -198,217 +215,200 @@ yage::core::error yage::platform::graphics::x11::window::open(
   return yage::core::error::OK;
 }
 
-yage::graphics::key convert_key(KeySym sym)
+yage::core::io::key convert_key(uint32_t keycode)
 {
-  static const std::unordered_map<KeySym, yage::graphics::key> map = {
-    { XK_space, yage::graphics::key::space },
-    { XK_exclam, yage::graphics::key::exclam },
-    { XK_quotedbl, yage::graphics::key::quotedbl },
-    { XK_numbersign, yage::graphics::key::numbersign },
-    { XK_dollar, yage::graphics::key::dollar },
-    { XK_percent, yage::graphics::key::percent },
-    { XK_ampersand, yage::graphics::key::ampersand },
-    { XK_apostrophe, yage::graphics::key::apostrophe },
-    { XK_quoteright, yage::graphics::key::quoteright },
-    { XK_parenleft, yage::graphics::key::parenleft },
-    { XK_parenright, yage::graphics::key::parenright },
-    { XK_asterisk, yage::graphics::key::asterisk },
-    { XK_plus, yage::graphics::key::plus },
-    { XK_comma, yage::graphics::key::comma },
-    { XK_minus, yage::graphics::key::minus },
-    { XK_period, yage::graphics::key::period },
-    { XK_slash, yage::graphics::key::slash },
-    { XK_0, yage::graphics::key::k_0 },
-    { XK_1, yage::graphics::key::k_1 },
-    { XK_2, yage::graphics::key::k_2 },
-    { XK_3, yage::graphics::key::k_3 },
-    { XK_4, yage::graphics::key::k_4 },
-    { XK_5, yage::graphics::key::k_5 },
-    { XK_6, yage::graphics::key::k_6 },
-    { XK_7, yage::graphics::key::k_7 },
-    { XK_8, yage::graphics::key::k_8 },
-    { XK_9, yage::graphics::key::k_9 },
-    { XK_colon, yage::graphics::key::colon },
-    { XK_semicolon, yage::graphics::key::semicolon },
-    { XK_less, yage::graphics::key::less },
-    { XK_equal, yage::graphics::key::equal },
-    { XK_greater, yage::graphics::key::greater },
-    { XK_question, yage::graphics::key::question },
-    { XK_at, yage::graphics::key::at },
-    { XK_A, yage::graphics::key::k_A },
-    { XK_B, yage::graphics::key::k_B },
-    { XK_C, yage::graphics::key::k_C },
-    { XK_D, yage::graphics::key::k_D },
-    { XK_E, yage::graphics::key::k_E },
-    { XK_F, yage::graphics::key::k_F },
-    { XK_G, yage::graphics::key::k_G },
-    { XK_H, yage::graphics::key::k_H },
-    { XK_I, yage::graphics::key::k_I },
-    { XK_J, yage::graphics::key::k_J },
-    { XK_K, yage::graphics::key::k_K },
-    { XK_L, yage::graphics::key::k_L },
-    { XK_M, yage::graphics::key::k_M },
-    { XK_N, yage::graphics::key::k_N },
-    { XK_O, yage::graphics::key::k_O },
-    { XK_P, yage::graphics::key::k_P },
-    { XK_Q, yage::graphics::key::k_Q },
-    { XK_R, yage::graphics::key::k_R },
-    { XK_S, yage::graphics::key::k_S },
-    { XK_T, yage::graphics::key::k_T },
-    { XK_U, yage::graphics::key::k_U },
-    { XK_V, yage::graphics::key::k_V },
-    { XK_W, yage::graphics::key::k_W },
-    { XK_X, yage::graphics::key::k_X },
-    { XK_Y, yage::graphics::key::k_Y },
-    { XK_Z, yage::graphics::key::k_Z },
-    { XK_bracketleft, yage::graphics::key::bracketleft },
-    { XK_backslash, yage::graphics::key::backslash },
-    { XK_bracketright, yage::graphics::key::bracketright },
-    { XK_asciicircum, yage::graphics::key::asciicircum },
-    { XK_underscore, yage::graphics::key::underscore },
-    { XK_grave, yage::graphics::key::grave },
-    { XK_quoteleft, yage::graphics::key::quoteleft },
-    { XK_a, yage::graphics::key::k_a },
-    { XK_b, yage::graphics::key::k_b },
-    { XK_c, yage::graphics::key::k_c },
-    { XK_d, yage::graphics::key::k_d },
-    { XK_e, yage::graphics::key::k_e },
-    { XK_f, yage::graphics::key::k_f },
-    { XK_g, yage::graphics::key::k_g },
-    { XK_h, yage::graphics::key::k_h },
-    { XK_i, yage::graphics::key::k_i },
-    { XK_j, yage::graphics::key::k_j },
-    { XK_k, yage::graphics::key::k_k },
-    { XK_l, yage::graphics::key::k_l },
-    { XK_m, yage::graphics::key::k_m },
-    { XK_n, yage::graphics::key::k_n },
-    { XK_o, yage::graphics::key::k_o },
-    { XK_p, yage::graphics::key::k_p },
-    { XK_q, yage::graphics::key::k_q },
-    { XK_r, yage::graphics::key::k_r },
-    { XK_s, yage::graphics::key::k_s },
-    { XK_t, yage::graphics::key::k_t },
-    { XK_u, yage::graphics::key::k_u },
-    { XK_v, yage::graphics::key::k_v },
-    { XK_w, yage::graphics::key::k_w },
-    { XK_x, yage::graphics::key::k_x },
-    { XK_y, yage::graphics::key::k_y },
-    { XK_z, yage::graphics::key::k_z },
-    { XK_braceleft, yage::graphics::key::braceleft },
-    { XK_bar, yage::graphics::key::bar },
-    { XK_braceright, yage::graphics::key::braceright },
-    { XK_asciitilde, yage::graphics::key::asciitilde },
-    { XK_Home, yage::graphics::key::Home },
-    { XK_Left, yage::graphics::key::Left },
-    { XK_Up, yage::graphics::key::Up },
-    { XK_Right, yage::graphics::key::Right },
-    { XK_Down, yage::graphics::key::Down },
-    { XK_Prior, yage::graphics::key::Prior },
-    { XK_Page_Up, yage::graphics::key::Page_Up },
-    { XK_Next, yage::graphics::key::Next },
-    { XK_Page_Down, yage::graphics::key::Page_Down },
-    { XK_End, yage::graphics::key::End },
-    { XK_Begin, yage::graphics::key::Begin },
-    { XK_Select, yage::graphics::key::Select },
-    { XK_Print, yage::graphics::key::Print },
-    { XK_Execute, yage::graphics::key::Execute },
-    { XK_Insert, yage::graphics::key::Insert },
-    { XK_Undo, yage::graphics::key::Undo },
-    { XK_Redo, yage::graphics::key::Redo },
-    { XK_Menu, yage::graphics::key::Menu },
-    { XK_Find, yage::graphics::key::Find },
-    { XK_Cancel, yage::graphics::key::Cancel },
-    { XK_Help, yage::graphics::key::Help },
-    { XK_Break, yage::graphics::key::Break },
-    { XK_Mode_switch, yage::graphics::key::Mode_switch },
-    { XK_script_switch, yage::graphics::key::script_switch },
-    { XK_Num_Lock, yage::graphics::key::Num_Lock },
-    { XK_KP_Space, yage::graphics::key::KP_Space },
-    { XK_KP_Tab, yage::graphics::key::KP_Tab },
-    { XK_KP_Enter, yage::graphics::key::KP_Enter },
-    { XK_KP_Home, yage::graphics::key::KP_Home },
-    { XK_KP_Left, yage::graphics::key::KP_Left },
-    { XK_KP_Up, yage::graphics::key::KP_Up },
-    { XK_KP_Right, yage::graphics::key::KP_Right },
-    { XK_KP_Down, yage::graphics::key::KP_Down },
-    { XK_KP_Prior, yage::graphics::key::KP_Prior },
-    { XK_KP_Page_Up, yage::graphics::key::KP_Page_Up },
-    { XK_KP_Next, yage::graphics::key::KP_Next },
-    { XK_KP_Page_Down, yage::graphics::key::KP_Page_Down },
-    { XK_KP_End, yage::graphics::key::KP_End },
-    { XK_KP_Begin, yage::graphics::key::KP_Begin },
-    { XK_KP_Insert, yage::graphics::key::KP_Insert },
-    { XK_KP_Delete, yage::graphics::key::KP_Delete },
-    { XK_KP_Equal, yage::graphics::key::KP_Equal },
-    { XK_KP_Multiply, yage::graphics::key::KP_Multiply },
-    { XK_KP_Add, yage::graphics::key::KP_Add },
-    { XK_KP_Separator, yage::graphics::key::KP_Separator },
-    { XK_KP_Subtract, yage::graphics::key::KP_Subtract },
-    { XK_KP_Decimal, yage::graphics::key::KP_Decimal },
-    { XK_KP_Divide, yage::graphics::key::KP_Divide },
-    { XK_KP_0, yage::graphics::key::KP_0 },
-    { XK_KP_1, yage::graphics::key::KP_1 },
-    { XK_KP_2, yage::graphics::key::KP_2 },
-    { XK_KP_3, yage::graphics::key::KP_3 },
-    { XK_KP_4, yage::graphics::key::KP_4 },
-    { XK_KP_5, yage::graphics::key::KP_5 },
-    { XK_KP_6, yage::graphics::key::KP_6 },
-    { XK_KP_7, yage::graphics::key::KP_7 },
-    { XK_KP_8, yage::graphics::key::KP_8 },
-    { XK_KP_9, yage::graphics::key::KP_9 },
-    { XK_F1, yage::graphics::key::F1 },
-    { XK_F2, yage::graphics::key::F2 },
-    { XK_F3, yage::graphics::key::F3 },
-    { XK_F4, yage::graphics::key::F4 },
-    { XK_F5, yage::graphics::key::F5 },
-    { XK_F6, yage::graphics::key::F6 },
-    { XK_F7, yage::graphics::key::F7 },
-    { XK_F8, yage::graphics::key::F8 },
-    { XK_F9, yage::graphics::key::F9 },
-    { XK_F10, yage::graphics::key::F10 },
-    { XK_F11, yage::graphics::key::F11 },
-    { XK_F12, yage::graphics::key::F12 },
-    { XK_Shift_L, yage::graphics::key::Shift_L },
-    { XK_Shift_R, yage::graphics::key::Shift_R },
-    { XK_Control_L, yage::graphics::key::Control_L },
-    { XK_Control_R, yage::graphics::key::Control_R },
-    { XK_Caps_Lock, yage::graphics::key::Caps_Lock },
-    { XK_Shift_Lock, yage::graphics::key::Shift_Lock },
-    { XK_Meta_L, yage::graphics::key::Meta_L },
-    { XK_Meta_R, yage::graphics::key::Meta_R },
-    { XK_Alt_L, yage::graphics::key::Alt_L },
-    { XK_Alt_R, yage::graphics::key::Alt_R },
-    { XK_Super_L, yage::graphics::key::Super_L },
-    { XK_Super_R, yage::graphics::key::Super_R },
-    { XK_Hyper_L, yage::graphics::key::Hyper_L },
-    { XK_Hyper_R, yage::graphics::key::Hyper_R },
+  static const std::unordered_map<uint32_t, yage::core::io::key> keymap = {
+    /* Control keys */
+    { 0x24, yage::core::io::key::ENTER },
+    { 0x77, yage::core::io::key::DEL },
+    { 0x16, yage::core::io::key::BACKSPACE },
+    { 0x09, yage::core::io::key::ESCAPE },
+    { 0x17, yage::core::io::key::TAB },
+    { 0x41, yage::core::io::key::SPACE },
+    { 0x4e, yage::core::io::key::SCROLL_LOCK },
+    { 0x7f, yage::core::io::key::PAUSE },
+    // { XK_Sys_Req, yage::core::io::key::SYS_REQ },
+    { 0x6e, yage::core::io::key::HOME },
+    { 0x71, yage::core::io::key::LEFT },
+    { 0x6f, yage::core::io::key::UP },
+    { 0x72, yage::core::io::key::RIGHT },
+    { 0x74, yage::core::io::key::DOWN },
+    // { XK_Prior, yage::core::io::key::PRIOR },
+    { 0x70, yage::core::io::key::PAGE_UP },
+    // { XK_Next, yage::core::io::key::NEXT },
+    { 0x75, yage::core::io::key::PAGE_DOWN },
+    { 0x73, yage::core::io::key::END },
+    // { XK_Begin, yage::core::io::key::BEGIN },
+
+    /* Special keys */
+    { 0x2f, yage::core::io::key::SK1 },
+    { 0x3d, yage::core::io::key::SK2 },
+    { 0x33, yage::core::io::key::SK3 },
+    { 0x22, yage::core::io::key::SK4 },
+    { 0x23, yage::core::io::key::SK5 },
+    { 0x30, yage::core::io::key::SK6 },
+    { 0x31, yage::core::io::key::SK7 },
+    { 0x3b, yage::core::io::key::SK8 },
+    { 0x3c, yage::core::io::key::SK9 },
+    { 0x14, yage::core::io::key::SK10 },
+    { 0x15, yage::core::io::key::SK11 },
+
+    /* Letters */
+    { 0x26, yage::core::io::key::A },
+    { 0x38, yage::core::io::key::B },
+    { 0x36, yage::core::io::key::C },
+    { 0x28, yage::core::io::key::D },
+    { 0x1a, yage::core::io::key::E },
+    { 0x29, yage::core::io::key::F },
+    { 0x2a, yage::core::io::key::G },
+    { 0x2b, yage::core::io::key::H },
+    { 0x1f, yage::core::io::key::I },
+    { 0x2c, yage::core::io::key::J },
+    { 0x2d, yage::core::io::key::K },
+    { 0x2e, yage::core::io::key::L },
+    { 0x3a, yage::core::io::key::M },
+    { 0x39, yage::core::io::key::N },
+    { 0x20, yage::core::io::key::O },
+    { 0x21, yage::core::io::key::P },
+    { 0x18, yage::core::io::key::Q },
+    { 0x1b, yage::core::io::key::R },
+    { 0x27, yage::core::io::key::S },
+    { 0x1c, yage::core::io::key::T },
+    { 0x1e, yage::core::io::key::U },
+    { 0x37, yage::core::io::key::V },
+    { 0x19, yage::core::io::key::W },
+    { 0x35, yage::core::io::key::X },
+    { 0x1d, yage::core::io::key::Y },
+    { 0x34, yage::core::io::key::Z },
+
+    /* Numbers */
+    { 0x13, yage::core::io::key::K0 },
+    { 0xa, yage::core::io::key::K1 },
+    { 0xb, yage::core::io::key::K2 },
+    { 0xc, yage::core::io::key::K3 },
+    { 0xd, yage::core::io::key::K4 },
+    { 0xe, yage::core::io::key::K5 },
+    { 0xf, yage::core::io::key::K6 },
+    { 0x10, yage::core::io::key::K7 },
+    { 0x11, yage::core::io::key::K8 },
+    { 0x12, yage::core::io::key::K9 },
+
+    /* Misc functions */
+//    { XK_space, yage::core::io::key::SELECT },
+//    { XK_space, yage::core::io::key::PRINT },
+//    { XK_space, yage::core::io::key::EXECUTE },
+    { 0x76, yage::core::io::key::INSERT },
+//    { XK_space, yage::core::io::key::UNDO },
+//    { XK_space, yage::core::io::key::REDO },
+//    { XK_space, yage::core::io::key::MENU },
+//    { XK_space, yage::core::io::key::FIND },
+//    { XK_space, yage::core::io::key::CANCEL },
+//    { XK_space, yage::core::io::key::HELP },
+//    { XK_space, yage::core::io::key::BREAK },
+//    { XK_space, yage::core::io::key::CLEAR },
+    { 0x4d, yage::core::io::key::NUM_LOCK },
+
+    /* Keypad functions */
+//    { XK_space, yage::core::io::key::KP_SPACE },
+//    { XK_space, yage::core::io::key::KP_TAB },
+    { 0x68, yage::core::io::key::KP_ENTER },
+//    { XK_space, yage::core::io::key::KP_HOME },
+//    { XK_space, yage::core::io::key::KP_LEFT },
+//    { XK_space, yage::core::io::key::KP_UP },
+//    { XK_space, yage::core::io::key::KP_RIGHT },
+//    { XK_space, yage::core::io::key::KP_DOWN },
+//    { XK_space, yage::core::io::key::KP_PRIOR },
+//    { XK_space, yage::core::io::key::KP_PAGE_UP },
+//    { XK_space, yage::core::io::key::KP_NEXT },
+//    { XK_space, yage::core::io::key::KP_PAGE_DOWN },
+//    { XK_space, yage::core::io::key::KP_END },
+//    { XK_space, yage::core::io::key::KP_BEGIN },
+//    { XK_space, yage::core::io::key::KP_INSERT },
+//    { XK_space, yage::core::io::key::KP_EQUAL },
+    { 0x3f, yage::core::io::key::KP_MULTIPLY },
+    { 0x56, yage::core::io::key::KP_ADD },
+//    { XK_space, yage::core::io::key::KP_SEPARATOR },
+    { 0x52, yage::core::io::key::KP_SUBTRACT },
+    { 0x5b, yage::core::io::key::KP_DECIMAL },
+    { 0x6a, yage::core::io::key::KP_DIVIDE },
+    { 0x5a, yage::core::io::key::KP_0 },
+    { 0x57, yage::core::io::key::KP_1 },
+    { 0x58, yage::core::io::key::KP_2 },
+    { 0x59, yage::core::io::key::KP_3 },
+    { 0x53, yage::core::io::key::KP_4 },
+    { 0x54, yage::core::io::key::KP_5 },
+    { 0x55, yage::core::io::key::KP_6 },
+    { 0x4f, yage::core::io::key::KP_7 },
+    { 0x50, yage::core::io::key::KP_8 },
+    { 0x51, yage::core::io::key::KP_9 },
+
+    /* Function keys */
+    { 0x43, yage::core::io::key::F1 },
+    { 0x44, yage::core::io::key::F2 },
+    { 0x45, yage::core::io::key::F3 },
+    { 0x46, yage::core::io::key::F4 },
+    { 0x47, yage::core::io::key::F5 },
+    { 0x48, yage::core::io::key::F6 },
+    { 0x49, yage::core::io::key::F7 },
+    { 0x4a, yage::core::io::key::F8 },
+    { 0x4b, yage::core::io::key::F9 },
+    { 0x4c, yage::core::io::key::F10 },
+    { 0x5f, yage::core::io::key::F11 },
+    { 0x60, yage::core::io::key::F12 },
+
+    /* Key state modifier keys */
+    { 0x32, yage::core::io::key::SHIFT_L },
+    { 0x3e, yage::core::io::key::SHIFT_R },
+    { 0x25, yage::core::io::key::CONTROL_L },
+    { 0x69, yage::core::io::key::CONTROL_R },
+    { 0x42, yage::core::io::key::CAPS_LOCK },
+//    { XK_space, yage::core::io::key::SHIFT_LOCK },
+    { 0x85, yage::core::io::key::META_L },
+    { 0x86, yage::core::io::key::META_R },
+    { 0x40, yage::core::io::key::ALT_L },
+    { 0x6c, yage::core::io::key::ALT_R },
+//    { XK_space, yage::core::io::key::SUPER_L },
+//    { XK_space, yage::core::io::key::SUPER_R },
+//    { XK_space, yage::core::io::key::HYPER_L },
+//    { XK_space, yage::core::io::key::HYPER_R },
   };
 
+#if USE_DEBUG
+  if (keymap.find(keycode) == keymap.end())
+  {
+    log(LOG_WARN, "Key not found: 0x%x (%c)", keycode, (char)keycode);
+    return yage::core::io::key::UNKNOWN;
+  }
+#endif
+
   /* Fall if key is not found */
-  return map.at(sym);
+  return keymap.at(keycode);
 }
 
-yage::graphics::mouse_button convert_button(unsigned int button)
+yage::core::io::mouse convert_button(unsigned int button)
 {
   switch (button)
   {
     case Button1:
-      return yage::graphics::mouse_button::LEFT;
+      return yage::core::io::mouse::LEFT;
     case Button2:
-      return yage::graphics::mouse_button::MIDDLE;
+      return yage::core::io::mouse::MIDDLE;
     case Button3:
-      return yage::graphics::mouse_button::RIGHT;
+      return yage::core::io::mouse::RIGHT;
     case Button4:
-      return yage::graphics::mouse_button::X1;
+      return yage::core::io::mouse::X1;
     case Button5:
-      return yage::graphics::mouse_button::X2;
+      return yage::core::io::mouse::X2;
     default:
-      return yage::graphics::mouse_button::UNKNOWN;
+      return yage::core::io::mouse::UNKNOWN;
   }
 }
 
 yage::core::error yage::platform::graphics::x11::window::update()
 {
+  /* Lock the X11 window */
+  std::lock_guard<std::recursive_mutex> lock(x11_lock);
+
   if (!opened)
   {
     return yage::core::error::OK;
@@ -435,38 +435,69 @@ yage::core::error yage::platform::graphics::x11::window::update()
 
       case KeyPress:
       {
-        KeySym key = XLookupKeysym(&ev.xkey, 0);
-        key_pressed.publish(convert_key(key));
+        yage::core::io::key key = convert_key(ev.xkey.keycode);
+        if (key != yage::core::io::key::UNKNOWN)
+        {
+          key_pressed.publish(key);
+        }
+
+#if 0
+        /* Check is there any character input */
+        char   buf[32];
+        KeySym sym;
+        Status status;
+        Xutf8LookupString(xic, &ev.xkey, buf, sizeof(buf), &sym, &status);
+        if (status == XLookupChars || status == XLookupBoth)
+        {
+          char * p = buf;
+          size_t ret;
+
+          for (wchar_t wc;
+               (ret = mbrtowc(&wc, p, buf + sizeof(buf) - p, nullptr)) > 0;
+               p += ret)
+          {
+            char_entered.publish(wc);
+          }
+        }
+#endif
+
         break;
       }
 
       case KeyRelease:
       {
-        KeySym key = XLookupKeysym(&ev.xkey, 0);
-        key_released.publish(convert_key(key));
+        yage::core::io::key key = convert_key(ev.xkey.keycode);
+        if (key != yage::core::io::key::UNKNOWN)
+        {
+          key_released.publish(key);
+        }
+
         break;
       }
 
       case ButtonPress:
       {
-        mouse_pressed.publish(std::pair(
-              convert_button(ev.xbutton.button),
-              (yage::graphics::mouse_position) { ev.xbutton.x, ev.xbutton.y }));
+        struct yage::graphics::mouse_click_data click_data
+              = { convert_button(ev.xbutton.button), (float)ev.xbutton.x,
+                  (float)ev.xbutton.y };
+        mouse_pressed.publish(click_data);
         break;
       }
 
       case ButtonRelease:
       {
-        mouse_released.publish(std::pair(
-              convert_button(ev.xbutton.button),
-              (yage::graphics::mouse_position) { ev.xbutton.x, ev.xbutton.y }));
+        struct yage::graphics::mouse_click_data click_data
+              = { convert_button(ev.xbutton.button), (float)ev.xbutton.x,
+                  (float)ev.xbutton.y };
+        mouse_released.publish(click_data);
         break;
       }
 
       case MotionNotify:
       {
-        mouse_moved.publish(
-              (yage::graphics::mouse_position) { ev.xbutton.x, ev.xbutton.y });
+        struct yage::graphics::mouse_moved_data pos
+              = { (float)ev.xmotion.x, (float)ev.xmotion.y };
+        mouse_moved.publish(pos);
         break;
       }
 
@@ -484,6 +515,10 @@ yage::core::error yage::platform::graphics::x11::window::close()
 {
   yage::core::event<void> event;
   window_closed.publish(event);
+
+  /* Lock the X11 window */
+  log(LOG_DEBUG, "Locking X11 window");
+  std::lock_guard<std::recursive_mutex> lock(x11_lock);
 
   log(LOG_DEBUG, "Destroying X11 window");
   glXDestroyContext(display, glx_context);

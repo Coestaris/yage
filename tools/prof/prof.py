@@ -3,12 +3,12 @@
 #
 # @file prof.py
 # @date 18-06-2024
-# @author Maxim Kurylko <kurylko.m@ajax.systems>
-# @copyright Ajax Systems
+# @author Maxim Kurylko <vk_vm@ukr.net>
 #
- 
+
 def main():
     pass
- 
+
+
 if __name__ == '__main__':
     main()

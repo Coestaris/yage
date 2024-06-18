@@ -24,12 +24,15 @@ class window : public yage::graphics::window
 {
 private:
   XSetWindowAttributes                   windowAttribs;
+  XIC                                    xic;
   Window                                 win;
   Display *                              display;
   XVisualInfo *                          visual;
   GLXContext                             glx_context = nullptr;
   yage::platform::graphics::gl::graphics context;
   bool                                   opened = false;
+
+  std::recursive_mutex x11_lock;
 
   Atom wmDeleteMessage;
 

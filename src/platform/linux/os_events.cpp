@@ -32,6 +32,7 @@ void handler(int signal, siginfo_t * info, void * context)
 {
   log(LOG_FATAL, "Received illness signal: %d", signal);
 
+#if 0
   if (instance)
   {
     yage::core::event<int> event(signal);
@@ -93,6 +94,7 @@ void handler(int signal, siginfo_t * info, void * context)
   /* unregister and let the default action occur */
   sigaction(SIGSEGV, &action, nullptr);
 
+#endif
   struct sigaction sa = {};
   sigaction(SIGABRT, nullptr, &sa);
   sa.sa_handler = SIG_DFL;
