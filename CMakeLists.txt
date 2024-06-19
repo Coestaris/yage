@@ -61,13 +61,18 @@ endif ()
 
 # Setup common source files
 set(SRC_FILES
+    src/*.cpp
     src/core/*.cpp
-    src/core/io/*.cpp
+    src/core/util/*.cpp
+
+    src/app/*.cpp
+    src/app/io/*.cpp
+    src/app/threads/*.cpp
+
     src/graphics/*.cpp
-    src/graphics/threads/*.cpp
+
     src/platform/*.cpp
     src/platform/graphics/*.cpp
-    src/*.cpp
 )
 
 # Add platform specific files

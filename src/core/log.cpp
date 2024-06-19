@@ -8,7 +8,7 @@
 
 /* Includes ================================================================= */
 #include "core/log.hpp"
-#include "core/named_thread.hpp"
+#include "core/util/named_thread.hpp"
 #include "core/time.hpp"
 
 #include <iostream>
@@ -63,7 +63,7 @@ void yage::core::logger::format(
 
   int pid = getpid();
 
-  std::string task_name = named_thread::get_thread_name();
+  std::string task_name = yage::core::util::named_thread::get_thread_name();
   if (task_name.empty())
   {
     task_name = "???";

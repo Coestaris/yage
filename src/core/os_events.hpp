@@ -9,16 +9,15 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "event_stream.hpp"
+#include "core/util/event_stream.hpp"
 
 namespace yage::core
 {
-
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-using signal_event_listener = yage::core::event_stream_listener<int>;
-using signal_event_stream   = yage::core::event_stream<int>;
+using signal_event_listener = yage::core::util::event_stream_listener<int>;
+using signal_event_stream   = yage::core::util::event_stream<int>;
 
 class os_events
 {

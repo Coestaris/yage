@@ -12,9 +12,9 @@
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-#include "core/event_stream.hpp"
-#include "core/io/mouse.hpp"
-#include "core/io/keyboard.hpp"
+#include "core/util/event_stream.hpp"
+#include "core/keyboard.hpp"
+#include "core/mouse.hpp"
 
 namespace yage::graphics
 {
@@ -28,9 +28,9 @@ struct mouse_moved_data
 
 struct mouse_click_data
 {
-  yage::core::io::mouse button;
-  float                 x;
-  float                 y;
+  yage::core::mouse button;
+  float             x;
+  float             y;
 };
 
 struct mouse_scroll_data
@@ -39,29 +39,29 @@ struct mouse_scroll_data
   float amount_y;
 };
 
-using key_pressed_stream    = yage::core::event_stream<yage::core::io::key>;
-using key_released_stream   = yage::core::event_stream<yage::core::io::key>;
-using char_entered_stream   = yage::core::event_stream<wchar_t>;
-using mouse_moved_stream    = yage::core::event_stream<mouse_moved_data>;
-using mouse_pressed_stream  = yage::core::event_stream<mouse_click_data>;
-using mouse_released_stream = yage::core::event_stream<mouse_click_data>;
-using mouse_scrolled_stream = yage::core::event_stream<mouse_scroll_data>;
+using key_pressed_stream    = yage::core::util::event_stream<yage::core::key>;
+using key_released_stream   = yage::core::util::event_stream<yage::core::key>;
+using char_entered_stream   = yage::core::util::event_stream<wchar_t>;
+using mouse_moved_stream    = yage::core::util::event_stream<mouse_moved_data>;
+using mouse_pressed_stream  = yage::core::util::event_stream<mouse_click_data>;
+using mouse_released_stream = yage::core::util::event_stream<mouse_click_data>;
+using mouse_scrolled_stream = yage::core::util::event_stream<mouse_scroll_data>;
 
 using key_pressed_listener
-      = yage::core::event_stream_listener<yage::core::io::key>;
+      = yage::core::util::event_stream_listener<yage::core::key>;
 using key_released_listener
-      = yage::core::event_stream_listener<yage::core::io::key>;
-using char_entered_listener = yage::core::event_stream_listener<wchar_t>;
+      = yage::core::util::event_stream_listener<yage::core::key>;
+using char_entered_listener = yage::core::util::event_stream_listener<wchar_t>;
 using mouse_pressed_listener
-      = yage::core::event_stream_listener<mouse_click_data>;
+      = yage::core::util::event_stream_listener<mouse_click_data>;
 using mouse_moved_listener
-      = yage::core::event_stream_listener<mouse_moved_data>;
+      = yage::core::util::event_stream_listener<mouse_moved_data>;
 using mouse_released_listener
-      = yage::core::event_stream_listener<mouse_click_data>;
+      = yage::core::util::event_stream_listener<mouse_click_data>;
 using mouse_scrolled_listener
-      = yage::core::event_stream_listener<mouse_scroll_data>;
+      = yage::core::util::event_stream_listener<mouse_scroll_data>;
 
-struct input_stream
+struct input_events
 {
   key_pressed_stream    key_pressed;
   key_released_stream   key_released;

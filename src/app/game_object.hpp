@@ -1,41 +1,36 @@
 /** ========================================================================
  *
- * @file mouse.hpp
- * @date 11-06-2024
+ * @file game_object.hpp
+ * @date 19-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
  *  ========================================================================= */
 
 #pragma once
 
-namespace yage::core::io
-{
-
 /* Includes ================================================================= */
+#include "core/float2.hpp"
+
+namespace yage::app
+{
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-enum class mouse
+class game_object
 {
-  UNKNOWN = 0,
+public:
+  virtual ~game_object() {};
 
-  LEFT,
-  RIGHT,
-  MIDDLE,
+  /* for now, let's assume that all game objects have position */
+  struct public_data
+  {
+    yage::core::float2 position;
+    yage::core::float2 size;
+  } data;
 
-  X1,
-  X2,
-  X3,
-  X4,
-  X5,
-  X6,
-
-  MAX_BUTTONS,
+  virtual void update() = 0;
 };
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-std::string mouse_to_string(mouse b);
-mouse       mouse_from_string(const std::string & str);
-
 }

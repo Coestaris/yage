@@ -17,9 +17,7 @@
 #include "graphics/graphics.hpp"
 
 #include "core/error.hpp"
-#include "core/io/mouse.hpp"
-#include "core/io/keyboard.hpp"
-#include "graphics/input_stream.hpp"
+#include "graphics/input_events.hpp"
 
 namespace yage::graphics
 {
@@ -42,16 +40,14 @@ struct geometry
 class window
 {
 public:
-  yage::graphics::input_stream input;
+  yage::graphics::input_events input;
 
   window(settings & settings)
   {
   }
   virtual ~window() = default;
 
-  virtual yage::core::error
-  open(std::string & title, geometry & geometry, bool fullscreen)
-        = 0;
+  virtual yage::core::error          open()         = 0;
   virtual yage::core::error          update()       = 0;
   virtual yage::core::error          close()        = 0;
   virtual bool                       is_open()      = 0;
@@ -85,6 +81,11 @@ public:
   virtual yage::core::error set_title(char * title)
   {
     return yage::core::error::NOT_IMPLEMENTED;
+  }
+
+  int get_max_fps()
+  {
+    return 60;
   }
 };
 

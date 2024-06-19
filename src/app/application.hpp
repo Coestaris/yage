@@ -11,12 +11,13 @@
 /* Includes ================================================================= */
 #include <string>
 #include "graphics/window.hpp"
-#include "graphics/game_object.hpp"
+#include "app/game_object.hpp"
 #include "core/os_events.hpp"
+#include "core/util/sync_point.hpp"
+#include "core/util/profiler.hpp"
 
-namespace yage::graphics::threads
+namespace yage::app
 {
-
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
@@ -37,20 +38,31 @@ enum profiler_points
   PROF_POINT_LOGIC_POST_FRAME,
 };
 
-struct open_window_arguments
+class application
 {
-  yage::core::os_events *        os_events;
-  yage::graphics::window *       window;
-  const std::string              title;
-  const yage::graphics::geometry geometry;
-  const int                      max_fps;
+public:
+  /* copy for logic */
+  std::vector<yage::app::game_object *> game_objects_1;
+
+  /* copy for renderer */
+  std::vector<yage::app::game_object::public_data> game_objects_2;
+
+  yage::core::util::sync_point pre_frame_sync { 2 };
+  yage::core::util::sync_point post_frame_sync { 2 };
+
+  yage::core::os_events *  os_events;
+  yage::graphics::window * window;
+
+  application(
+        yage::graphics::window * window, yage::core::os_events * os_events)
+  : os_events(os_events)
+  , window(window)
+  {
+  }
+
+  yage::core::error spawn_threads();
 };
 
 /* Variables ================================================================ */
-extern std::vector<yage::graphics::game_object* > game_objects_1; /* copy for logic */
-extern std::vector<yage::graphics::game_object::public_data> game_objects_2; /* copy for renderer */
-
 /* Prototypes =============================================================== */
-void spawn_threads(open_window_arguments & args);
-
 }

@@ -11,10 +11,9 @@
 
 #include "renderer.hpp"
 #include "core/time.hpp"
-#include "core/io/keyboard.hpp"
 #include "graphics/shader_compiler.hpp"
 #include "platform/graphics/platform.hpp"
-#include "graphics/threads/threads.hpp"
+#include "app/application.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -127,12 +126,9 @@ static bool compile_shader()
 }
 
 /* Shared functions ========================================================= */
-void yage::graphics::threads::renderer::run()
+void yage::app::threads::renderer::run()
 {
-  if (args.window->open(
-            const_cast<std::string &>(args.title),
-            const_cast<geometry &>(args.geometry), false)
-      != yage::core::error::OK)
+  if (app->window->open() != yage::core::error::OK)
   {
     log(LOG_ERROR, "Failed to open window");
     return;
@@ -144,13 +140,13 @@ void yage::graphics::threads::renderer::run()
     return;
   }
 
-  yage::graphics::graphics * graphics = args.window->get_graphics();
+  yage::graphics::graphics * graphics = app->window->get_graphics();
 
   while (true)
   {
     /* Stage 1: Sync with updater before frame */
     profiler->passed(PROF_POINT_RENDERER_PRE_FRAME);
-    pre_frame_sync->wait();
+    app->pre_frame_sync.wait();
 
     /* Stage 2: Draw the frame using data from previous frame */
     profiler->passed(PROF_POINT_RENDERER_DRAW_START);
@@ -158,9 +154,9 @@ void yage::graphics::threads::renderer::run()
     if (stop_signal_listener.get_next(signal))
     {
       log(LOG_DEBUG, "Received signal: %d", signal);
-      args.window->close();
+      app->window->close();
     }
-    if (!args.window->is_open())
+    if (!app->window->is_open())
     {
       log(LOG_DEBUG, "Window is closed. Exiting renderer worker");
       break;
@@ -169,7 +165,7 @@ void yage::graphics::threads::renderer::run()
     float draw_start = yage::core::get_ms();
 
     graphics->clear();
-    for (auto & public_data : game_objects_2)
+    for (auto & public_data : app->game_objects_2)
     {
       graphics->draw_rect(public_data.position, public_data.size);
     }
@@ -177,13 +173,13 @@ void yage::graphics::threads::renderer::run()
 
     /* Stage 3: Sync with updater after frame */
     profiler->passed(PROF_POINT_RENDERER_DRAW_END);
-    post_frame_sync->wait();
+    app->post_frame_sync.wait();
 
     /* Stage 4: Copy data from updater to renderer (for next frame) */
-    game_objects_2.clear();
-    for (auto & object : game_objects_1)
+    app->game_objects_2.clear();
+    for (auto & object : app->game_objects_1)
     {
-      game_objects_2.push_back(object->data);
+      app->game_objects_2.push_back(object->data);
     }
 
     /* Stage 5: Wait for vsync */
@@ -192,7 +188,7 @@ void yage::graphics::threads::renderer::run()
      * so this may not work as expected. */
     draw_time = draw_time * 0.9f + (yage::core::get_ms() - draw_start) * 0.1f;
     profiler->passed(PROF_POINT_RENDERER_UPDATE_START);
-    if (args.window->update() != yage::core::error::OK)
+    if (app->window->update() != yage::core::error::OK)
     {
       log(LOG_ERROR, "Failed to update window");
       break;

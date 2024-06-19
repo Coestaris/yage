@@ -7,8 +7,8 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "graphics/threads/logic.hpp"
-#include "graphics/threads/threads.hpp"
+#include "logic.hpp"
+#include "app/application.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -16,9 +16,9 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-void yage::graphics::threads::logic::run()
+void yage::app::threads::logic::run()
 {
-  while (1)
+  while (true)
   {
     if (should_close)
     {
@@ -27,7 +27,7 @@ void yage::graphics::threads::logic::run()
 
     /* Stage 1: Sync with updater before frame */
     profiler->passed(PROF_POINT_LOGIC_PRE_FRAME);
-    pre_frame_sync->wait();
+    app->pre_frame_sync.wait();
 
     /* Stage 2: Process input */
     profiler->passed(PROF_POINT_LOGIC_INPUT);
@@ -35,7 +35,7 @@ void yage::graphics::threads::logic::run()
 
     /* Stage 3: Update objects */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_OBJECTS);
-    for (auto & object : game_objects_1)
+    for (auto & object : app->game_objects_1)
     {
       object->update();
     }
@@ -58,11 +58,11 @@ void yage::graphics::threads::logic::run()
 
     /* Stage 8: Sync with renderer after frame */
     profiler->passed(PROF_POINT_LOGIC_POST_FRAME);
-    post_frame_sync->wait();
+    app->post_frame_sync.wait();
   }
 }
 
-void yage::graphics::threads::logic::close()
+void yage::app::threads::logic::close()
 {
   should_close = true;
 }

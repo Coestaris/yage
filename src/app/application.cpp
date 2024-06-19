@@ -7,11 +7,11 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "threads.hpp"
-#include "renderer.hpp"
-#include "logic.hpp"
-#include "core/sync_point.hpp"
-#include "core/profiler.hpp"
+#include "application.hpp"
+#include "app/threads/renderer.hpp"
+#include "app/threads/logic.hpp"
+#include "core/util/sync_point.hpp"
+#include "core/util/profiler.hpp"
 
 #include <barrier>
 
@@ -20,32 +20,22 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
-std::vector<yage::graphics::game_object* > yage::graphics::threads::game_objects_1{}; /* copy for logic */
-std::vector<yage::graphics::game_object::public_data> yage::graphics::threads::game_objects_2{}; /* copy for renderer */
-
 /* Shared functions ========================================================= */
-/*
- * Threading model:
- *           Sync                                     Sync
- * Renderer:   ||  Start drawing scene   |              || Copy objects data
- * Logic:      ||  Process input | Update objects | etc ||
- */
-void yage::graphics::threads::spawn_threads(
-      yage::graphics::threads::open_window_arguments & args)
+yage::core::error yage::app::application::spawn_threads()
 {
-  yage::core::sync_point pre_frame_sync(2);
-  yage::core::sync_point post_frame_sync(2);
+  /*
+   * Threading model:
+   *           Sync                                     Sync
+   * Renderer:   ||  Start drawing scene   |              || Copy objects data
+   * Logic:      ||  Process input | Update objects | etc ||
+   */
+  yage::core::util::file_profiler renderer_profiler(10000, "renderer.prof");
+  yage::core::util::file_profiler logic_profiler(10000, "logic.prof");
 
-  yage::core::file_profiler renderer_profiler(10000, "renderer.prof");
-  yage::core::file_profiler logic_profiler(10000, "logic.prof");
+  yage::app::threads::renderer renderer(this, &renderer_profiler);
+  yage::app::threads::logic logic(this, &logic_profiler);
 
-  yage::graphics::threads::renderer renderer(
-        &renderer_profiler, &pre_frame_sync, &post_frame_sync, args);
-
-  args.os_events->on_stop_signal.add_listener(&renderer.stop_signal_listener);
-
-  yage::graphics::threads::logic logic(
-        &logic_profiler, &pre_frame_sync, &post_frame_sync, args.window);
+  os_events->on_stop_signal.add_listener(&renderer.stop_signal_listener);
 
   logic.start();
   renderer.start();
@@ -66,4 +56,6 @@ void yage::graphics::threads::spawn_threads(
 
   renderer_profiler.flush();
   logic_profiler.flush();
+
+  return yage::core::error::OK;
 }

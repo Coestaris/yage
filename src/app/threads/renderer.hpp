@@ -9,31 +9,26 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "core/named_thread.hpp"
+#include "core/util/named_thread.hpp"
 #include "core/os_events.hpp"
 #include "graphics/window.hpp"
-#include "graphics/frequency_keeper.hpp"
-#include "threads.hpp"
-#include "core/sync_point.hpp"
-#include "core/profiler.hpp"
+#include "app/frequency_keeper.hpp"
+#include "app/application.hpp"
+#include "core/util/sync_point.hpp"
+#include "core/util/profiler.hpp"
 
-namespace yage::graphics::threads
+namespace yage::app::threads
 {
-
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class renderer : public yage::core::named_thread
+class renderer : public yage::core::util::named_thread
 {
 private:
-  open_window_arguments args;
-  frequency_keeper      keeper;
-
-  yage::core::profiler * profiler;
-  yage::core::sync_point * pre_frame_sync;
-  yage::core::sync_point * post_frame_sync;
-
-  float draw_time = 0.0f;
+  yage::app::application *     app;
+  yage::core::util::profiler * profiler;
+  yage::app::frequency_keeper  keeper;
+  float                        draw_time = 0.0f;
 
 public:
   yage::core::signal_event_listener stop_signal_listener;
@@ -51,22 +46,15 @@ public:
   }
 
 public:
-  renderer(
-        yage::core::profiler * profiler,
-        yage::core::sync_point * pre_frame_sync,
-        yage::core::sync_point * post_frame_sync,
-        open_window_arguments &  args)
-  : yage::core::named_thread("renderer")
-  , args(args)
-  , keeper(args.max_fps)
+  renderer(yage::app::application * app, yage::core::util::profiler * profiler)
+  : yage::core::util::named_thread("renderer")
+  , app(app)
   , profiler(profiler)
-  , pre_frame_sync(pre_frame_sync)
-  , post_frame_sync(post_frame_sync)
+  , keeper(app->window->get_max_fps())
   {
   }
 };
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-
 }

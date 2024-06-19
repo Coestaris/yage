@@ -9,12 +9,13 @@
 /* Includes ================================================================= */
 #include <fstream>
 #include "core/log.hpp"
-#include "core/named_thread.hpp"
+#include "core/util/named_thread.hpp"
 #include "core/os_events.hpp"
 #include "core/fs.hpp"
 
 #include "platform/graphics/platform.hpp"
-#include "graphics/threads/threads.hpp"
+#include "app/game_object.hpp"
+#include "app/application.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -22,9 +23,11 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-class movable_game_object : public yage::graphics::game_object
+class movable_game_object : public yage::app::game_object
 {
 public:
+  ~movable_game_object() override = default;
+
   int x_inc = 2;
   int y_inc = 2;
 
@@ -53,9 +56,11 @@ public:
   }
 };
 
-class constant_game_object : public yage::graphics::game_object
+class constant_game_object : public yage::app::game_object
 {
 public:
+  ~constant_game_object() override = default;
+
   constant_game_object()
   {
     data.position = { 100, 100 };
@@ -79,15 +84,19 @@ int main(int argc, char * argv[])
   yage::graphics::window * window
         = yage::platform::graphics::create_window(settings);
 
-  /* WARNING: There's a huge memory leak */
-  for (int i = 0; i < 10; i++)
-    yage::graphics::threads::game_objects_1.push_back(new movable_game_object);
+  yage::app::application app(window, &events);
 
-  yage::graphics::threads::open_window_arguments args
-        = { &events, window, "Hello world", { 0, 0, 800, 600 }, 60 };
-  yage::graphics::threads::spawn_threads(args);
+  for (int i = 0; i < 10; i++)
+    app.game_objects_1.push_back(new movable_game_object);
+
+  app.spawn_threads();
 
   yage::platform::graphics::destroy_window(window);
+
+  for (auto * game_object : app.game_objects_1)
+  {
+    delete game_object;
+  }
 
   return 0;
 }

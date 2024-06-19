@@ -13,7 +13,7 @@
 #include <GL/glx.h>
 #include "graphics/window.hpp"
 #include "platform/graphics/gl/graphics.hpp"
-#include "core/named_thread.hpp"
+#include "core/util/named_thread.hpp"
 
 namespace yage::platform::graphics::x11
 {
@@ -33,14 +33,14 @@ private:
   yage::platform::graphics::gl::graphics context;
   bool                                   opened = false;
 
-  class event_loop : public yage::core::named_thread
+  class event_loop : public yage::core::util::named_thread
   {
   private:
     window * win;
 
   public:
     event_loop(window * win)
-    : yage::core::named_thread("event_loop")
+    : yage::core::util::named_thread("event_loop")
     , win(win)
     {
     }
@@ -65,11 +65,7 @@ public:
     close();
   }
 
-  yage::core::error
-  open(std::string &              title,
-       yage::graphics::geometry & geometry,
-       bool                       fullscreen) override;
-
+  yage::core::error          open() override;
   yage::core::error          update() override;
   yage::core::error          close() override;
   bool                       is_open() override;

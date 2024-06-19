@@ -9,40 +9,31 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "core/named_thread.hpp"
+#include "core/util/named_thread.hpp"
 #include "graphics/window.hpp"
-#include "core/sync_point.hpp"
-#include "core/profiler.hpp"
+#include "core/util/sync_point.hpp"
+#include "core/util/profiler.hpp"
+#include "app/application.hpp"
 
-namespace yage::graphics::threads
+namespace yage::app::threads
 {
-
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-class logic : public yage::core::named_thread
+class logic : public yage::core::util::named_thread
 {
 private:
-  yage::graphics::window * window;
-  bool should_close = false;
-
-  yage::core::profiler *   profiler;
-  yage::core::sync_point * pre_frame_sync;
-  yage::core::sync_point * post_frame_sync;
+  yage::app::application *     app;
+  yage::core::util::profiler * profiler;
+  bool                         should_close = false;
 
 public:
-  explicit logic(
-        yage::core::profiler *   profiler,
-        yage::core::sync_point * pre_frame_sync,
-        yage::core::sync_point * post_frame_sync,
-        yage::graphics::window * window)
-  : yage::core::named_thread("logic")
-  , window(window)
+  logic(yage::app::application * app, yage::core::util::profiler * profiler)
+  : yage::core::util::named_thread("logic")
+  , app(app)
   , profiler(profiler)
-  , pre_frame_sync(pre_frame_sync)
-  , post_frame_sync(post_frame_sync)
   {
   }
 

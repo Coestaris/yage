@@ -13,9 +13,9 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
-#include "log.hpp"
+#include "core/log.hpp"
 
-namespace yage::core
+namespace yage::core::util
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -80,5 +80,4 @@ public:
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-
 }
