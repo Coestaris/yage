@@ -13,6 +13,7 @@
 #include <GL/glx.h>
 #include "graphics/window.hpp"
 #include "platform/graphics/gl/graphics.hpp"
+#include "core/named_thread.hpp"
 
 namespace yage::platform::graphics::x11
 {
@@ -32,14 +33,36 @@ private:
   yage::platform::graphics::gl::graphics context;
   bool                                   opened = false;
 
-  std::recursive_mutex x11_lock;
+  class event_loop : public yage::core::named_thread
+  {
+  private:
+    window * win;
+
+  public:
+    event_loop(window * win)
+    : yage::core::named_thread("event_loop")
+    , win(win)
+    {
+    }
+
+    void run() override;
+
+  } event_loop;
 
   Atom wmDeleteMessage;
+  bool should_close = false;
 
 public:
   window(yage::graphics::settings & settings)
   : yage::graphics::window(settings)
+  , event_loop(this)
   {
+  }
+
+  ~window() override
+  {
+    event_loop.join();
+    close();
   }
 
   yage::core::error

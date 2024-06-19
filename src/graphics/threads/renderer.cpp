@@ -11,7 +11,6 @@
 
 #include "renderer.hpp"
 #include "core/time.hpp"
-#include "core/pubsub.hpp"
 #include "core/io/keyboard.hpp"
 #include "graphics/shader_compiler.hpp"
 #include "platform/graphics/platform.hpp"
@@ -155,6 +154,12 @@ void yage::graphics::threads::renderer::run()
 
     /* Stage 2: Draw the frame using data from previous frame */
     profiler->passed(PROF_POINT_RENDERER_DRAW_START);
+    int signal = 0;
+    if (stop_signal_listener.get_next(signal))
+    {
+      log(LOG_DEBUG, "Received signal: %d", signal);
+      args.window->close();
+    }
     if (!args.window->is_open())
     {
       log(LOG_DEBUG, "Window is closed. Exiting renderer worker");
@@ -164,8 +169,10 @@ void yage::graphics::threads::renderer::run()
     float draw_start = yage::core::get_ms();
 
     graphics->clear();
-    graphics->draw_rect({ 0, 10 }, { 200, 200 });
-    graphics->draw_rect({ 330, 390 }, { 300, 100 });
+    for (auto & public_data : game_objects_2)
+    {
+      graphics->draw_rect(public_data.position, public_data.size);
+    }
     graphics->flush();
 
     /* Stage 3: Sync with updater after frame */
@@ -173,7 +180,11 @@ void yage::graphics::threads::renderer::run()
     post_frame_sync->wait();
 
     /* Stage 4: Copy data from updater to renderer (for next frame) */
-    /* TODO: Implement data copying */
+    game_objects_2.clear();
+    for (auto & object : game_objects_1)
+    {
+      game_objects_2.push_back(object->data);
+    }
 
     /* Stage 5: Wait for vsync */
     /* Perform moving average.

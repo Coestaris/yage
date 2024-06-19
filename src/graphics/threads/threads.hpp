@@ -11,6 +11,8 @@
 /* Includes ================================================================= */
 #include <string>
 #include "graphics/window.hpp"
+#include "graphics/game_object.hpp"
+#include "core/os_events.hpp"
 
 namespace yage::graphics::threads
 {
@@ -37,6 +39,7 @@ enum profiler_points
 
 struct open_window_arguments
 {
+  yage::core::os_events *        os_events;
   yage::graphics::window *       window;
   const std::string              title;
   const yage::graphics::geometry geometry;
@@ -44,6 +47,9 @@ struct open_window_arguments
 };
 
 /* Variables ================================================================ */
+extern std::vector<yage::graphics::game_object* > game_objects_1; /* copy for logic */
+extern std::vector<yage::graphics::game_object::public_data> game_objects_2; /* copy for renderer */
+
 /* Prototypes =============================================================== */
 void spawn_threads(open_window_arguments & args);
 

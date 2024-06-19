@@ -20,12 +20,12 @@
 #include <GL/glx.h>
 #include <stdexcept>
 #include <cstring>
+#include <thread>
 
 /* Defines ================================================================== */
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 600
 #define FPS           30
-#define TEST_LOCAL
 
 /* Macros =================================================================== */
 /* Types ==================================================================== */
@@ -210,6 +210,8 @@ yage::core::error yage::platform::graphics::x11::window::open(
   wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", False);
   XSetWMProtocols(display, win, &wmDeleteMessage, 1);
 
+  event_loop.start();
+
   opened = true;
 
   return yage::core::error::OK;
@@ -294,40 +296,40 @@ yage::core::io::key convert_key(uint32_t keycode)
     { 0x12, yage::core::io::key::K9 },
 
     /* Misc functions */
-//    { XK_space, yage::core::io::key::SELECT },
-//    { XK_space, yage::core::io::key::PRINT },
-//    { XK_space, yage::core::io::key::EXECUTE },
+    //    { XK_space, yage::core::io::key::SELECT },
+    //    { XK_space, yage::core::io::key::PRINT },
+    //    { XK_space, yage::core::io::key::EXECUTE },
     { 0x76, yage::core::io::key::INSERT },
-//    { XK_space, yage::core::io::key::UNDO },
-//    { XK_space, yage::core::io::key::REDO },
-//    { XK_space, yage::core::io::key::MENU },
-//    { XK_space, yage::core::io::key::FIND },
-//    { XK_space, yage::core::io::key::CANCEL },
-//    { XK_space, yage::core::io::key::HELP },
-//    { XK_space, yage::core::io::key::BREAK },
-//    { XK_space, yage::core::io::key::CLEAR },
+    //    { XK_space, yage::core::io::key::UNDO },
+    //    { XK_space, yage::core::io::key::REDO },
+    //    { XK_space, yage::core::io::key::MENU },
+    //    { XK_space, yage::core::io::key::FIND },
+    //    { XK_space, yage::core::io::key::CANCEL },
+    //    { XK_space, yage::core::io::key::HELP },
+    //    { XK_space, yage::core::io::key::BREAK },
+    //    { XK_space, yage::core::io::key::CLEAR },
     { 0x4d, yage::core::io::key::NUM_LOCK },
 
     /* Keypad functions */
-//    { XK_space, yage::core::io::key::KP_SPACE },
-//    { XK_space, yage::core::io::key::KP_TAB },
+    //    { XK_space, yage::core::io::key::KP_SPACE },
+    //    { XK_space, yage::core::io::key::KP_TAB },
     { 0x68, yage::core::io::key::KP_ENTER },
-//    { XK_space, yage::core::io::key::KP_HOME },
-//    { XK_space, yage::core::io::key::KP_LEFT },
-//    { XK_space, yage::core::io::key::KP_UP },
-//    { XK_space, yage::core::io::key::KP_RIGHT },
-//    { XK_space, yage::core::io::key::KP_DOWN },
-//    { XK_space, yage::core::io::key::KP_PRIOR },
-//    { XK_space, yage::core::io::key::KP_PAGE_UP },
-//    { XK_space, yage::core::io::key::KP_NEXT },
-//    { XK_space, yage::core::io::key::KP_PAGE_DOWN },
-//    { XK_space, yage::core::io::key::KP_END },
-//    { XK_space, yage::core::io::key::KP_BEGIN },
-//    { XK_space, yage::core::io::key::KP_INSERT },
-//    { XK_space, yage::core::io::key::KP_EQUAL },
+    //    { XK_space, yage::core::io::key::KP_HOME },
+    //    { XK_space, yage::core::io::key::KP_LEFT },
+    //    { XK_space, yage::core::io::key::KP_UP },
+    //    { XK_space, yage::core::io::key::KP_RIGHT },
+    //    { XK_space, yage::core::io::key::KP_DOWN },
+    //    { XK_space, yage::core::io::key::KP_PRIOR },
+    //    { XK_space, yage::core::io::key::KP_PAGE_UP },
+    //    { XK_space, yage::core::io::key::KP_NEXT },
+    //    { XK_space, yage::core::io::key::KP_PAGE_DOWN },
+    //    { XK_space, yage::core::io::key::KP_END },
+    //    { XK_space, yage::core::io::key::KP_BEGIN },
+    //    { XK_space, yage::core::io::key::KP_INSERT },
+    //    { XK_space, yage::core::io::key::KP_EQUAL },
     { 0x3f, yage::core::io::key::KP_MULTIPLY },
     { 0x56, yage::core::io::key::KP_ADD },
-//    { XK_space, yage::core::io::key::KP_SEPARATOR },
+    //    { XK_space, yage::core::io::key::KP_SEPARATOR },
     { 0x52, yage::core::io::key::KP_SUBTRACT },
     { 0x5b, yage::core::io::key::KP_DECIMAL },
     { 0x6a, yage::core::io::key::KP_DIVIDE },
@@ -362,15 +364,15 @@ yage::core::io::key convert_key(uint32_t keycode)
     { 0x25, yage::core::io::key::CONTROL_L },
     { 0x69, yage::core::io::key::CONTROL_R },
     { 0x42, yage::core::io::key::CAPS_LOCK },
-//    { XK_space, yage::core::io::key::SHIFT_LOCK },
+    //    { XK_space, yage::core::io::key::SHIFT_LOCK },
     { 0x85, yage::core::io::key::META_L },
     { 0x86, yage::core::io::key::META_R },
     { 0x40, yage::core::io::key::ALT_L },
     { 0x6c, yage::core::io::key::ALT_R },
-//    { XK_space, yage::core::io::key::SUPER_L },
-//    { XK_space, yage::core::io::key::SUPER_R },
-//    { XK_space, yage::core::io::key::HYPER_L },
-//    { XK_space, yage::core::io::key::HYPER_R },
+    //    { XK_space, yage::core::io::key::SUPER_L },
+    //    { XK_space, yage::core::io::key::SUPER_R },
+    //    { XK_space, yage::core::io::key::HYPER_L },
+    //    { XK_space, yage::core::io::key::HYPER_R },
   };
 
 #if USE_DEBUG
@@ -406,104 +408,14 @@ yage::core::io::mouse convert_button(unsigned int button)
 
 yage::core::error yage::platform::graphics::x11::window::update()
 {
-  /* Lock the X11 window */
-  std::lock_guard<std::recursive_mutex> lock(x11_lock);
-
+  if (should_close)
+  {
+    close();
+    return yage::core::error::OK;
+  }
   if (!opened)
   {
     return yage::core::error::OK;
-  }
-
-  while (XPending(display))
-  {
-    XEvent ev;
-    XNextEvent(display, &ev);
-
-    switch (ev.type)
-    {
-      case Expose:
-        break;
-
-      case ClientMessage:
-        /* Handle close event */
-        if ((long)ev.xclient.data.l[0] == (long)wmDeleteMessage)
-        {
-          close();
-          return yage::core::error::OK;
-        }
-        break;
-
-      case KeyPress:
-      {
-        yage::core::io::key key = convert_key(ev.xkey.keycode);
-        if (key != yage::core::io::key::UNKNOWN)
-        {
-          key_pressed.publish(key);
-        }
-
-#if 0
-        /* Check is there any character input */
-        char   buf[32];
-        KeySym sym;
-        Status status;
-        Xutf8LookupString(xic, &ev.xkey, buf, sizeof(buf), &sym, &status);
-        if (status == XLookupChars || status == XLookupBoth)
-        {
-          char * p = buf;
-          size_t ret;
-
-          for (wchar_t wc;
-               (ret = mbrtowc(&wc, p, buf + sizeof(buf) - p, nullptr)) > 0;
-               p += ret)
-          {
-            char_entered.publish(wc);
-          }
-        }
-#endif
-
-        break;
-      }
-
-      case KeyRelease:
-      {
-        yage::core::io::key key = convert_key(ev.xkey.keycode);
-        if (key != yage::core::io::key::UNKNOWN)
-        {
-          key_released.publish(key);
-        }
-
-        break;
-      }
-
-      case ButtonPress:
-      {
-        struct yage::graphics::mouse_click_data click_data
-              = { convert_button(ev.xbutton.button), (float)ev.xbutton.x,
-                  (float)ev.xbutton.y };
-        mouse_pressed.publish(click_data);
-        break;
-      }
-
-      case ButtonRelease:
-      {
-        struct yage::graphics::mouse_click_data click_data
-              = { convert_button(ev.xbutton.button), (float)ev.xbutton.x,
-                  (float)ev.xbutton.y };
-        mouse_released.publish(click_data);
-        break;
-      }
-
-      case MotionNotify:
-      {
-        struct yage::graphics::mouse_moved_data pos
-              = { (float)ev.xmotion.x, (float)ev.xmotion.y };
-        mouse_moved.publish(pos);
-        break;
-      }
-
-      default:
-        break;
-    }
   }
 
   glXSwapBuffers(display, win);
@@ -513,12 +425,29 @@ yage::core::error yage::platform::graphics::x11::window::update()
 
 yage::core::error yage::platform::graphics::x11::window::close()
 {
-  yage::core::event<void> event;
-  window_closed.publish(event);
+  if (!opened)
+  {
+    return yage::core::error::OK;
+  }
 
-  /* Lock the X11 window */
-  log(LOG_DEBUG, "Locking X11 window");
-  std::lock_guard<std::recursive_mutex> lock(x11_lock);
+  if (!should_close)
+  {
+    should_close = true;
+
+    /* send event to unblock event loop */
+    XEvent ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.type                 = ClientMessage;
+    ev.xclient.window       = win;
+    ev.xclient.message_type = XInternAtom(display, "WM_PROTOCOLS", True);
+    ev.xclient.format       = 32;
+    ev.xclient.data.l[0]    = wmDeleteMessage;
+    ev.xclient.data.l[1]    = CurrentTime;
+    XSendEvent(display, win, False, NoEventMask, &ev);
+    XFlush(display);
+
+    event_loop.join();
+  }
 
   log(LOG_DEBUG, "Destroying X11 window");
   glXDestroyContext(display, glx_context);
@@ -542,4 +471,101 @@ bool yage::platform::graphics::x11::window::is_open()
 yage::graphics::graphics * yage::platform::graphics::x11::window::get_graphics()
 {
   return &context;
+}
+
+void yage::platform::graphics::x11::window::event_loop::run()
+{
+  while (1)
+  {
+    XEvent ev;
+    XNextEvent(win->display, &ev);
+    if (win->should_close)
+    {
+      return;
+    }
+
+    switch (ev.type)
+    {
+      case Expose:
+        break;
+
+      case ClientMessage:
+        /* Handle close event */
+        if ((long)ev.xclient.data.l[0] == (long)win->wmDeleteMessage)
+        {
+          win->should_close = true;
+          return;
+        }
+        break;
+
+      case KeyPress:
+      {
+        yage::core::io::key key = convert_key(ev.xkey.keycode);
+        if (key != yage::core::io::key::UNKNOWN)
+        {
+          win->input.key_pressed.push(key);
+        }
+
+        /* Check is there any character input */
+        char   buf[32];
+        KeySym sym;
+        Status status;
+        Xutf8LookupString(win->xic, &ev.xkey, buf, sizeof(buf), &sym, &status);
+        if (status == XLookupChars || status == XLookupBoth)
+        {
+          char * p = buf;
+          size_t ret;
+
+          for (wchar_t wc;
+               (ret = mbrtowc(&wc, p, buf + sizeof(buf) - p, nullptr)) > 0;
+               p += ret)
+          {
+            win->input.char_entered.push(wc);
+          }
+        }
+
+        break;
+      }
+
+      case KeyRelease:
+      {
+        yage::core::io::key key = convert_key(ev.xkey.keycode);
+        if (key != yage::core::io::key::UNKNOWN)
+        {
+          win->input.key_released.push(key);
+        }
+
+        break;
+      }
+
+      case ButtonPress:
+      {
+        struct yage::graphics::mouse_click_data click_data
+              = { convert_button(ev.xbutton.button), (float)ev.xbutton.x,
+                  (float)ev.xbutton.y };
+        win->input.mouse_pressed.push(click_data);
+        break;
+      }
+
+      case ButtonRelease:
+      {
+        struct yage::graphics::mouse_click_data click_data
+              = { convert_button(ev.xbutton.button), (float)ev.xbutton.x,
+                  (float)ev.xbutton.y };
+        win->input.mouse_released.push(click_data);
+        break;
+      }
+
+      case MotionNotify:
+      {
+        struct yage::graphics::mouse_moved_data pos
+              = { (float)ev.xmotion.x, (float)ev.xmotion.y };
+        win->input.mouse_moved.push(pos);
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
 }

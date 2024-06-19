@@ -35,7 +35,10 @@ void yage::graphics::threads::logic::run()
 
     /* Stage 3: Update objects */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_OBJECTS);
-    /* TODO: Implement objects updating */
+    for (auto & object : game_objects_1)
+    {
+      object->update();
+    }
 
     /* Stage 4: Update particles */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_PARTICLES);

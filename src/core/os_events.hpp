@@ -9,7 +9,7 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "core/pubsub.hpp"
+#include "event_stream.hpp"
 
 namespace yage::core
 {
@@ -17,13 +17,14 @@ namespace yage::core
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-using signal_subscriber = yage::core::sync_subscriber<int>;
+using signal_event_listener = yage::core::event_stream_listener<int>;
+using signal_event_stream   = yage::core::event_stream<int>;
 
 class os_events
 {
 public:
-  yage::core::publisher<int> on_stop_signal;
-  yage::core::publisher<int> on_ill_signal;
+  signal_event_stream on_stop_signal;
+  signal_event_stream on_ill_signal;
 
   os_events();
 
@@ -33,4 +34,3 @@ public:
 }
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-

@@ -10,7 +10,6 @@
 
 /* Includes ================================================================= */
 #include "core/named_thread.hpp"
-#include "core/pubsub.hpp"
 #include "core/os_events.hpp"
 #include "graphics/window.hpp"
 #include "graphics/frequency_keeper.hpp"
@@ -37,6 +36,8 @@ private:
   float draw_time = 0.0f;
 
 public:
+  yage::core::signal_event_listener stop_signal_listener;
+
   void run() override;
 
   float get_draw_time() const

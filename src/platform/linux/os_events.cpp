@@ -9,7 +9,9 @@
 /* Includes ================================================================= */
 #include <csignal>
 #include <execinfo.h>
+#include <stdexcept>
 #include "core/os_events.hpp"
+#include "core/log.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -23,8 +25,7 @@ static void stop_handler(int signal)
   log(LOG_WARN, "Received stop signal: %d", signal);
   if (instance)
   {
-    yage::core::event<int> event(signal);
-    instance->on_stop_signal.publish(event);
+    instance->on_stop_signal.push(signal);
   }
 }
 

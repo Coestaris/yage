@@ -28,7 +28,7 @@ protected:
   struct point
   {
     int   point;
-    float time; /* ns */
+    long long time; /* ns */
   } * points;
 
 public:
@@ -48,8 +48,12 @@ public:
   void passed(int point)
   {
     points[current_point].point = point;
-    auto time = std::chrono::high_resolution_clock::now();
-    points[current_point].time  = std::chrono::duration_cast<std::chrono::nanoseconds>(time.time_since_epoch()).count();
+    points[current_point].time
+          = std::chrono::time_point_cast<std::chrono::nanoseconds>(
+                  std::chrono::system_clock::now())
+                  .time_since_epoch()
+                  .count();
+
     ++current_point;
 
     if (current_point == max_points)
@@ -70,7 +74,7 @@ public:
   {
     for (int i = 0; i < current_point; ++i)
     {
-      fprintf(file, "%d %f\n", points[i].point, points[i].time);
+      fprintf(file, "%d %llu\n", points[i].point, points[i].time);
     }
   }
 

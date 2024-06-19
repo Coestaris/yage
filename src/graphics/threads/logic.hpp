@@ -9,7 +9,6 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "core/pubsub.hpp"
 #include "core/named_thread.hpp"
 #include "graphics/window.hpp"
 #include "core/sync_point.hpp"
