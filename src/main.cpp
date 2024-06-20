@@ -14,7 +14,7 @@
 #include "core/fs.hpp"
 
 #include "platform/graphics/platform.hpp"
-#include "app/game_object.hpp"
+#include "app/object.hpp"
 #include "app/application.hpp"
 
 /* Defines ================================================================== */
@@ -23,16 +23,16 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-class movable_game_object : public yage::app::game_object
+class movable_obj : public yage::app::object
 {
 public:
-  ~movable_game_object() override = default;
+  ~movable_obj() override = default;
 
   int x_inc = 2;
   int y_inc = 2;
 
-  explicit movable_game_object(yage::app::application * app)
-  : yage::app::game_object(app)
+  explicit movable_obj(yage::app::application * app)
+  : yage::app::object(app)
   {
     yage::graphics::geometry geometry {};
     if (app->window->get_geometry(geometry) != yage::core::error::OK)
@@ -72,13 +72,13 @@ public:
   }
 };
 
-class constant_game_object : public yage::app::game_object
+class controller_obj : public yage::app::object
 {
 public:
-  ~constant_game_object() override = default;
+  ~controller_obj() override = default;
 
-  explicit constant_game_object(yage::app::application * app)
-  : yage::app::game_object(app)
+  explicit controller_obj(yage::app::application * app)
+  : yage::app::object(app)
   {
     data.position = { 100, 100 };
     data.size     = { 100, 100 };
@@ -86,6 +86,13 @@ public:
 
   void update() override
   {
+    if (app->input.key_pressed(yage::core::key::ESCAPE))
+    {
+      // app->window->close();
+      exit(0); /* TODO: Fix this */
+    }
+
+    data.position = app->input.mouse_position();
   }
 };
 
@@ -112,13 +119,14 @@ int main(int argc, char * argv[])
   yage::app::application app(window, &events);
 
   for (int i = 0; i < 10; i++)
-    app.game_objects_1.push_back(new movable_game_object(&app));
+    app.objects_logic.push_back(new movable_obj(&app));
+  app.objects_logic.push_back(new controller_obj(&app));
 
   app.spawn_threads();
 
   yage::platform::graphics::destroy_window(window);
 
-  for (auto * game_object : app.game_objects_1)
+  for (auto * game_object : app.objects_logic)
   {
     delete game_object;
   }

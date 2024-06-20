@@ -28,5 +28,6 @@ float atan2(float y, float x);
 float sqrt(float x);
 float pow(float x, float y);
 float exp(float x);
+float lerp(float a, float b, float t);
 
 }

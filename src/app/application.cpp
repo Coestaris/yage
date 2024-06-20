@@ -10,6 +10,7 @@
 #include "application.hpp"
 #include "app/threads/renderer.hpp"
 #include "app/threads/logic.hpp"
+#include "app/threads/statistics.hpp"
 #include "core/util/sync_point.hpp"
 #include "core/util/profiler.hpp"
 
@@ -29,18 +30,19 @@ yage::core::error yage::app::application::spawn_threads()
    * Renderer:   ||  Start drawing scene   |              || Copy objects data
    * Logic:      ||  Process input | Update objects | etc ||
    */
-#if 0
-  yage::core::util::file_profiler renderer_profiler(10000, "renderer.prof");
-  yage::core::util::file_profiler logic_profiler(10000, "logic.prof");
-#endif
+  yage::core::util::simple_profiler renderer_profiler;
+  yage::app::threads::renderer      renderer(this, &renderer_profiler);
 
-  yage::app::threads::renderer renderer(this, nullptr);
-  yage::app::threads::logic logic(this, nullptr);
+  yage::core::util::simple_profiler logic_profiler;
+  yage::app::threads::logic         logic(this, &logic_profiler);
+
+  yage::app::threads::statistics statistics(&logic, &renderer);
 
   os_events->on_stop_signal.add_listener(&renderer.stop_signal_listener);
 
   logic.start();
   renderer.start();
+  statistics.start();
 
   renderer.join();
   log(LOG_INFO, "Renderer thread has finished");
@@ -50,16 +52,17 @@ yage::core::error yage::app::application::spawn_threads()
   pre_frame_sync.shutdown();
   post_frame_sync.shutdown();
 
-  /* Ask logic thread to politely close */
+  /* Ask logic/statistics thread to politely close */
   logic.close();
+  statistics.close();
 
   logic.join();
+  statistics.join();
+
   log(LOG_INFO, "Logic thread has finished");
 
-#if 0
   renderer_profiler.flush();
   logic_profiler.flush();
-#endif
 
   return yage::core::error::OK;
 }

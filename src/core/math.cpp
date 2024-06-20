@@ -73,3 +73,8 @@ float yage::core::exp(float x)
 {
   return std::exp(x);
 }
+
+float yage::core::lerp(float a, float b, float t)
+{
+  return a + (b - a) * t;
+}

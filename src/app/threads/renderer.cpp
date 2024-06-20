@@ -145,11 +145,12 @@ void yage::app::threads::renderer::run()
   while (true)
   {
     /* Stage 1: Sync with updater before frame */
-    profile(PROF_POINT_RENDERER_PRE_FRAME);
+    profiler->start_cycle();
+    profiler->passed(PROF_POINT_RENDERER_PRE_FRAME);
     app->pre_frame_sync.wait();
 
     /* Stage 2: Draw the frame using data from previous frame */
-    profile(PROF_POINT_RENDERER_DRAW_START);
+    profiler->passed(PROF_POINT_RENDERER_DRAW_START);
     int signal = 0;
     if (stop_signal_listener.get_next(signal))
     {
@@ -165,29 +166,25 @@ void yage::app::threads::renderer::run()
     float draw_start = yage::core::get_ms();
 
     graphics->clear();
-    for (auto & public_data : app->game_objects_2)
+    for (auto & public_data : app->objects_renderer)
     {
       graphics->draw_rect(public_data.position, public_data.size);
     }
     graphics->flush();
 
     /* Stage 3: Sync with updater after frame */
-    profile(PROF_POINT_RENDERER_DRAW_END);
+    profiler->passed(PROF_POINT_RENDERER_DRAW_END);
     app->post_frame_sync.wait();
 
     /* Stage 4: Copy data from updater to renderer (for next frame) */
-    app->game_objects_2.clear();
-    for (auto & object : app->game_objects_1)
+    app->objects_renderer.clear();
+    for (auto & object : app->objects_logic)
     {
-      app->game_objects_2.push_back(object->data);
+      app->objects_renderer.push_back(object->data);
     }
 
     /* Stage 5: Wait for vsync */
-    /* Perform moving average.
-     * Note that some GL backends may have their own vsync,
-     * so this may not work as expected. */
-    draw_time = draw_time * 0.9f + (yage::core::get_ms() - draw_start) * 0.1f;
-    profile(PROF_POINT_RENDERER_UPDATE_START);
+    profiler->passed(PROF_POINT_RENDERER_UPDATE_START);
     if (app->window->update() != yage::core::error::OK)
     {
       log(LOG_ERROR, "Failed to update window");

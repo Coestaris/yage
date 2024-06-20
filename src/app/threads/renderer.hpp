@@ -28,24 +28,24 @@ private:
   yage::app::application *     app;
   yage::core::util::profiler * profiler;
   yage::app::frequency_keeper  keeper;
-  float                        draw_time = 0.0f;
-
-  void profile(int point)
-  {
-    if (profiler)
-    {
-      profiler->passed(point);
-    }
-  }
 
 public:
   yage::core::signal_event_listener stop_signal_listener;
 
   void run() override;
 
-  float get_draw_time() const
+  yage::core::util::profiler::time get_draw_time() const
   {
-    return draw_time;
+    return profiler->get_diff(
+          yage::app::profiler_points::PROF_POINT_RENDERER_DRAW_START,
+          yage::app::profiler_points::PROF_POINT_RENDERER_DRAW_END);
+  }
+
+  yage::core::util::profiler::time get_copy_time() const
+  {
+    return profiler->get_diff(
+          yage::app::profiler_points::PROF_POINT_RENDERER_DRAW_END,
+          yage::app::profiler_points::PROF_POINT_RENDERER_UPDATE_START);
   }
 
   float get_keeper_cps() const

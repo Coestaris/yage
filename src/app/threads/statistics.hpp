@@ -9,11 +9,10 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include "core/math.hpp"
 #include "core/util/named_thread.hpp"
-#include "graphics/window.hpp"
-#include "core/util/sync_point.hpp"
-#include "core/util/profiler.hpp"
-#include "app/application.hpp"
+#include "app/threads/logic.hpp"
+#include "app/threads/renderer.hpp"
 
 namespace yage::app::threads
 {
@@ -22,67 +21,75 @@ namespace yage::app::threads
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-class logic : public yage::core::util::named_thread
+class statistics : public yage::core::util::named_thread
 {
 private:
-  yage::app::application *     app;
-  yage::core::util::profiler * profiler;
-  bool                         should_close = false;
+  constexpr static const float lerp_alpha     = 0.4;
+  constexpr static const int   log_period_ms  = 1000;
+  constexpr static const int   poll_period_ms = 200;
 
-  void profile(int point)
+  yage::app::threads::logic *    logic;
+  yage::app::threads::renderer * renderer;
+
+  size_t counter      = 0;
+  bool   should_close = false;
+
+  float draw_time_ms;
+  float copy_time_ms;
+  float update_time_ms;
+  float particles_time_ms;
+  float physics_time_ms;
+  float ai_time_ms;
+  float sound_time_ms;
+
+public:
+  statistics(
+        yage::app::threads::logic *    logic,
+        yage::app::threads::renderer * renderer)
+  : yage::core::util::named_thread("statistics")
+  , logic(logic)
+  , renderer(renderer)
   {
-    if (profiler)
+  }
+
+  void run()
+  {
+    while (true)
     {
-      profiler->passed(point);
+      std::this_thread::sleep_for(std::chrono::milliseconds(poll_period_ms));
+
+      if (should_close)
+      {
+        break;
+      }
+
+      // clang-format off
+      draw_time_ms =      yage::core::lerp(draw_time_ms,      (float)(renderer->get_draw_time() / 1000) / 1000.0f, lerp_alpha);
+      copy_time_ms =      yage::core::lerp(copy_time_ms,      (float)(renderer->get_copy_time() / 1000) / 1000.0f, lerp_alpha);
+      update_time_ms =    yage::core::lerp(update_time_ms,    (float)(logic->get_update_time() / 1000) / 1000.0f, lerp_alpha);
+      particles_time_ms = yage::core::lerp(particles_time_ms, (float)(logic->get_particles_time() / 1000) / 1000.0f, lerp_alpha);
+      physics_time_ms =   yage::core::lerp(physics_time_ms,   (float)(logic->get_physics_time() / 1000) / 1000.0f, lerp_alpha);
+      ai_time_ms =        yage::core::lerp(ai_time_ms,        (float)(logic->get_ai_time() / 1000) / 1000.0f, lerp_alpha);
+      sound_time_ms =     yage::core::lerp(sound_time_ms,     (float)(logic->get_sound_time() / 1000) / 1000.0f, lerp_alpha);
+      // clang-format on
+
+      if (counter++ % (log_period_ms / poll_period_ms) != 0)
+      {
+        continue;
+      }
+      log(LOG_INFO,
+          "FPS: %2.2f (%.1f, %.1f). Logic: "
+          "%.1f, %.1f, %.1f, %.1f, %.1f",
+          renderer->get_keeper_cps(), draw_time_ms, copy_time_ms,
+          update_time_ms, particles_time_ms, physics_time_ms, ai_time_ms,
+          sound_time_ms);
     }
   }
 
-public:
-  logic(yage::app::application * app, yage::core::util::profiler * profiler)
-  : yage::core::util::named_thread("logic")
-  , app(app)
-  , profiler(profiler)
+  void close()
   {
+    should_close = true;
   }
-
-  yage::core::util::profiler::time get_update_time() const
-  {
-    return profiler->get_diff(
-          yage::app::profiler_points::PROF_POINT_LOGIC_INPUT,
-          yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PARTICLES);
-  }
-
-  yage::core::util::profiler::time get_particles_time() const
-  {
-    return profiler->get_diff(
-          yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PARTICLES,
-          yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PHYSICS);
-  }
-
-  yage::core::util::profiler::time get_physics_time() const
-  {
-    return profiler->get_diff(
-          yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PHYSICS,
-          yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_AI);
-  }
-
-  yage::core::util::profiler::time get_ai_time() const
-  {
-    return profiler->get_diff(
-          yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_AI,
-          yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_SOUND);
-  }
-
-  yage::core::util::profiler::time get_sound_time() const
-  {
-    return profiler->get_diff(
-          yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_SOUND,
-          yage::app::profiler_points::PROF_POINT_LOGIC_POST_FRAME);
-  }
-
-  void run() override;
-
-  void close();
 };
 
 }

@@ -18,14 +18,14 @@ namespace yage::app
 /* Types ==================================================================== */
 class application;
 
-class game_object
+class object
 {
 protected:
   class yage::app::application * app;
 
 public:
-  virtual ~game_object() = default;
-  explicit game_object(yage::app::application * app)
+  virtual ~object() = default;
+  explicit object(yage::app::application * app)
   : app(app) {};
 
   /* for now, let's assume that all game objects have position */

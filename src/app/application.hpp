@@ -10,11 +10,12 @@
 
 /* Includes ================================================================= */
 #include <string>
-#include "graphics/window.hpp"
-#include "app/game_object.hpp"
 #include "core/os_events.hpp"
 #include "core/util/sync_point.hpp"
 #include "core/util/profiler.hpp"
+#include "graphics/window.hpp"
+#include "app/object.hpp"
+#include "app/input_manager.hpp"
 
 namespace yage::app
 {
@@ -23,11 +24,10 @@ namespace yage::app
 /* Types ==================================================================== */
 enum profiler_points
 {
-  PROF_POINT_RENDERER_PRE_FRAME,
+  PROF_POINT_RENDERER_PRE_FRAME = 0,
   PROF_POINT_RENDERER_DRAW_START,
   PROF_POINT_RENDERER_DRAW_END,
   PROF_POINT_RENDERER_UPDATE_START,
-
   PROF_POINT_LOGIC_PRE_FRAME,
   PROF_POINT_LOGIC_INPUT,
   PROF_POINT_LOGIC_UPDATE_OBJECTS,
@@ -42,10 +42,9 @@ class application
 {
 public:
   /* copy for logic */
-  std::vector<yage::app::game_object *> game_objects_1;
-
+  std::vector<yage::app::object *> objects_logic;
   /* copy for renderer */
-  std::vector<yage::app::game_object::public_data> game_objects_2;
+  std::vector<yage::app::object::public_data> objects_renderer;
 
   yage::core::util::sync_point pre_frame_sync { 2 };
   yage::core::util::sync_point post_frame_sync { 2 };
@@ -53,10 +52,13 @@ public:
   yage::core::os_events *  os_events;
   yage::graphics::window * window;
 
+  yage::app::input_manager input;
+
   application(
         yage::graphics::window * window, yage::core::os_events * os_events)
   : os_events(os_events)
   , window(window)
+  , input(&window->input)
   {
   }
 
