@@ -32,6 +32,11 @@ private:
 public:
   yage::core::error init(int bits_per_pixel, int width, int height);
 
+  yage::graphics::shader_compiler * create_shader_compiler() override;
+  yage::core::error destroy_shader_compiler(yage::graphics::shader_compiler * compiler) override;
+  yage::graphics::shader * create_shader() override;
+  yage::core::error destroy_shader(yage::graphics::shader * shader) override;
+
   yage::core::error clear() override;
   yage::core::error flush() override;
 

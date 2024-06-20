@@ -20,19 +20,21 @@
 
 namespace yage::graphics
 {
-
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
+class graphics;
+
 class shader
 {
 protected:
+  yage::graphics::graphics * graphics;
   std::unordered_map<std::string, int> uniform_cache;
 
-protected:
   virtual int get_uniform_location_direct(std::string name) = 0;
 
 public:
+  shader(yage::graphics::graphics * graphics) : graphics(graphics) {}
   virtual ~shader() = default;
 
   /** Uploads binary representation of shader to video memory */
@@ -65,5 +67,4 @@ public:
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-
 }

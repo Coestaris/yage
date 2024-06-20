@@ -29,6 +29,9 @@ private:
   yage::core::util::profiler * profiler;
   yage::app::frequency_keeper  keeper;
 
+  yage::graphics::graphics * graphics; /* cache */
+  bool compile_shader();
+
 public:
   yage::core::signal_event_listener stop_signal_listener;
 

@@ -18,6 +18,8 @@
 #include "core/log.hpp"
 #include "platform/graphics/gl/graphics.hpp"
 #include "platform/graphics/gl/glplatform.hpp"
+#include "platform/graphics/gl/shader_compiler.hpp"
+#include "platform/graphics/gl/shader.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -200,7 +202,9 @@ yage::core::error yage::platform::graphics::gl::graphics::init(
 
   if (has_extension("GL_KHR_debug"))
   {
-    gl_call("glDebugMessageControl", GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    gl_call(
+          "glDebugMessageControl", GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0,
+          nullptr, GL_TRUE);
     gl_call("glDebugMessageCallback", GLDebugMessageCallback, nullptr);
   }
   else
@@ -257,4 +261,29 @@ yage::core::error yage::platform::graphics::gl::graphics::draw_rect(
   glVertex2f(position.x, position.y + dim.y);         // Bottom Left
   glEnd(); // Finished Drawing The Quad
   return yage::core::error::OK;
+}
+
+yage::graphics::shader_compiler *
+yage::platform::graphics::gl::graphics::create_shader_compiler()
+{
+  return new yage::platform::graphics::gl::shader_compiler(this);
+}
+
+yage::core::error
+yage::platform::graphics::gl::graphics::destroy_shader_compiler(
+      yage::graphics::shader_compiler * compiler)
+{
+  delete compiler;
+  return yage::core::error::OK;
+}
+
+yage::graphics::shader * yage::platform::graphics::gl::graphics::create_shader()
+{
+  return new yage::platform::graphics::gl::shader(this);
+}
+
+yage::core::error yage::platform::graphics::gl::graphics::destroy_shader(
+      yage::graphics::shader * shader)
+{
+  return yage::core::EMPTY;
 }

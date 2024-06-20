@@ -24,10 +24,4 @@ namespace yage::platform::graphics
 yage::graphics::window * create_window(yage::graphics::settings & settings);
 void                     destroy_window(yage::graphics::window * window);
 
-yage::graphics::shader_compiler * create_shader_compiler();
-void destroy_shader_compiler(yage::graphics::shader_compiler * compiler);
-
-yage::graphics::shader * create_shader();
-void                     destroy_shader(yage::graphics::shader * shader);
-
 }
