@@ -145,11 +145,11 @@ void yage::app::threads::renderer::run()
   while (true)
   {
     /* Stage 1: Sync with updater before frame */
-    profiler->passed(PROF_POINT_RENDERER_PRE_FRAME);
+    profile(PROF_POINT_RENDERER_PRE_FRAME);
     app->pre_frame_sync.wait();
 
     /* Stage 2: Draw the frame using data from previous frame */
-    profiler->passed(PROF_POINT_RENDERER_DRAW_START);
+    profile(PROF_POINT_RENDERER_DRAW_START);
     int signal = 0;
     if (stop_signal_listener.get_next(signal))
     {
@@ -172,7 +172,7 @@ void yage::app::threads::renderer::run()
     graphics->flush();
 
     /* Stage 3: Sync with updater after frame */
-    profiler->passed(PROF_POINT_RENDERER_DRAW_END);
+    profile(PROF_POINT_RENDERER_DRAW_END);
     app->post_frame_sync.wait();
 
     /* Stage 4: Copy data from updater to renderer (for next frame) */
@@ -187,7 +187,7 @@ void yage::app::threads::renderer::run()
      * Note that some GL backends may have their own vsync,
      * so this may not work as expected. */
     draw_time = draw_time * 0.9f + (yage::core::get_ms() - draw_start) * 0.1f;
-    profiler->passed(PROF_POINT_RENDERER_UPDATE_START);
+    profile(PROF_POINT_RENDERER_UPDATE_START);
     if (app->window->update() != yage::core::error::OK)
     {
       log(LOG_ERROR, "Failed to update window");

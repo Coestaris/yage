@@ -31,9 +31,18 @@ public:
   int x_inc = 2;
   int y_inc = 2;
 
-  movable_game_object()
+  explicit movable_game_object(yage::app::application * app)
+  : yage::app::game_object(app)
   {
-    data.position = { (float)(rand() % 500), (float)(rand() % 500) };
+    yage::graphics::geometry geometry {};
+    if (app->window->get_geometry(geometry) != yage::core::error::OK)
+    {
+      geometry.width == 800;
+      geometry.height == 600;
+    }
+
+    data.position = { (float)(rand() % (geometry.width - 200)),
+                      (float)(rand() % geometry.height - 200) };
     x_inc         = 2 * (rand() % 2 ? 1 : -1);
     y_inc         = 2 * (rand() % 2 ? 1 : -1);
     data.size     = { 100, 100 };
@@ -41,15 +50,22 @@ public:
 
   void update() override
   {
+    yage::graphics::geometry geometry {};
+    if (app->window->get_geometry(geometry) != yage::core::error::OK)
+    {
+      geometry.width == 800;
+      geometry.height == 600;
+    }
+
     data.position.x += x_inc;
     data.position.y += y_inc;
 
-    if (data.position.x > 800 - data.size.x || data.position.x < 0)
+    if (data.position.x > geometry.width - data.size.x || data.position.x < 0)
     {
       x_inc *= -1;
     }
 
-    if (data.position.y > 600 - data.size.y || data.position.y < 0)
+    if (data.position.y > geometry.height - data.size.y || data.position.y < 0)
     {
       y_inc *= -1;
     }
@@ -61,7 +77,8 @@ class constant_game_object : public yage::app::game_object
 public:
   ~constant_game_object() override = default;
 
-  constant_game_object()
+  explicit constant_game_object(yage::app::application * app)
+  : yage::app::game_object(app)
   {
     data.position = { 100, 100 };
     data.size     = { 100, 100 };
@@ -80,14 +97,22 @@ int main(int argc, char * argv[])
   logger.set_level(LOG_DEBUG);
   set_global_logger(&logger);
 
-  yage::graphics::settings settings;
+  yage::graphics::settings settings {
+    .title           = "YAGE",
+    .width           = 800,
+    .height          = 600,
+    .max_fps         = 60,
+    .win_mode        = yage::graphics::settings::window_mode::WINDOWED_FIXED,
+    .vsync           = true,
+    .custom_settings = {},
+  };
   yage::graphics::window * window
         = yage::platform::graphics::create_window(settings);
 
   yage::app::application app(window, &events);
 
   for (int i = 0; i < 10; i++)
-    app.game_objects_1.push_back(new movable_game_object);
+    app.game_objects_1.push_back(new movable_game_object(&app));
 
   app.spawn_threads();
 

@@ -30,6 +30,14 @@ private:
   yage::app::frequency_keeper  keeper;
   float                        draw_time = 0.0f;
 
+  void profile(int point)
+  {
+    if (profiler)
+    {
+      profiler->passed(point);
+    }
+  }
+
 public:
   yage::core::signal_event_listener stop_signal_listener;
 
@@ -50,8 +58,10 @@ public:
   : yage::core::util::named_thread("renderer")
   , app(app)
   , profiler(profiler)
-  , keeper(app->window->get_max_fps())
   {
+    int max_fps = 0;
+    app->window->get_max_fps(max_fps);
+    keeper = yage::app::frequency_keeper(max_fps);
   }
 };
 

@@ -29,11 +29,13 @@ yage::core::error yage::app::application::spawn_threads()
    * Renderer:   ||  Start drawing scene   |              || Copy objects data
    * Logic:      ||  Process input | Update objects | etc ||
    */
+#if 0
   yage::core::util::file_profiler renderer_profiler(10000, "renderer.prof");
   yage::core::util::file_profiler logic_profiler(10000, "logic.prof");
+#endif
 
-  yage::app::threads::renderer renderer(this, &renderer_profiler);
-  yage::app::threads::logic logic(this, &logic_profiler);
+  yage::app::threads::renderer renderer(this, nullptr);
+  yage::app::threads::logic logic(this, nullptr);
 
   os_events->on_stop_signal.add_listener(&renderer.stop_signal_listener);
 
@@ -54,8 +56,10 @@ yage::core::error yage::app::application::spawn_threads()
   logic.join();
   log(LOG_INFO, "Logic thread has finished");
 
+#if 0
   renderer_profiler.flush();
   logic_profiler.flush();
+#endif
 
   return yage::core::error::OK;
 }

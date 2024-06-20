@@ -14,209 +14,17 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <X11/keysymdef.h>
 
 #include <GL/gl.h>
-#include <GL/glx.h>
-#include <stdexcept>
 #include <cstring>
 #include <thread>
 
 /* Defines ================================================================== */
-#define WINDOW_WIDTH  800
-#define WINDOW_HEIGHT 600
-#define FPS           30
-
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-typedef GLXContext (*glXCreateContextAttribsARBProc)(
-      Display *, GLXFBConfig, GLXContext, Bool, const int *);
-
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
-/* Shared functions ========================================================= */
-yage::core::error yage::platform::graphics::x11::window::open()
-{
-  int screenId;
-
-  log(LOG_DEBUG, "Opening X11 window");
-  display = XOpenDisplay(NULL);
-  if (display == NULL)
-  {
-    log(LOG_ERROR, "Cannot open display");
-    return yage::core::error::EXTERNAL_API_ERROR;
-  }
-  screenId = DefaultScreen(display);
-
-  /* Check GLX version */
-  GLint majorGLX, minorGLX = 0;
-  glXQueryVersion(display, &majorGLX, &minorGLX);
-  log(LOG_DEBUG, "GLX version: %d.%d", majorGLX, minorGLX);
-  if (majorGLX <= 1 && minorGLX < 2)
-  {
-    log(LOG_ERROR, "GLX 1.2 or greater is required");
-    XCloseDisplay(display);
-    return yage::core::error::EXTERNAL_API_ERROR;
-  }
-
-  // clang-format off
-  GLint glxAttribs[] = {
-    GLX_X_RENDERABLE    , True,
-    GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-    GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-    GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
-    GLX_RED_SIZE        , 8,
-    GLX_GREEN_SIZE      , 8,
-    GLX_BLUE_SIZE       , 8,
-    GLX_ALPHA_SIZE      , 8,
-    GLX_DEPTH_SIZE      , 24,
-    GLX_STENCIL_SIZE    , 8,
-    GLX_DOUBLEBUFFER    , True,
-    None,
-  };
-  // clang-format on
-
-  log(LOG_DEBUG, "Getting framebuffer config for screen %d", screenId);
-  int           fbcount;
-  GLXFBConfig * fbc
-        = glXChooseFBConfig(display, screenId, glxAttribs, &fbcount);
-  if (fbc == 0)
-  {
-    log(LOG_ERROR, "Failed to retrieve a framebuffer config");
-    XCloseDisplay(display);
-    return yage::core::error::EXTERNAL_API_ERROR;
-  }
-
-  /* Pick the FB config/visual with the most samples per pixel */
-  int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
-  for (int i = 0; i < fbcount; ++i)
-  {
-    XVisualInfo * vi = glXGetVisualFromFBConfig(display, fbc[i]);
-    if (vi != 0)
-    {
-      int samp_buf, samples;
-      glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
-      glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLES, &samples);
-
-      log(LOG_DEBUG,
-          "Matching fbconfig %d, visual ID 0x%2lx: SAMPLE_BUFFERS = %d,"
-          " SAMPLES = %d",
-          i, vi->visualid, samp_buf, samples);
-
-      if (best_fbc < 0 || (samp_buf && samples > best_num_samp))
-      {
-        best_fbc      = i;
-        best_num_samp = samples;
-      }
-      if (worst_fbc < 0 || !samp_buf || samples < worst_num_samp)
-        worst_fbc = i;
-      worst_num_samp = samples;
-    }
-    XFree(vi);
-  }
-  GLXFBConfig bestFbc = fbc[best_fbc];
-  XFree(fbc); /* Make sure to free this! */
-
-  visual = glXGetVisualFromFBConfig(display, bestFbc);
-  if (visual == 0)
-  {
-    log(LOG_ERROR, "Could not create correct visual window");
-    XCloseDisplay(display);
-    return yage::core::error::EXTERNAL_API_ERROR;
-  }
-
-  if (screenId != visual->screen)
-  {
-    log(LOG_ERROR, "screenId != visual->screen");
-    XCloseDisplay(display);
-    return yage::core::error::EXTERNAL_API_ERROR;
-  }
-
-  /* Open the window */
-  windowAttribs.border_pixel      = BlackPixel(display, screenId);
-  windowAttribs.background_pixel  = WhitePixel(display, screenId);
-  windowAttribs.override_redirect = True;
-  windowAttribs.colormap          = XCreateColormap(
-        display, RootWindow(display, screenId), visual->visual, AllocNone);
-  windowAttribs.event_mask = ExposureMask;
-  win                      = XCreateWindow(
-        display, RootWindow(display, screenId), 0, 0, WINDOW_WIDTH,
-        WINDOW_HEIGHT, 0, visual->depth, InputOutput, visual->visual,
-        CWBackPixel | CWColormap | CWBorderPixel | CWEventMask, &windowAttribs);
-
-  /* Redirect Close */
-  Atom atomWmDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", False);
-  XSetWMProtocols(display, win, &atomWmDeleteWindow, 1);
-
-  log(LOG_DEBUG, "Creating GLX context");
-  glx_context
-        = glXCreateNewContext(display, bestFbc, GLX_RGBA_TYPE, nullptr, True);
-  if (!glx_context)
-  {
-    log(LOG_ERROR, "Failed to create GLX context");
-    XCloseDisplay(display);
-    return yage::core::error::EXTERNAL_API_ERROR;
-  }
-
-  XSync(display, False);
-
-  /* Verifying that context is a direct context */
-  if (!glXIsDirect(display, glx_context))
-  {
-    log(LOG_INFO, "Indirect GLX rendering context obtained");
-  }
-  else
-  {
-    log(LOG_INFO, "Direct GLX rendering context obtained");
-  }
-
-  log(LOG_DEBUG, "Making GLX context current");
-  glXMakeCurrent(display, win, glx_context);
-
-  if (context.init(16, WINDOW_WIDTH, WINDOW_HEIGHT) != yage::core::error::OK)
-  {
-    log(LOG_ERROR, "Failed to initialize graphics context");
-    XCloseDisplay(display);
-    return yage::core::error::EXTERNAL_API_ERROR;
-  }
-
-  // loads the XMODIFIERS environment variable to see what IME to use
-  XSetLocaleModifiers("");
-
-  XIM xim = XOpenIM(display, 0, 0, 0);
-  if (!xim)
-  {
-    // fallback to internal input method
-    XSetLocaleModifiers("@im=none");
-    xim = XOpenIM(display, 0, 0, 0);
-  }
-
-  /* Show the window */
-  XClearWindow(display, win);
-  XMapRaised(display, win);
-
-  xic = XCreateIC(
-        xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow,
-        win, XNFocusWindow, win, NULL);
-
-  XSetICFocus(xic);
-
-  XSelectInput(
-        display, win,
-        KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask
-              | PointerMotionMask);
-
-  wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", False);
-  XSetWMProtocols(display, win, &wmDeleteMessage, 1);
-
-  event_loop.start();
-
-  opened = true;
-
-  return yage::core::error::OK;
-}
-
-yage::core::key convert_key(uint32_t keycode)
+static yage::core::key convert_key(uint32_t keycode)
 {
   static const std::unordered_map<uint32_t, yage::core::key> keymap = {
     /* Control keys */
@@ -405,6 +213,288 @@ yage::core::mouse convert_button(unsigned int button)
   }
 }
 
+/* Shared functions ========================================================= */
+yage::core::error yage::platform::graphics::x11::window::open()
+{
+  if (settings.width <= 0 || settings.height <= 0)
+  {
+    log(LOG_ERROR, "Invalid window size");
+    return yage::core::error::INVALID_ARGUMENT;
+  }
+
+  log(LOG_DEBUG, "Opening X11 window");
+  display = XOpenDisplay(NULL);
+  if (display == NULL)
+  {
+    log(LOG_ERROR, "Cannot open display");
+    return yage::core::error::EXTERNAL_API_ERROR;
+  }
+  int screenId = DefaultScreen(display);
+
+  /* Check GLX version */
+  GLint majorGLX, minorGLX = 0;
+  glXQueryVersion(display, &majorGLX, &minorGLX);
+  log(LOG_DEBUG, "GLX version: %d.%d", majorGLX, minorGLX);
+  if (majorGLX <= 1 && minorGLX < 2)
+  {
+    log(LOG_ERROR, "GLX 1.2 or greater is required");
+    XCloseDisplay(display);
+    return yage::core::error::EXTERNAL_API_ERROR;
+  }
+
+  /*
+   * Pick the FB config/visual with the most samples per pixel
+   */
+  // clang-format off
+  GLint glxAttribs[] = {
+    GLX_X_RENDERABLE,   True,
+    GLX_DRAWABLE_TYPE,  GLX_WINDOW_BIT,
+    GLX_RENDER_TYPE,    GLX_RGBA_BIT,
+    GLX_X_VISUAL_TYPE,  GLX_TRUE_COLOR,
+    GLX_RED_SIZE,       8,
+    GLX_GREEN_SIZE,     8,
+    GLX_BLUE_SIZE,      8,
+    GLX_ALPHA_SIZE,     8,
+    GLX_DEPTH_SIZE,     24,
+    GLX_STENCIL_SIZE,   8,
+    GLX_DOUBLEBUFFER,   True,
+    None,
+  };
+  // clang-format on
+
+  log(LOG_DEBUG, "Getting framebuffer config for screen %d", screenId);
+  int           fbcount;
+  GLXFBConfig * fbc
+        = glXChooseFBConfig(display, screenId, glxAttribs, &fbcount);
+  if (fbc == nullptr)
+  {
+    log(LOG_ERROR, "Failed to retrieve a framebuffer config");
+    XCloseDisplay(display);
+    return yage::core::error::EXTERNAL_API_ERROR;
+  }
+
+  int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
+  for (int i = 0; i < fbcount; ++i)
+  {
+    XVisualInfo * vi = glXGetVisualFromFBConfig(display, fbc[i]);
+    if (vi != 0)
+    {
+      int samp_buf, samples;
+      glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
+      glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLES, &samples);
+
+      log(LOG_DEBUG,
+          "Matching fbconfig %d, visual ID 0x%2lx: SAMPLE_BUFFERS = %d,"
+          " SAMPLES = %d",
+          i, vi->visualid, samp_buf, samples);
+
+      if (best_fbc < 0 || (samp_buf && samples > best_num_samp))
+      {
+        best_fbc      = i;
+        best_num_samp = samples;
+      }
+      if (worst_fbc < 0 || !samp_buf || samples < worst_num_samp)
+        worst_fbc = i;
+      worst_num_samp = samples;
+    }
+    XFree(vi);
+  }
+  GLXFBConfig bestFbc = fbc[best_fbc];
+  XFree(fbc); /* Make sure to free this! */
+
+  visual = glXGetVisualFromFBConfig(display, bestFbc);
+  if (visual == 0)
+  {
+    log(LOG_ERROR, "Could not create correct visual window");
+    XCloseDisplay(display);
+    return yage::core::error::EXTERNAL_API_ERROR;
+  }
+
+  if (screenId != visual->screen)
+  {
+    log(LOG_ERROR, "screenId != visual->screen");
+    XCloseDisplay(display);
+    return yage::core::error::EXTERNAL_API_ERROR;
+  }
+
+  /*
+   * Open the window
+   */
+  XSetWindowAttributes windowAttribs;
+  windowAttribs.border_pixel     = BlackPixel(display, screenId);
+  windowAttribs.background_pixel = WhitePixel(display, screenId);
+  windowAttribs.colormap
+        = (colormap = XCreateColormap(
+                 display, RootWindow(display, screenId), visual->visual,
+                 AllocNone));
+  windowAttribs.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask
+                             | ButtonPressMask | ButtonReleaseMask
+                             | PointerMotionMask;
+  win = XCreateWindow(
+        display, RootWindow(display, screenId), 0, 0, settings.width,
+        settings.height, 0, visual->depth, InputOutput, visual->visual,
+        CWBackPixel | CWColormap | CWBorderPixel | CWEventMask, &windowAttribs);
+
+  /*
+   * Setup window properties
+   */
+  set_mode(settings.win_mode);
+  yage::graphics::geometry geometry = { 0, 0, settings.width, settings.height };
+  set_geometry(geometry);
+  set_title(settings.title);
+
+  /*
+   * Setup GLX
+   */
+  log(LOG_DEBUG, "Creating GLX context");
+  glx_context
+        = glXCreateNewContext(display, bestFbc, GLX_RGBA_TYPE, nullptr, True);
+  if (!glx_context)
+  {
+    log(LOG_ERROR, "Failed to create GLX context");
+    XCloseDisplay(display);
+    return yage::core::error::EXTERNAL_API_ERROR;
+  }
+
+  XSync(display, False);
+
+  /* Verifying that context is a direct context */
+  if (!glXIsDirect(display, glx_context))
+  {
+    log(LOG_INFO, "Indirect GLX rendering context obtained");
+  }
+  else
+  {
+    log(LOG_INFO, "Direct GLX rendering context obtained");
+  }
+
+  log(LOG_DEBUG, "Making GLX context current");
+  glXMakeCurrent(display, win, glx_context);
+
+  if (context.init(16, settings.width, settings.height)
+      != yage::core::error::OK)
+  {
+    log(LOG_ERROR, "Failed to initialize graphics context");
+    XCloseDisplay(display);
+    return yage::core::error::EXTERNAL_API_ERROR;
+  }
+
+  /*
+   * Setup input method
+   */
+  // loads the XMODIFIERS environment variable to see what IME to use
+  XSetLocaleModifiers("");
+
+  XIM xim = XOpenIM(display, nullptr, nullptr, nullptr);
+  if (!xim)
+  {
+    // fallback to internal input method
+    XSetLocaleModifiers("@im=none");
+    xim = XOpenIM(display, nullptr, nullptr, nullptr);
+  }
+
+  /* Show the window */
+  XClearWindow(display, win);
+  XMapRaised(display, win);
+
+  xic = XCreateIC(
+        xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow,
+        win, XNFocusWindow, win, nullptr);
+
+  XSetICFocus(xic);
+
+  wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", false);
+  XSetWMProtocols(display, win, &wmDeleteMessage, 1);
+
+  event_loop.start();
+
+  opened = true;
+
+  return yage::core::error::OK;
+}
+
+yage::core::error yage::platform::graphics::x11::window::set_mode(
+      yage::graphics::settings::window_mode mode)
+{
+  log(LOG_DEBUG, "Setting window mode to %d", static_cast<int>(mode));
+  settings.win_mode = mode;
+
+  switch (settings.win_mode)
+  {
+    case yage::graphics::settings::window_mode::FULLSCREEN:
+    {
+      Atom atoms[2]
+            = { XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False), None };
+      XChangeProperty(
+            display, win, XInternAtom(display, "_NET_WM_STATE", False), 4, 32,
+            PropModeReplace, (unsigned char *)atoms, 1);
+
+      settings.width  = DisplayWidth(display, DefaultScreen(display));
+      settings.height = DisplayHeight(display, DefaultScreen(display));
+    }
+    break;
+
+    case yage::graphics::settings::window_mode::WINDOWED_RESIZABLE:
+    {
+      XSizeHints sizeHints;
+      sizeHints.flags      = PSize | PMinSize | PMaxSize;
+      sizeHints.min_width  = 100; // Minimum width
+      sizeHints.min_height = 100; // Minimum height
+      sizeHints.max_width  = DisplayWidth(display, DefaultScreen(display));
+      sizeHints.max_height = DisplayHeight(display, DefaultScreen(display));
+      XSetWMNormalHints(display, win, &sizeHints);
+    }
+    break;
+
+    case yage::graphics::settings::window_mode::WINDOWED_FIXED:
+    {
+      XSizeHints sizeHints;
+      sizeHints.flags      = PSize | PMinSize | PMaxSize;
+      sizeHints.min_width  = settings.width;
+      sizeHints.min_height = settings.height;
+      sizeHints.max_width  = settings.width;
+      sizeHints.max_height = settings.height;
+      XSetWMNormalHints(display, win, &sizeHints);
+    }
+    break;
+  }
+
+  return yage::core::error::OK;
+}
+
+yage::core::error yage::platform::graphics::x11::window::set_geometry(
+      yage::graphics::geometry & geometry)
+{
+  log(LOG_DEBUG, "Setting window geometry to %d x %d", geometry.width,
+      geometry.height);
+
+  settings.width  = geometry.width;
+  settings.height = geometry.height;
+
+  XWindowChanges changes;
+  changes.width  = geometry.width;
+  changes.height = geometry.height;
+  XConfigureWindow(display, win, CWWidth | CWHeight, &changes);
+
+  return yage::core::error::OK;
+}
+
+yage::core::error
+yage::platform::graphics::x11::window::set_title(std::string title)
+{
+  log(LOG_DEBUG, "Setting window title to %s", title.c_str());
+
+  settings.title = title;
+
+  /* Set window title */
+  if (!title.empty())
+  {
+    XStoreName(display, win, title.c_str());
+  }
+
+  return yage::core::error::OK;
+}
+
 yage::core::error yage::platform::graphics::x11::window::update()
 {
   if (should_close)
@@ -453,7 +543,7 @@ yage::core::error yage::platform::graphics::x11::window::close()
 
   log(LOG_DEBUG, "Closing X11 display");
   XFree(visual);
-  XFreeColormap(display, windowAttribs.colormap);
+  XFreeColormap(display, colormap);
   XDestroyWindow(display, win);
   XCloseDisplay(display);
 

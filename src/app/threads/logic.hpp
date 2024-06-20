@@ -29,6 +29,14 @@ private:
   yage::core::util::profiler * profiler;
   bool                         should_close = false;
 
+  void profile(int point)
+  {
+    if (profiler)
+    {
+      profiler->passed(point);
+    }
+  }
+
 public:
   logic(yage::app::application * app, yage::core::util::profiler * profiler)
   : yage::core::util::named_thread("logic")

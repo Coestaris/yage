@@ -9,6 +9,7 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include <stdexcept>
 #include <X11/Xutil.h>
 #include <GL/glx.h>
 #include "graphics/window.hpp"
@@ -24,14 +25,15 @@ namespace yage::platform::graphics::x11
 class window : public yage::graphics::window
 {
 private:
-  XSetWindowAttributes                   windowAttribs;
-  XIC                                    xic;
-  Window                                 win;
-  Display *                              display;
-  XVisualInfo *                          visual;
-  GLXContext                             glx_context = nullptr;
   yage::platform::graphics::gl::graphics context;
-  bool                                   opened = false;
+
+  Colormap      colormap;
+  XIC           xic;
+  Window        win;
+  Display *     display;
+  XVisualInfo * visual;
+  GLXContext    glx_context = nullptr;
+  bool          opened      = false;
 
   class event_loop : public yage::core::util::named_thread
   {
@@ -70,6 +72,40 @@ public:
   yage::core::error          close() override;
   bool                       is_open() override;
   yage::graphics::graphics * get_graphics() override;
+
+  yage::core::error set_mode(yage::graphics::settings::window_mode mode) override;
+  yage::core::error set_geometry(yage::graphics::geometry & geometry) override;
+  yage::core::error set_title(std::string title) override;
+
+  yage::core::error set_max_fps(int max_fps) override
+  {
+    throw std::runtime_error("Not implemented");
+  }
+
+  yage::core::error set_vsync(bool vsync) override
+  {
+    throw std::runtime_error("Not implemented");
+  }
+
+  yage::core::error set_icon(yage::graphics::image & icon) override
+  {
+    throw std::runtime_error("Not implemented");
+  }
+
+  yage::core::error get_icon(yage::graphics::image & icon) override
+  {
+    throw std::runtime_error("Not implemented");
+  }
+
+  yage::core::error set_cursor(yage::graphics::image & cursor) override
+  {
+    throw std::runtime_error("Not implemented");
+  }
+
+  yage::core::error get_cursor(yage::graphics::image & cursor) override
+  {
+    throw std::runtime_error("Not implemented");
+  }
 };
 
 /* Variables ================================================================ */

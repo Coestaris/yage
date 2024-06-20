@@ -12,6 +12,7 @@
 #include <string>
 #include <queue>
 #include <mutex>
+#include <map>
 
 #include "graphics/image.hpp"
 #include "graphics/graphics.hpp"
@@ -25,8 +26,21 @@ namespace yage::graphics
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class settings
+struct settings
 {
+  std::string title;
+  int         width;
+  int         height;
+  int         max_fps;
+  enum class window_mode
+  {
+    FULLSCREEN,
+    WINDOWED_RESIZABLE,
+    WINDOWED_FIXED,
+  } win_mode;
+  bool vsync;
+
+  std::map<std::string, std::string> custom_settings;
 };
 
 struct geometry
@@ -39,10 +53,14 @@ struct geometry
 
 class window
 {
-public:
-  yage::graphics::input_events input;
+protected:
+  yage::graphics::settings settings;
 
-  window(settings & settings)
+public:
+  yage::graphics::input_events             input;
+
+  window(yage::graphics::settings & settings)
+  : settings(settings)
   {
   }
   virtual ~window() = default;
@@ -53,39 +71,45 @@ public:
   virtual bool                       is_open()      = 0;
   virtual yage::graphics::graphics * get_graphics() = 0;
 
-  virtual yage::core::error set_fullscreen(bool fullscreen)
+  virtual yage::core::error set_mode(settings::window_mode mode) = 0;
+  virtual yage::core::error get_mode(settings::window_mode & mode)
   {
-    return yage::core::error::NOT_IMPLEMENTED;
+    mode = settings.win_mode;
+    return yage::core::error::OK;
   }
 
-  virtual yage::core::error set_vsync(bool vsync)
+  virtual yage::core::error set_max_fps(int max_fps) = 0;
+  virtual yage::core::error get_max_fps(int & max_fps)
   {
-    return yage::core::error::NOT_IMPLEMENTED;
+    max_fps = settings.max_fps;
+    return yage::core::error::OK;
   }
 
-  virtual yage::core::error set_icon(image & icon)
+  virtual yage::core::error set_vsync(bool vsync) = 0;
+  virtual yage::core::error get_vsync(bool & vsync)
   {
-    return yage::core::error::NOT_IMPLEMENTED;
+    vsync = settings.vsync;
+    return yage::core::error::OK;
   }
 
-  virtual yage::core::error set_cursor(image & cursor)
+  virtual yage::core::error set_icon(image & icon) = 0;
+  virtual yage::core::error get_icon(image & icon) = 0;
+
+  virtual yage::core::error set_cursor(image & cursor) = 0;
+  virtual yage::core::error get_cursor(image & cursor) = 0;
+
+  virtual yage::core::error set_geometry(geometry & geometry) = 0;
+  virtual yage::core::error get_geometry(geometry & geometry)
   {
-    return yage::core::error::NOT_IMPLEMENTED;
+    geometry = { 0, 0, settings.width, settings.height };
+    return yage::core::error::OK;
   }
 
-  virtual yage::core::error set_geometry(geometry & geometry)
+  virtual yage::core::error set_title(std::string title) = 0;
+  virtual yage::core::error get_title(std::string & title)
   {
-    return yage::core::error::NOT_IMPLEMENTED;
-  }
-
-  virtual yage::core::error set_title(char * title)
-  {
-    return yage::core::error::NOT_IMPLEMENTED;
-  }
-
-  int get_max_fps()
-  {
-    return 60;
+    title = settings.title;
+    return yage::core::error::OK;
   }
 };
 

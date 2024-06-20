@@ -16,10 +16,17 @@ namespace yage::app
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
+class application;
+
 class game_object
 {
+protected:
+  class yage::app::application * app;
+
 public:
-  virtual ~game_object() {};
+  virtual ~game_object() = default;
+  explicit game_object(yage::app::application * app)
+  : app(app) {};
 
   /* for now, let's assume that all game objects have position */
   struct public_data
