@@ -47,13 +47,10 @@ void yage::app::threads::logic::run()
 
     /* Stage 5: Update physics */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_PHYSICS);
-    /* Sleep for 10 ms to simulate physics updating */
-    std::this_thread::sleep_for(std::chrono::milliseconds(3));
     /* TODO: Implement physics updating */
 
     /* Stage 6: Update AI */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_AI);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     /* TODO: Implement AI updating */
 
     /* Stage 7: Update sound */
