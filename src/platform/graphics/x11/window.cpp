@@ -216,11 +216,19 @@ yage::core::mouse convert_button(unsigned int button)
 /* Shared functions ========================================================= */
 yage::core::error yage::platform::graphics::x11::window::open()
 {
+  if (opened)
+  {
+    log(LOG_ERROR, "Window is already opened!");
+    return yage::core::error::INVALID_STATE;
+  }
+
   if (settings.width <= 0 || settings.height <= 0)
   {
     log(LOG_ERROR, "Invalid window size");
     return yage::core::error::INVALID_ARGUMENT;
   }
+
+  working_thread = std::this_thread::get_id();
 
   log(LOG_DEBUG, "Opening X11 window");
   display = XOpenDisplay(NULL);
@@ -416,6 +424,12 @@ yage::core::error yage::platform::graphics::x11::window::open()
 yage::core::error yage::platform::graphics::x11::window::set_mode(
       yage::graphics::settings::window_mode mode)
 {
+  if (working_thread != std::this_thread::get_id())
+  {
+    log(LOG_ERROR, "Close called from different thread!");
+    return yage::core::error::INVALID_THREAD;
+  }
+
   log(LOG_DEBUG, "Setting window mode to %d", static_cast<int>(mode));
   settings.win_mode = mode;
 
@@ -465,6 +479,12 @@ yage::core::error yage::platform::graphics::x11::window::set_mode(
 yage::core::error yage::platform::graphics::x11::window::set_geometry(
       yage::graphics::geometry & geometry)
 {
+  if (working_thread != std::this_thread::get_id())
+  {
+    log(LOG_ERROR, "Close called from different thread!");
+    return yage::core::error::INVALID_THREAD;
+  }
+
   log(LOG_DEBUG, "Setting window geometry to %d x %d", geometry.width,
       geometry.height);
 
@@ -482,6 +502,12 @@ yage::core::error yage::platform::graphics::x11::window::set_geometry(
 yage::core::error
 yage::platform::graphics::x11::window::set_title(std::string title)
 {
+  if (working_thread != std::this_thread::get_id())
+  {
+    log(LOG_ERROR, "Close called from different thread!");
+    return yage::core::error::INVALID_THREAD;
+  }
+
   log(LOG_DEBUG, "Setting window title to %s", title.c_str());
 
   settings.title = title;
@@ -497,6 +523,12 @@ yage::platform::graphics::x11::window::set_title(std::string title)
 
 yage::core::error yage::platform::graphics::x11::window::update()
 {
+  if (working_thread != std::this_thread::get_id())
+  {
+    log(LOG_ERROR, "Close called from different thread!");
+    return yage::core::error::INVALID_THREAD;
+  }
+
   if (should_close)
   {
     close();
@@ -514,29 +546,34 @@ yage::core::error yage::platform::graphics::x11::window::update()
 
 yage::core::error yage::platform::graphics::x11::window::close()
 {
+  should_close = true;
+
   if (!opened)
   {
     return yage::core::error::OK;
   }
 
-  if (!should_close)
+  if (working_thread != std::this_thread::get_id())
   {
-    should_close = true;
-
-    /* send event to unblock event loop */
-    XEvent ev;
-    memset(&ev, 0, sizeof(ev));
-    ev.type                 = ClientMessage;
-    ev.xclient.window       = win;
-    ev.xclient.message_type = XInternAtom(display, "WM_PROTOCOLS", True);
-    ev.xclient.format       = 32;
-    ev.xclient.data.l[0]    = wmDeleteMessage;
-    ev.xclient.data.l[1]    = CurrentTime;
-    XSendEvent(display, win, False, NoEventMask, &ev);
-    XFlush(display);
-
-    event_loop.join();
+    log(LOG_WARN, "Close called from different thread!");
+    return yage::core::error::OK;
   }
+
+  log(LOG_INFO, "Closing window");
+
+  /* send event to unblock event loop */
+  XEvent ev;
+  memset(&ev, 0, sizeof(ev));
+  ev.type                 = ClientMessage;
+  ev.xclient.window       = win;
+  ev.xclient.message_type = XInternAtom(display, "WM_PROTOCOLS", True);
+  ev.xclient.format       = 32;
+  ev.xclient.data.l[0]    = wmDeleteMessage;
+  ev.xclient.data.l[1]    = CurrentTime;
+  log(LOG_DEBUG, "Sending close signal to event_loop");
+  XSendEvent(display, win, False, NoEventMask, &ev);
+  XFlush(display);
+  event_loop.join();
 
   log(LOG_DEBUG, "Destroying X11 window");
   glXDestroyContext(display, glx_context);
@@ -564,7 +601,7 @@ yage::graphics::graphics * yage::platform::graphics::x11::window::get_graphics()
 
 void yage::platform::graphics::x11::window::event_loop::run()
 {
-  while (1)
+  while (true)
   {
     XEvent ev;
     XNextEvent(win->display, &ev);
@@ -605,12 +642,12 @@ void yage::platform::graphics::x11::window::event_loop::run()
           char * p = buf;
           size_t ret;
 
-          for (wchar_t wc;
-               (ret = mbrtowc(&wc, p, buf + sizeof(buf) - p, nullptr)) > 0;
-               p += ret)
-          {
-            win->input.char_entered.push(wc);
-          }
+//          for (wchar_t wc;
+//               (ret = mbrtowc(&wc, p, buf + sizeof(buf) - p, nullptr)) > 0;
+//               p += ret)
+//          {
+//            win->input.char_entered.push(wc);
+//          }
         }
 
         break;

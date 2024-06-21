@@ -30,6 +30,8 @@ protected:
   virtual void update(yage::core::milliseconds delta) = 0;
 
 public:
+  bool should_be_deleted = false;
+
   virtual ~object() = default;
   explicit object(yage::app::application * app)
   : app(app) {};
@@ -57,6 +59,11 @@ public:
     }
 
     update(delta);
+  }
+
+  void destroy()
+  {
+    should_be_deleted = true;
   }
 };
 

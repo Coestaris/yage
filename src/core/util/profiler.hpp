@@ -77,7 +77,17 @@ public:
   yage::core::milliseconds get_diff(point a, point b) override
   {
     std::lock_guard<std::mutex> lock(mutex);
-    return (float)((prev_points[b] - prev_points[a]) / 1000) / 1000.0f;
+    if (prev_points[b] == 0 || prev_points[a] == 0)
+    {
+      return 0;
+    }
+    yage::core::nano_seconds diff = prev_points[b] - prev_points[a];
+    if (diff < 0)
+    {
+      return 0;
+    }
+
+    return (float)(diff / 1000) / 1000.0f;
   }
 };
 

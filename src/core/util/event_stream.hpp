@@ -21,8 +21,8 @@ namespace yage::core::util
 /* Types ==================================================================== */
 template <typename T> class event_stream_listener
 {
-  size_t max_queue_size = 100;
-  std::string name{};
+  size_t      max_queue_size = 100;
+  std::string name {};
 
   std::queue<T> queue;
   std::mutex    mutex;
@@ -39,7 +39,7 @@ public:
     }
 
     queue.push(data);
-    }
+  }
 
   bool get_next(T & data)
   {
@@ -70,6 +70,13 @@ public:
   void add_listener(event_stream_listener<T> * listener)
   {
     listeners.push_back(listener);
+  }
+
+  void remove_listener(event_stream_listener<T> * listener)
+  {
+    listeners.erase(
+          std::remove(listeners.begin(), listeners.end(), listener),
+          listeners.end());
   }
 };
 

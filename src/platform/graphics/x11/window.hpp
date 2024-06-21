@@ -27,13 +27,14 @@ class window : public yage::graphics::window
 private:
   yage::platform::graphics::gl::graphics context;
 
-  Colormap      colormap;
-  XIC           xic;
-  Window        win;
-  Display *     display;
-  XVisualInfo * visual;
-  GLXContext    glx_context = nullptr;
-  bool          opened      = false;
+  Colormap        colormap;
+  XIC             xic;
+  Window          win;
+  Display *       display;
+  XVisualInfo *   visual;
+  std::thread::id working_thread;
+  GLXContext      glx_context = nullptr;
+  bool            opened      = false;
 
   class event_loop : public yage::core::util::named_thread
   {
@@ -73,7 +74,8 @@ public:
   bool                       is_open() override;
   yage::graphics::graphics * get_graphics() override;
 
-  yage::core::error set_mode(yage::graphics::settings::window_mode mode) override;
+  yage::core::error
+  set_mode(yage::graphics::settings::window_mode mode) override;
   yage::core::error set_geometry(yage::graphics::geometry & geometry) override;
   yage::core::error set_title(std::string title) override;
 

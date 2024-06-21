@@ -36,9 +36,22 @@ void yage::app::threads::logic::run()
 
     /* Stage 3: Update objects */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_OBJECTS);
+    std::vector<size_t> to_remove;
+    size_t              index = 0;
     for (auto & object : app->objects_logic)
     {
       object->update();
+      if (object->should_be_deleted)
+      {
+        to_remove.push_back(index);
+      }
+      index++;
+    }
+    for (auto obj_index : to_remove)
+    {
+      object * obj = app->objects_logic[obj_index];
+      app->objects_logic.erase(app->objects_logic.begin() + obj_index);
+      delete obj;
     }
 
     /* Stage 4: Update particles */
