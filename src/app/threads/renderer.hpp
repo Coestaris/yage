@@ -29,13 +29,21 @@ private:
   yage::core::util::profiler * profiler;
   yage::app::frequency_keeper  keeper;
 
+  size_t                     instances_count;
   yage::graphics::graphics * graphics; /* cache */
-  bool                       compile_shader();
+
+
+  bool compile_shader();
 
 public:
   yage::core::signal_event_listener stop_signal_listener;
 
   void run() override;
+
+  size_t get_instances_count() const
+  {
+    return instances_count;
+  }
 
   yage::core::milliseconds get_draw_time() const
   {

@@ -53,6 +53,7 @@ void yage::app::threads::logic::run()
       app->objects_logic.erase(app->objects_logic.begin() + obj_index);
       delete obj;
     }
+    instances_count = app->objects_logic.size();
 
     /* Stage 4: Update particles */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_PARTICLES);

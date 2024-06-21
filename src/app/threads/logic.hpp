@@ -28,7 +28,8 @@ class logic : public yage::core::util::named_thread
 private:
   yage::app::application *     app;
   yage::core::util::profiler * profiler;
-  bool                         should_close = false;
+  size_t                       instances_count = 0;
+  bool                         should_close    = false;
 
 public:
   logic(yage::app::application * app, yage::core::util::profiler * profiler)
@@ -36,6 +37,11 @@ public:
   , app(app)
   , profiler(profiler)
   {
+  }
+
+  size_t get_instances_count() const
+  {
+    return instances_count;
   }
 
   yage::core::milliseconds get_update_time() const

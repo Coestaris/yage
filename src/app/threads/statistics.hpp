@@ -78,8 +78,9 @@ public:
         continue;
       }
       log(LOG_INFO,
-          "FPS: %2.2f (%.1f, %.1f). Logic: "
+          "Obj: %zu (%zu). FPS: %2.2f (%.1f, %.1f). Logic: "
           "%.1f, %.1f, %.1f, %.1f, %.1f",
+          renderer->get_instances_count(), logic->get_instances_count(),
           renderer->get_keeper_cps(), draw_time_ms, copy_time_ms,
           update_time_ms, particles_time_ms, physics_time_ms, ai_time_ms,
           sound_time_ms);

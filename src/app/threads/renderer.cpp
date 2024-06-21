@@ -68,6 +68,7 @@ void yage::app::threads::renderer::run()
     {
       graphics->draw_rect(public_data.position, public_data.size);
     }
+    instances_count = app->objects_renderer.size();
     graphics->flush();
 
     /* Stage 3: Sync with updater after frame */
