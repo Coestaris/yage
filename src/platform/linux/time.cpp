@@ -23,9 +23,16 @@ struct tm yage::core::get_time()
   return *localtime(&t);
 }
 
-float yage::core::get_ms()
+yage::core::milliseconds yage::core::get_ms()
 {
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   return ts.tv_sec * 1000.0f + (float)ts.tv_nsec / 1000000.0f;
+}
+
+yage::core::nano_seconds yage::core::get_ns()
+{
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return ts.tv_sec * 1000000000LL + ts.tv_nsec;
 }

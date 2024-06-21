@@ -28,8 +28,8 @@ class movable_obj : public yage::app::object
 public:
   ~movable_obj() override = default;
 
-  int x_inc = 2;
-  int y_inc = 2;
+  float x_inc = 2;
+  float y_inc = 2;
 
   explicit movable_obj(yage::app::application * app)
   : yage::app::object(app)
@@ -43,12 +43,12 @@ public:
 
     data.position = { (float)(rand() % (geometry.width - 200)),
                       (float)(rand() % geometry.height - 200) };
-    x_inc         = 2 * (rand() % 2 ? 1 : -1);
-    y_inc         = 2 * (rand() % 2 ? 1 : -1);
+    x_inc         = 0.1 * (rand() % 2 ? 1 : -1);
+    y_inc         = 0.1 * (rand() % 2 ? 1 : -1);
     data.size     = { 100, 100 };
   }
 
-  void update() override
+  void update(yage::core::milliseconds delta) override
   {
     yage::graphics::geometry geometry {};
     if (app->window->get_geometry(geometry) != yage::core::error::OK)
@@ -57,8 +57,8 @@ public:
       geometry.height == 600;
     }
 
-    data.position.x += x_inc;
-    data.position.y += y_inc;
+    data.position.x += x_inc * delta;
+    data.position.y += y_inc * delta;
 
     if (data.position.x > geometry.width - data.size.x || data.position.x < 0)
     {
@@ -84,7 +84,7 @@ public:
     data.size     = { 100, 100 };
   }
 
-  void update() override
+  void update(yage::core::milliseconds delta) override
   {
     if (app->input.key_pressed(yage::core::key::ESCAPE))
     {

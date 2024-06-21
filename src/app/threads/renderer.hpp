@@ -30,21 +30,21 @@ private:
   yage::app::frequency_keeper  keeper;
 
   yage::graphics::graphics * graphics; /* cache */
-  bool compile_shader();
+  bool                       compile_shader();
 
 public:
   yage::core::signal_event_listener stop_signal_listener;
 
   void run() override;
 
-  yage::core::util::profiler::time get_draw_time() const
+  yage::core::milliseconds get_draw_time() const
   {
     return profiler->get_diff(
           yage::app::profiler_points::PROF_POINT_RENDERER_DRAW_START,
           yage::app::profiler_points::PROF_POINT_RENDERER_DRAW_END);
   }
 
-  yage::core::util::profiler::time get_copy_time() const
+  yage::core::milliseconds get_copy_time() const
   {
     return profiler->get_diff(
           yage::app::profiler_points::PROF_POINT_RENDERER_DRAW_END,

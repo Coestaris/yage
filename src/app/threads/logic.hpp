@@ -14,6 +14,7 @@
 #include "core/util/sync_point.hpp"
 #include "core/util/profiler.hpp"
 #include "app/application.hpp"
+#include "core/time.hpp"
 
 namespace yage::app::threads
 {
@@ -37,35 +38,35 @@ public:
   {
   }
 
-  yage::core::util::profiler::time get_update_time() const
+  yage::core::milliseconds get_update_time() const
   {
     return profiler->get_diff(
           yage::app::profiler_points::PROF_POINT_LOGIC_INPUT,
           yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PARTICLES);
   }
 
-  yage::core::util::profiler::time get_particles_time() const
+  yage::core::milliseconds get_particles_time() const
   {
     return profiler->get_diff(
           yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PARTICLES,
           yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PHYSICS);
   }
 
-  yage::core::util::profiler::time get_physics_time() const
+  yage::core::milliseconds get_physics_time() const
   {
     return profiler->get_diff(
           yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PHYSICS,
           yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_AI);
   }
 
-  yage::core::util::profiler::time get_ai_time() const
+  yage::core::milliseconds get_ai_time() const
   {
     return profiler->get_diff(
           yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_AI,
           yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_SOUND);
   }
 
-  yage::core::util::profiler::time get_sound_time() const
+  yage::core::milliseconds get_sound_time() const
   {
     return profiler->get_diff(
           yage::app::profiler_points::PROF_POINT_LOGIC_UPDATE_SOUND,

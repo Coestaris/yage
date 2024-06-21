@@ -64,13 +64,13 @@ public:
       }
 
       // clang-format off
-      draw_time_ms =      yage::core::lerp(draw_time_ms,      (float)(renderer->get_draw_time() / 1000) / 1000.0f, lerp_alpha);
-      copy_time_ms =      yage::core::lerp(copy_time_ms,      (float)(renderer->get_copy_time() / 1000) / 1000.0f, lerp_alpha);
-      update_time_ms =    yage::core::lerp(update_time_ms,    (float)(logic->get_update_time() / 1000) / 1000.0f, lerp_alpha);
-      particles_time_ms = yage::core::lerp(particles_time_ms, (float)(logic->get_particles_time() / 1000) / 1000.0f, lerp_alpha);
-      physics_time_ms =   yage::core::lerp(physics_time_ms,   (float)(logic->get_physics_time() / 1000) / 1000.0f, lerp_alpha);
-      ai_time_ms =        yage::core::lerp(ai_time_ms,        (float)(logic->get_ai_time() / 1000) / 1000.0f, lerp_alpha);
-      sound_time_ms =     yage::core::lerp(sound_time_ms,     (float)(logic->get_sound_time() / 1000) / 1000.0f, lerp_alpha);
+      draw_time_ms = yage::core::lerp(draw_time_ms, renderer->get_draw_time(), lerp_alpha);
+      copy_time_ms = yage::core::lerp(copy_time_ms, renderer->get_copy_time(), lerp_alpha);
+      update_time_ms = yage::core::lerp(update_time_ms, logic->get_update_time(), lerp_alpha);
+      particles_time_ms = yage::core::lerp(particles_time_ms, logic->get_particles_time(), lerp_alpha);
+      physics_time_ms = yage::core::lerp(physics_time_ms, logic->get_physics_time(), lerp_alpha);
+      ai_time_ms = yage::core::lerp(ai_time_ms, logic->get_ai_time(), lerp_alpha);
+      sound_time_ms = yage::core::lerp(sound_time_ms, logic->get_sound_time(), lerp_alpha);
       // clang-format on
 
       if (counter++ % (log_period_ms / poll_period_ms) != 0)

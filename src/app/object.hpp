@@ -10,6 +10,7 @@
 
 /* Includes ================================================================= */
 #include "core/float2.hpp"
+#include "core/time.hpp"
 
 namespace yage::app
 {
@@ -20,8 +21,13 @@ class application;
 
 class object
 {
+private:
+  yage::core::milliseconds last_update = 0;
+
 protected:
   class yage::app::application * app;
+
+  virtual void update(yage::core::milliseconds delta) = 0;
 
 public:
   virtual ~object() = default;
@@ -35,7 +41,23 @@ public:
     yage::core::float2 size;
   } data;
 
-  virtual void update() = 0;
+  void update()
+  {
+    yage::core::milliseconds delta;
+    yage::core::milliseconds time = yage::core::get_ms();
+    if (last_update == 0)
+    {
+      last_update = time;
+      delta       = 0;
+    }
+    else
+    {
+      delta       = time - last_update;
+      last_update = time;
+    }
+
+    update(delta);
+  }
 };
 
 /* Variables ================================================================ */

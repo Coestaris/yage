@@ -20,12 +20,12 @@ namespace yage::app
 class frequency_keeper
 {
 private:
-  size_t calls        = 0;
-  float  prev_ms      = 0.0f;
-  float  prev_call_ms = 0.0f;
-  float  cps          = 0.0f;
+  size_t                   calls        = 0;
+  yage::core::milliseconds prev_ms      = 0.0f;
+  yage::core::milliseconds prev_call_ms = 0.0f;
+  float                    cps          = 0.0f;
 
-  float desired_interval;
+  yage::core::milliseconds desired_interval;
 
 public:
   explicit frequency_keeper(size_t max_cps = 60)
@@ -36,9 +36,10 @@ public:
   float call()
   {
     calls++;
-    float ms              = yage::core::get_ms();
-    float prev_call_delta = ms - prev_call_ms;
-    prev_call_ms          = ms;
+    yage::core::milliseconds ms              = yage::core::get_ms();
+    yage::core::milliseconds prev_call_delta = ms - prev_call_ms;
+
+    prev_call_ms = ms;
 
     if (prev_call_delta < desired_interval)
     {
@@ -46,7 +47,7 @@ public:
             static_cast<int>(desired_interval - prev_call_delta)));
     }
 
-    float delta = ms - prev_ms;
+    yage::core::milliseconds delta = ms - prev_ms;
 
     if (delta > 1000.0f)
     {

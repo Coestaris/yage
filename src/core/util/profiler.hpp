@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <stdexcept>
+#include "core/time.hpp"
 
 namespace yage::core::util
 {
@@ -23,41 +24,32 @@ class profiler
 {
 public:
   /* Time in nanoseconds */
-  using time  = signed long long;
   using point = int;
 
 protected:
-  static time get_time()
-  {
-    return std::chrono::time_point_cast<std::chrono::nanoseconds>(
-                 std::chrono::system_clock::now())
-          .time_since_epoch()
-          .count();
-  }
-
 public:
   virtual void flush()             = 0;
   virtual void start_cycle()       = 0;
   virtual void passed(point point) = 0;
 
-  virtual time get_cycle_time()           = 0;
-  virtual time get_diff(point a, point b) = 0;
+  virtual yage::core::milliseconds get_cycle_time()           = 0;
+  virtual yage::core::milliseconds get_diff(point a, point b) = 0;
 };
 
 class simple_profiler : public profiler
 {
 private:
-  std::mutex mutex;
-  time *     prev_points;
-  time *     points;
-  size_t     max_points;
-  point      first_point = 0;
+  std::mutex                 mutex;
+  yage::core::nano_seconds * prev_points;
+  yage::core::nano_seconds * points;
+  size_t                     max_points;
+  point                      first_point = 0;
 
 public:
   simple_profiler(size_t max_points = 100)
   {
-    prev_points      = new time[max_points];
-    points           = new time[max_points];
+    prev_points      = new yage::core::nano_seconds[max_points];
+    points           = new yage::core::nano_seconds[max_points];
     this->max_points = max_points;
   }
 
@@ -74,18 +66,18 @@ public:
 
   void passed(point point) override
   {
-    points[point] = get_time();
+    points[point] = yage::core::get_ns();
   }
 
-  time get_cycle_time() override
+  yage::core::milliseconds get_cycle_time() override
   {
     throw std::runtime_error("Not implemented");
   }
 
-  time get_diff(point a, point b) override
+  yage::core::milliseconds get_diff(point a, point b) override
   {
     std::lock_guard<std::mutex> lock(mutex);
-    return prev_points[b] - prev_points[a];
+    return (float)((prev_points[b] - prev_points[a]) / 1000) / 1000.0f;
   }
 };
 
@@ -102,7 +94,7 @@ private:
   struct record
   {
     yage::core::util::profiler::point point;
-    yage::core::util::profiler::time  time;
+    yage::core::nano_seconds          time;
   } * records; /* ring buffer */
 
   size_t find_point(size_t start, point point)
@@ -160,7 +152,7 @@ public:
     std::lock_guard<std::mutex> lock(mutex);
 
     records[current_record].point = point;
-    records[current_record].time  = get_time();
+    records[current_record].time  = yage::core::get_ns();
 
     ++current_record;
 
@@ -171,19 +163,22 @@ public:
     }
   }
 
-  time get_cycle_time() override
+  yage::core::milliseconds get_cycle_time() override
   {
-    return records[current_record].time - records[cycle_start].time;
+    return (float)((records[current_record].time - records[cycle_start].time)
+                   / 1000)
+           / 1000.0f;
   }
 
-  time get_diff(point a, point b) override
+  yage::core::milliseconds get_diff(point a, point b) override
   {
     std::lock_guard<std::mutex> lock(mutex);
 
     size_t a_pos = find_point(current_record, a);
     size_t b_pos = find_point(a_pos + 1, b);
 
-    return records[b_pos].time - records[a_pos].time;
+    return (float)((records[b_pos].time - records[a_pos].time) / 1000)
+           / 1000.0f;
   }
 };
 
