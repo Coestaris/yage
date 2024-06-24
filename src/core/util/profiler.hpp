@@ -87,7 +87,7 @@ public:
       return 0;
     }
 
-    return (float)(diff / 1000) / 1000.0f;
+    return static_cast<float>(diff / 1000ll) / 1000.0f;
   }
 };
 
@@ -175,8 +175,9 @@ public:
 
   yage::core::milliseconds get_cycle_time() override
   {
-    return (float)((records[current_record].time - records[cycle_start].time)
-                   / 1000)
+    return static_cast<float>(
+                 (records[current_record].time - records[cycle_start].time)
+                 / 1000ll)
            / 1000.0f;
   }
 
@@ -187,7 +188,8 @@ public:
     size_t a_pos = find_point(current_record, a);
     size_t b_pos = find_point(a_pos + 1, b);
 
-    return (float)((records[b_pos].time - records[a_pos].time) / 1000)
+    return static_cast<float>(
+                 (records[b_pos].time - records[a_pos].time) / 1000ll)
            / 1000.0f;
   }
 };

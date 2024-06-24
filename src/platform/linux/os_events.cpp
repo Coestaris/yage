@@ -67,7 +67,7 @@ void handler(int signal, siginfo_t * info, void * context)
   size = backtrace(array, 10);
 
   /* Dump registers */
-  ucontext_t * uc = (ucontext_t *)context;
+  auto * uc = static_cast<ucontext_t *>(context);
   fprintf(stderr, "R8:  %016llx\n", uc->uc_mcontext.gregs[REG_R8]);
   fprintf(stderr, "R9:  %016llx\n", uc->uc_mcontext.gregs[REG_R9]);
   fprintf(stderr, "R10: %016llx\n", uc->uc_mcontext.gregs[REG_R10]);

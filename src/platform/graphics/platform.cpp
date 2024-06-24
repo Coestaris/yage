@@ -55,23 +55,5 @@ yage::platform::graphics::create_window(yage::graphics::settings & settings)
 
 void yage::platform::graphics::destroy_window(yage::graphics::window * window)
 {
-#if YAGE_PLATFORM_X11
-  log(LOG_INFO, "Destroying X11 window");
-  delete (yage::platform::graphics::x11::window *)window;
-#elif YAGE_PLATFORM_WAYLAND
-  log(LOG_INFO, "Destroying wayland window");
-  delete (yage::platform::graphics::wayland::window *)window;
-#elif YAGE_PLATFORM_WIN_GL
-  log(LOG_INFO, "Destroying Windows (OpenGL) window");
-  delete (yage::platform::graphics::win_gl::window *)window;
-#elif YAGE_PLATFORM_WIN_DX
-  log(LOG_INFO, "Destroying Windows (DirectX) window");
-  delete (yage::platform::graphics::win_dx::window *)window;
-#elif YAGE_PLATFORM_DARWIN
-  log(LOG_INFO, "Destroying Darwin window");
-  delete (yage::platform::graphics::darwin::window *)window;
-#else
-  throw std::runtime_error("Unsupported platform");
-#endif
+  delete window;
 }
-

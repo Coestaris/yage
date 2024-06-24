@@ -37,7 +37,8 @@ void * yage::platform::graphics::gl::gl_lookup(const char * func, bool required)
 #if WIN32
   auto proc = wglGetProcAddress(func);
 #else
-  auto proc = glXGetProcAddress((const GLubyte *)func);
+  auto proc = reinterpret_cast<void *>(
+        glXGetProcAddress(reinterpret_cast<const GLubyte *>(func)));
 #endif
 
   if (!proc)
@@ -54,6 +55,6 @@ void * yage::platform::graphics::gl::gl_lookup(const char * func, bool required)
     return nullptr;
   }
 
-  cache[func] = (void *)proc;
-  return (void *)proc;
+  cache[func] = proc;
+  return proc;
 }

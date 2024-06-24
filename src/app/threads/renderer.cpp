@@ -36,9 +36,11 @@ void yage::app::threads::renderer::run()
     return;
   }
 
-  if (!compile_shader())
+  yage::core::error error;
+  if ((error = app->asset_factory->read_assets()) != yage::core::error::OK)
   {
-    log(LOG_ERROR, "Failed to compile shader");
+    log(LOG_ERROR, "Failed to read assets: %d", error);
+    app->window->close();
     return;
   }
 

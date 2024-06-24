@@ -185,7 +185,8 @@ static yage::core::key convert_key(uint32_t keycode)
 #if USE_DEBUG
   if (keymap.find(keycode) == keymap.end())
   {
-    log(LOG_WARN, "Key not found: 0x%x (%c)", keycode, (char)keycode);
+    log(LOG_WARN, "Key not found: 0x%x (%c)", keycode,
+        static_cast<char>(keycode));
     return yage::core::key::UNKNOWN;
   }
 #endif
@@ -441,7 +442,7 @@ yage::core::error yage::platform::graphics::x11::window::set_mode(
             = { XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False), None };
       XChangeProperty(
             display, win, XInternAtom(display, "_NET_WM_STATE", False), 4, 32,
-            PropModeReplace, (unsigned char *)atoms, 1);
+            PropModeReplace, reinterpret_cast<const unsigned char *>(atoms), 1);
 
       settings.width  = DisplayWidth(display, DefaultScreen(display));
       settings.height = DisplayHeight(display, DefaultScreen(display));
@@ -617,7 +618,8 @@ void yage::platform::graphics::x11::window::event_loop::run()
 
       case ClientMessage:
         /* Handle close event */
-        if ((long)ev.xclient.data.l[0] == (long)win->wmDeleteMessage)
+        if (static_cast<long>(ev.xclient.data.l[0])
+            == static_cast<long>(win->wmDeleteMessage))
         {
           win->should_close = true;
           return;
@@ -642,12 +644,12 @@ void yage::platform::graphics::x11::window::event_loop::run()
           char * p = buf;
           size_t ret;
 
-//          for (wchar_t wc;
-//               (ret = mbrtowc(&wc, p, buf + sizeof(buf) - p, nullptr)) > 0;
-//               p += ret)
-//          {
-//            win->input.char_entered.push(wc);
-//          }
+          //          for (wchar_t wc;
+          //               (ret = mbrtowc(&wc, p, buf + sizeof(buf) - p,
+          //               nullptr)) > 0; p += ret)
+          //          {
+          //            win->input.char_entered.push(wc);
+          //          }
         }
 
         break;
@@ -667,8 +669,9 @@ void yage::platform::graphics::x11::window::event_loop::run()
       case ButtonPress:
       {
         struct yage::graphics::mouse_click_data click_data
-              = { convert_button(ev.xbutton.button), (float)ev.xbutton.x,
-                  (float)ev.xbutton.y };
+              = { convert_button(ev.xbutton.button),
+                  static_cast<float>(ev.xbutton.x),
+                  static_cast<float>(ev.xbutton.y) };
         win->input.mouse_pressed.push(click_data);
         break;
       }
@@ -676,8 +679,9 @@ void yage::platform::graphics::x11::window::event_loop::run()
       case ButtonRelease:
       {
         struct yage::graphics::mouse_click_data click_data
-              = { convert_button(ev.xbutton.button), (float)ev.xbutton.x,
-                  (float)ev.xbutton.y };
+              = { convert_button(ev.xbutton.button),
+                  static_cast<float>(ev.xbutton.x),
+                  static_cast<float>(ev.xbutton.y) };
         win->input.mouse_released.push(click_data);
         break;
       }
@@ -685,7 +689,8 @@ void yage::platform::graphics::x11::window::event_loop::run()
       case MotionNotify:
       {
         struct yage::graphics::mouse_moved_data pos
-              = { (float)ev.xmotion.x, (float)ev.xmotion.y };
+              = { static_cast<float>(ev.xmotion.x),
+                  static_cast<float>(ev.xmotion.y) };
         win->input.mouse_moved.push(pos);
         break;
       }

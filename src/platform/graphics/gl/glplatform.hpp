@@ -23,7 +23,7 @@ void * gl_lookup(const char * func, bool required = false);
 template <typename RetType = void, typename... Args>
 RetType gl_call(const char * func, Args... args)
 {
-  auto proc = (RetType(*)(Args...))gl_lookup(func, true);
+  auto * proc = reinterpret_cast<RetType (*)(Args...)>(gl_lookup(func, true));
   return proc(args...);
 }
 

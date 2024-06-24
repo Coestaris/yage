@@ -16,6 +16,7 @@
 #include "platform/graphics/platform.hpp"
 #include "app/object.hpp"
 #include "app/application.hpp"
+#include "app/assets/pack/asset_factory.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -97,7 +98,7 @@ public:
   {
     if (app->input.key_pressed(yage::core::key::ESCAPE))
     {
-       app->window->close();
+      app->window->close();
     }
 
     yage::graphics::mouse_click_data click_data {};
@@ -112,6 +113,34 @@ public:
     data.position = app->input.mouse_position();
   }
 };
+
+std::string lookup_asset_path()
+{
+  std::vector<std::string> variants = {
+    "assets", "../assets", "../../assets", "assets/assets", "../assets/assets",
+  };
+  std::vector<std::string> extensions = { ".pack", ".zip" };
+
+  for (const auto & variant : variants)
+  {
+    for (const auto & extension : extensions)
+    {
+      std::string path = variant + extension;
+      log(LOG_DEBUG, "Checking for %s", path.c_str());
+      if (yage::core::file_exists(path))
+      {
+        return path;
+      }
+    }
+  }
+
+  return {};
+}
+
+std::string create_cache_file(const std::string & asset_path)
+{
+  return asset_path + ".cache";
+}
 
 int main(int argc, char * argv[])
 {
@@ -133,12 +162,22 @@ int main(int argc, char * argv[])
   yage::graphics::window * window
         = yage::platform::graphics::create_window(settings);
 
-  yage::app::application app(window, &events);
+  std::string asset_path = lookup_asset_path();
+  if (asset_path.empty())
+  {
+    log(LOG_ERROR, "Failed to find assets.pack file");
+    return 1;
+  }
+  yage::app::assets::pack::asset_factory asset_factory(
+        asset_path, create_cache_file(asset_path));
+
+  yage::app::application app(&asset_factory, window, &events);
 
   for (int i = 0; i < 10; i++)
   {
-    yage::core::float2 position = { (float)(rand() % (settings.width - 200)),
-                                    (float)(rand() % settings.height - 200) };
+    yage::core::float2 position
+          = { static_cast<float>(rand() % (settings.width - 200)),
+              static_cast<float>(rand() % settings.height - 200) };
 
     app.objects_logic.push_back(new movable_obj(&app, position));
   }

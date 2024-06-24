@@ -16,6 +16,7 @@
 #include "graphics/window.hpp"
 #include "app/object.hpp"
 #include "app/input_manager.hpp"
+#include "app/assets/asset_factory.hpp"
 
 namespace yage::app
 {
@@ -41,6 +42,8 @@ enum profiler_points
 class application
 {
 public:
+  yage::app::assets::asset_factory * asset_factory;
+
   /* copy for logic */
   std::vector<yage::app::object *> objects_logic;
   /* copy for renderer */
@@ -55,8 +58,11 @@ public:
   yage::app::input_manager input;
 
   application(
-        yage::graphics::window * window, yage::core::os_events * os_events)
-  : os_events(os_events)
+        yage::app::assets::asset_factory * asset_factory,
+        yage::graphics::window *           window,
+        yage::core::os_events *            os_events)
+  : asset_factory(asset_factory)
+  , os_events(os_events)
   , window(window)
   , input(&window->input)
   {

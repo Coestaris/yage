@@ -25,8 +25,8 @@ class input_manager
 private:
   yage::graphics::input_events * input;
 
-  bool key_states[(int)yage::core::key::MAX_KEYS]        = { false };
-  bool mouse_states[(int)yage::core::mouse::MAX_BUTTONS] = { false };
+  bool key_states[static_cast<size_t>(yage::core::key::MAX_KEYS)]        = { false };
+  bool mouse_states[static_cast<size_t>(yage::core::mouse::MAX_BUTTONS)] = { false };
   yage::core::float2 mouse_pos;
 
   yage::graphics::key_pressed_listener key_pressed_listener;

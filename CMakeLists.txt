@@ -47,7 +47,7 @@ endif ()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -lpthread")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-private-field -Wno-unused-const-variable -Wno-unused-value -Wno-unused-local-typedefs")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-private-field -Wno-unused-const-variable -Wno-unused-value -Wno-unused-local-typedefs -Werror=old-style-cast")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -lpthread")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-private-field -Wno-unused-const-variable -Wno-unused-value -Wno-unused-local-typedefs")
 
@@ -61,18 +61,20 @@ endif ()
 
 # Setup common source files
 set(SRC_FILES
-    src/*.cpp
-    src/core/*.cpp
-    src/core/util/*.cpp
+        src/*.cpp
+        src/core/*.cpp
+        src/core/util/*.cpp
 
-    src/app/*.cpp
-    src/app/io/*.cpp
-    src/app/threads/*.cpp
+        src/app/*.cpp
+        src/app/io/*.cpp
+        src/app/threads/*.cpp
+        src/app/assets/*.cpp
+        src/app/assets/pack/*.cpp
 
-    src/graphics/*.cpp
+        src/graphics/*.cpp
 
-    src/platform/*.cpp
-    src/platform/graphics/*.cpp
+        src/platform/*.cpp
+        src/platform/graphics/*.cpp
 )
 
 # Add platform specific files
@@ -111,5 +113,12 @@ endforeach ()
 util_add_short_filename_property(${PLAIN_SRC_FILES})
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
+
+
+# Link zlib
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
+link_libraries(${ZLIB_LIBRARIES})
+
 add_executable(yage ${PLAIN_SRC_FILES}
         src/graphics/graphics.hpp)

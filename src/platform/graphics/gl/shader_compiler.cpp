@@ -25,20 +25,20 @@ yage::platform::graphics::gl::shader_compiler::shader_compiler(
 : yage::graphics::shader_compiler(graphics)
 {
   // clang-format off
-  glCreateShader      = (PFNGLCREATESHADERPROC)gl_lookup("glCreateShader", true);
-  glShaderSource      = (PFNGLSHADERSOURCEPROC)gl_lookup("glShaderSource", true);
-  glCompileShader     = (PFNGLCOMPILESHADERPROC)gl_lookup("glCompileShader", true);
-  glGetShaderiv       = (PFNGLGETSHADERIVPROC)gl_lookup("glGetShaderiv", true);
-  glGetShaderInfoLog  = (PFNGLGETSHADERINFOLOGPROC)gl_lookup("glGetShaderInfoLog", true);
-  glDeleteShader      = (PFNGLDELETESHADERPROC)gl_lookup("glDeleteShader", true);
-  glCreateProgram     = (PFNGLCREATEPROGRAMPROC)gl_lookup("glCreateProgram", true);
-  glAttachShader      = (PFNGLATTACHSHADERPROC)gl_lookup("glAttachShader", true);
-  glLinkProgram       = (PFNGLLINKPROGRAMPROC)gl_lookup("glLinkProgram", true);
-  glGetProgramiv      = (PFNGLGETPROGRAMIVPROC)gl_lookup("glGetProgramiv", true);
-  glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)gl_lookup("glGetProgramInfoLog", true);
-  glUseProgram        = (PFNGLUSEPROGRAMPROC)gl_lookup("glUseProgram", true);
-  glDeleteProgram     = (PFNGLDELETEPROGRAMPROC)gl_lookup("glDeleteProgram", true);
-  glGetProgramBinary  = (PFNGLGETPROGRAMBINARYPROC)gl_lookup("glGetProgramBinary", true);
+  glCreateShader      = reinterpret_cast<PFNGLCREATESHADERPROC>(gl_lookup("glCreateShader", true));
+  glShaderSource      = reinterpret_cast<PFNGLSHADERSOURCEPROC>(gl_lookup("glShaderSource", true));
+  glCompileShader     = reinterpret_cast<PFNGLCOMPILESHADERPROC>(gl_lookup("glCompileShader", true));
+  glGetShaderiv       = reinterpret_cast<PFNGLGETSHADERIVPROC>(gl_lookup("glGetShaderiv", true));
+  glGetShaderInfoLog  = reinterpret_cast<PFNGLGETSHADERINFOLOGPROC>(gl_lookup("glGetShaderInfoLog", true));
+  glDeleteShader      = reinterpret_cast<PFNGLDELETESHADERPROC>(gl_lookup("glDeleteShader", true));
+  glCreateProgram     = reinterpret_cast<PFNGLCREATEPROGRAMPROC>(gl_lookup("glCreateProgram", true));
+  glAttachShader      = reinterpret_cast<PFNGLATTACHSHADERPROC>(gl_lookup("glAttachShader", true));
+  glLinkProgram       = reinterpret_cast<PFNGLLINKPROGRAMPROC>(gl_lookup("glLinkProgram", true));
+  glGetProgramiv      = reinterpret_cast<PFNGLGETPROGRAMIVPROC>(gl_lookup("glGetProgramiv", true));
+  glGetProgramInfoLog = reinterpret_cast<PFNGLGETPROGRAMINFOLOGPROC>(gl_lookup("glGetProgramInfoLog", true));
+  glUseProgram        = reinterpret_cast<PFNGLUSEPROGRAMPROC>(gl_lookup("glUseProgram", true));
+  glDeleteProgram     = reinterpret_cast<PFNGLDELETEPROGRAMPROC>(gl_lookup("glDeleteProgram", true));
+  glGetProgramBinary  = reinterpret_cast<PFNGLGETPROGRAMBINARYPROC>(gl_lookup("glGetProgramBinary", true));
   // clang-format on
 }
 

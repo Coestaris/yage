@@ -49,7 +49,7 @@ void yage::app::threads::logic::run()
     }
     for (auto obj_index : to_remove)
     {
-      object * obj = app->objects_logic[obj_index];
+      auto * obj = app->objects_logic[obj_index];
       app->objects_logic.erase(app->objects_logic.begin() + obj_index);
       delete obj;
     }

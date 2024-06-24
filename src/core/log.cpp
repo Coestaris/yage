@@ -69,7 +69,8 @@ void yage::core::logger::format(
     task_name = "???";
   }
 
-  if (level >= (int)(sizeof(level_specifiers) / sizeof(level_specifiers[0])))
+  if (static_cast<size_t>(level)
+      >= sizeof(level_specifiers) / sizeof(level_specifiers[0]))
   {
     throw std::runtime_error("Invalid log level");
   }
@@ -80,8 +81,8 @@ void yage::core::logger::format(
         format, sizeof(format),
         "[" COLOR_GREEN "%s.%3d" COLOR_RESET "][" COLOR_YELLOW
         "%d:%10s" COLOR_RESET "][%s] %s [" COLOR_CYAN "%s:%d" COLOR_RESET "] ",
-        time_str, (int)yage::core::get_ms() % 1000, pid, task_name.c_str(),
-        level_specifiers[level], fmt, file, line);
+        time_str, static_cast<int>(yage::core::get_ms()) % 1000, pid,
+        task_name.c_str(), level_specifiers[level], fmt, file, line);
 
   /* Format the message */
   vsnprintf(dst, size, format, args);

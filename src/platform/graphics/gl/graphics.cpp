@@ -36,96 +36,96 @@ void APIENTRY GLDebugMessageCallback(
       const GLchar * msg,
       const void *   data)
 {
-  char * _source;
-  char * _type;
-  char * _severity;
+  const char * _source;
+  const char * _type;
+  const char * _severity;
 
   switch (source)
   {
     case GL_DEBUG_SOURCE_API:
-      _source = (char *)"API";
+      _source = "API";
       break;
 
     case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-      _source = (char *)"WINDOW SYSTEM";
+      _source = "WINDOW SYSTEM";
       break;
 
     case GL_DEBUG_SOURCE_SHADER_COMPILER:
-      _source = (char *)"SHADER COMPILER";
+      _source = "SHADER COMPILER";
       break;
 
     case GL_DEBUG_SOURCE_THIRD_PARTY:
-      _source = (char *)"THIRD PARTY";
+      _source = "THIRD PARTY";
       break;
 
     case GL_DEBUG_SOURCE_APPLICATION:
-      _source = (char *)"APPLICATION";
+      _source = "APPLICATION";
       break;
 
     case GL_DEBUG_SOURCE_OTHER:
-      _source = (char *)"UNKNOWN";
+      _source = "UNKNOWN";
       break;
 
     default:
-      _source = (char *)"UNKNOWN";
+      _source = "UNKNOWN";
       break;
   }
 
   switch (type)
   {
     case GL_DEBUG_TYPE_ERROR:
-      _type = (char *)"ERROR";
+      _type = "ERROR";
       break;
 
     case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-      _type = (char *)"DEPRECATED BEHAVIOR";
+      _type = "DEPRECATED BEHAVIOR";
       break;
 
     case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-      _type = (char *)"UDEFINED BEHAVIOR";
+      _type = "UDEFINED BEHAVIOR";
       break;
 
     case GL_DEBUG_TYPE_PORTABILITY:
-      _type = (char *)"PORTABILITY";
+      _type = "PORTABILITY";
       break;
 
     case GL_DEBUG_TYPE_PERFORMANCE:
-      _type = (char *)"PERFORMANCE";
+      _type = "PERFORMANCE";
       break;
 
     case GL_DEBUG_TYPE_OTHER:
-      _type = (char *)"OTHER";
+      _type = "OTHER";
       break;
 
     case GL_DEBUG_TYPE_MARKER:
-      _type = (char *)"MARKER";
+      _type = "MARKER";
       break;
 
     default:
-      _type = (char *)"UNKNOWN";
+      _type = "UNKNOWN";
       break;
   }
 
   switch (severity)
   {
     case GL_DEBUG_SEVERITY_HIGH:
-      _severity = (char *)"HIGH";
+      _severity = "HIGH";
       break;
 
     case GL_DEBUG_SEVERITY_MEDIUM:
-      _severity = (char *)"MEDIUM";
+      _severity = "MEDIUM";
       break;
 
     case GL_DEBUG_SEVERITY_LOW:
-      _severity = (char *)"LOW";
+      _severity = "LOW";
       break;
 
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-      _severity = (char *)"NOTIFICATION";
+      _severity = "NOTIFICATION";
       break;
 
     default:
-      _severity = (char *)"UNKNOWN";
+      _severity = "UNKNOWN";
       break;
   }
 
@@ -137,7 +137,7 @@ void APIENTRY GLDebugMessageCallback(
 /* Shared functions ========================================================= */
 void yage::platform::graphics::gl::graphics::cache_extensions()
 {
-  const GLubyte * ext = glGetString(GL_EXTENSIONS);
+  const char * ext = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
 
   if (!ext)
   {
@@ -145,9 +145,9 @@ void yage::platform::graphics::gl::graphics::cache_extensions()
     return;
   }
 
-  size_t len  = strlen((const char *)ext);
+  size_t len  = strlen(ext);
   char * copy = new char[len + 1];
-  strcpy(copy, (const char *)ext);
+  strcpy(copy, ext);
 
   char * token = strtok(copy, " ");
   while (token)
