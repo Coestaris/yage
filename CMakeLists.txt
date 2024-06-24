@@ -43,6 +43,16 @@ if ((BACKEND_WIN_GL OR BACKEND_WIN_DX) AND NOT WIN32)
     message(FATAL_ERROR "Windows backend is only available on Windows")
 endif ()
 
+# Here, to not affect the build process by our options
+add_subdirectory(thirdparty/11Zip)
+set(JSONCPP_WITH_CMAKE_PACKAGE OFF)
+set(JSONCPP_WITH_PKGCONFIG_SUPPORT OFF)
+set(JSONCPP_WITH_TESTS OFF)
+set(BUILD_OBJECT_LIBS OFF)
+set(BUILD_STATIC_LIBS OFF)
+set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF)
+add_subdirectory(thirdparty/jsoncpp)
+
 # Setup compiler
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -113,12 +123,8 @@ endforeach ()
 util_add_short_filename_property(${PLAIN_SRC_FILES})
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
-
-
-# Link zlib
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-link_libraries(${ZLIB_LIBRARIES})
-
 add_executable(yage ${PLAIN_SRC_FILES}
         src/graphics/graphics.hpp)
+
+target_link_libraries(yage elzip)
+target_link_libraries(yage jsoncpp_lib)

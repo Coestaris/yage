@@ -9,6 +9,7 @@
 #include <csignal>
 #include <sys/stat.h>
 #include "core/fs.hpp"
+#include <glob.h>
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -60,4 +61,80 @@ std::string yage::core::absolute_path(std::string path)
   free(resolved_path);
 
   return result;
+}
+
+std::string yage::core::get_temp_dir(std::string prefix)
+{
+  char * temp_dir = getenv("TMPDIR");
+  if (temp_dir == nullptr)
+  {
+    temp_dir = getenv("TMP");
+  }
+
+  if (temp_dir == nullptr)
+  {
+    temp_dir = getenv("TEMP");
+  }
+
+  if (temp_dir == nullptr)
+  {
+    temp_dir = getenv("TEMPDIR");
+  }
+
+  if (temp_dir == nullptr)
+  {
+    temp_dir = const_cast<char *>("/tmp");
+  }
+
+  std::string dir
+        = prefix.empty() ? ("yage" + std::to_string(getpid())) : prefix;
+  dir = std::string(temp_dir) + "/" + dir;
+
+  if (mkdir(dir.c_str(), 0700) == -1 && errno != EEXIST)
+  {
+    return {};
+  }
+
+  return dir;
+}
+
+std::vector<std::string>
+yage::core::list_files(std::string path, std::string pattern)
+{
+  std::vector<std::string> files;
+
+  /* glob */
+  glob_t glob_result;
+  glob((path + "/" + pattern).c_str(), GLOB_TILDE, NULL, &glob_result);
+
+  for (size_t i = 0; i < glob_result.gl_pathc; i++)
+  {
+    files.emplace_back(glob_result.gl_pathv[i]);
+  }
+
+  globfree(&glob_result);
+
+  return files;
+}
+
+std::string yage::core::basename(std::string path, bool with_extension)
+{
+  size_t pos = path.find_last_of('/');
+  if (pos == std::string::npos)
+  {
+    return path;
+  }
+
+  if (with_extension)
+  {
+    return path.substr(pos + 1);
+  }
+
+  size_t dot_pos = path.find_last_of('.');
+  if (dot_pos == std::string::npos)
+  {
+    return path.substr(pos + 1);
+  }
+
+  return path.substr(pos + 1, dot_pos - pos - 1);
 }

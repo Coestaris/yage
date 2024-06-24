@@ -1,0 +1,5 @@
+{
+  "type": "shader",
+  "fragment": "triangle.fsh",
+  "vertex": "triangle.vsh"
+}

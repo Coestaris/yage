@@ -10,6 +10,7 @@
 
 /* Includes ================================================================= */
 #include <string>
+#include <vector>
 
 namespace yage::core
 {
@@ -23,5 +24,8 @@ bool is_directory(std::string path);
 bool is_file(std::string path);
 
 std::string absolute_path(std::string path);
+std::string basename(std::string path, bool with_extension = true);
+std::string get_temp_dir(std::string prefix = {});
+std::vector<std::string> list_files(std::string path, std::string pattern="*");
 
 }

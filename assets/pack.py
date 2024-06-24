@@ -11,7 +11,7 @@ import zipfile
 
 
 def main():
-    ext_to_pack = [".fsh", ".vsh"]
+    ext_to_pack = [".fsh", ".vsh", ".meta"]
     with zipfile.ZipFile("assets.zip", "w", zipfile.ZIP_DEFLATED) as zipf:
         for ext in ext_to_pack:
             for file in glob.glob(f"*{ext}"):

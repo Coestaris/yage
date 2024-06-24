@@ -21,7 +21,7 @@
 yage::core::error
 yage::platform::graphics::gl::shader::set_binary(std::vector<uint8_t> binary)
 {
-  return yage::core::error::NOT_IMPLEMENTED;
+  return yage::core::error::OK;
 }
 
 yage::core::error yage::platform::graphics::gl::shader::destroy()

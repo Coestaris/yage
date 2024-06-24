@@ -137,11 +137,6 @@ std::string lookup_asset_path()
   return {};
 }
 
-std::string create_cache_file(const std::string & asset_path)
-{
-  return asset_path + ".cache";
-}
-
 int main(int argc, char * argv[])
 {
   yage::core::os_events events;
@@ -169,7 +164,7 @@ int main(int argc, char * argv[])
     return 1;
   }
   yage::app::assets::pack::asset_factory asset_factory(
-        asset_path, create_cache_file(asset_path));
+        asset_path, yage::core::get_temp_dir("yagecache"));
 
   yage::app::application app(&asset_factory, window, &events);
 

@@ -51,7 +51,7 @@ void yage::platform::graphics::gl::shader_compiler::clear()
 yage::core::error yage::platform::graphics::gl::shader_compiler::add_shader(
       std::string source, yage::graphics::shader_type type)
 {
-  log(LOG_DEBUG, "Adding shader of type %d", type);
+//  log(LOG_DEBUG, "Adding shader of type %d", type);
 
   if (sources.find(type) != sources.end())
   {
@@ -98,7 +98,7 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
 
   for (auto & [type, source] : sources)
   {
-    log(LOG_DEBUG, "Compiling shader of type %d", type);
+//    log(LOG_DEBUG, "Compiling shader of type %d", type);
     GLuint gl_type;
     switch (type)
     {

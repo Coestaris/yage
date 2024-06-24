@@ -10,8 +10,10 @@
 
 /* Includes ================================================================= */
 #include <string>
+#include <utility>
 
 #include "core/error.hpp"
+#include "app/assets/asset_cacher.hpp"
 
 namespace yage::app::assets
 {
@@ -20,22 +22,16 @@ namespace yage::app::assets
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-class asset_cacher;
-
 class asset
 {
 protected:
-  asset_cacher * cacher = nullptr;
-  std::string    name;
+  yage::app::assets::asset_cacher * cacher = nullptr;
+  std::string                       name;
 
 public:
-  asset(const char * name, asset_cacher * cacher)
-  : asset(std::string(name), cacher)
-  {
-  }
-  asset(const std::string & name, asset_cacher * cacher)
+  asset(std::string name, yage::app::assets::asset_cacher * cacher)
   : cacher(cacher)
-  , name(name)
+  , name(std::move(name))
   {
   }
 
@@ -51,8 +47,13 @@ public:
 #if USE_DEBUG
   /** False is data in asset store different from loaded data into memory.
    * In that case, asset should be reloaded. */
-  virtual bool is_live() const;
+  virtual bool is_live() const = 0;
 #endif
+
+  const std::string & get_name() const
+  {
+    return name;
+  }
 };
 
 }
