@@ -114,6 +114,74 @@ public:
   }
 };
 
+class custom_render_func : public yage::app::application::custom_render_func
+{
+private:
+  yage::app::assets::shader *  triangle;
+  yage::app::assets::texture * image;
+  yage::app::assets::texture * image2;
+
+  yage::graphics::graphics * graphics;
+
+  std::vector<yage::app::assets::asset *> assets;
+
+  yage::app::assets::asset * load_asset(const std::string & name)
+  {
+    auto * asset = app->asset_factory->get_asset(name);
+    if (asset)
+    {
+      if (asset->load() != yage::core::error::OK)
+      {
+        log(LOG_ERROR, "Failed to load asset %s", name.c_str());
+        return nullptr;
+      }
+      assets.push_back(asset);
+    }
+    return asset;
+  }
+
+#if USE_DEBUG
+  void poll_assets()
+  {
+    for (auto * asset : assets)
+    {
+      asset->poll();
+    }
+  }
+#endif
+
+public:
+  explicit custom_render_func(yage::app::application * app)
+  : yage::app::application::custom_render_func(app)
+  {
+  }
+
+  void before_loop() override
+  {
+    graphics = app->window->get_graphics();
+
+    triangle = dynamic_cast<yage::app::assets::shader *>(load_asset("triangle"));
+    image  = dynamic_cast<yage::app::assets::texture *>(load_asset("image"));
+    image2 = dynamic_cast<yage::app::assets::texture *>(load_asset("image2"));
+  }
+
+  void loop() override
+  {
+#if USE_DEBUG
+    poll_assets();
+#endif
+
+    triangle->bind();
+    image->bind(0);
+    image2->bind(1);
+
+    for (auto & public_data : app->objects_renderer)
+    {
+      graphics->draw_rect(public_data.position, public_data.size);
+    }
+  }
+};
+
 std::string lookup_asset_path()
 {
   std::vector<std::string> variants = {
@@ -167,6 +235,7 @@ int main(int argc, char * argv[])
         asset_path, yage::core::get_temp_dir("yagecache"));
 
   yage::app::application app(&asset_factory, window, &events);
+  app.render_func = new custom_render_func(&app);
 
   for (int i = 0; i < 10; i++)
   {

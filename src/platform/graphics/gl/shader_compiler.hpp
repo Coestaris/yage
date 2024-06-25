@@ -72,7 +72,6 @@ public:
 
   void clear() override;
   yage::core::error add_shader(std::string source, yage::graphics::shader_type type) override;
-  std::string get_hash() override;
   yage::core::error compile(std::vector<compile_message> & out_messages) override;
   yage::core::error get_binary(std::vector<uint8_t> & out_data) override;
 };

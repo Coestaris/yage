@@ -28,7 +28,6 @@ public:
   void clear() override;
   yage::core::error set_parameters(const yage::graphics::texture_param & parameters) override;
   yage::core::error add_image(const std::string & path)         override;
-  std::string       get_hash()                                  override;
   yage::core::error compile()                                   override;
   yage::core::error get_binary(std::vector<uint8_t> & out_data) override;
 };

@@ -31,7 +31,7 @@ yage::core::error yage::app::assets::pack::asset_factory::pack_parser::parse(
 {
   for (const auto & file : meta_files)
   {
-    log(LOG_INFO, "Reading meta file: %s", file.c_str());
+//    log(LOG_INFO, "Reading meta file: %s", file.c_str());
     std::ifstream ifs(file);
     if (!ifs.is_open())
     {
@@ -212,7 +212,7 @@ yage::core::error yage::app::assets::pack::asset_factory::read_assets(
                          yage::app::assets::shader::sources sources) {
     auto * shader = new yage::app::assets::shader(basename, &cacher, graphics);
     shader->update(std::move(sources));
-    shaders[basename] = shader;
+    assets[basename] = shader;
   });
   parser.on_texture([this, graphics](
                           const std::string &                   basename,
@@ -221,7 +221,7 @@ yage::core::error yage::app::assets::pack::asset_factory::read_assets(
     auto * texture
           = new yage::app::assets::texture(basename, &cacher, graphics);
     texture->update(param, sources);
-    textures[basename] = texture;
+    assets[basename] = texture;
   });
 
   if (parser.parse(extract_path, meta_files) != yage::core::error::OK)
@@ -230,33 +230,31 @@ yage::core::error yage::app::assets::pack::asset_factory::read_assets(
     return yage::core::INVALID_STATE;
   }
 
+#if USE_DEBUG
   watcher.start();
+#endif
 
   return yage::core::error::OK;
 }
 
-yage::app::assets::shader *
-yage::app::assets::pack::asset_factory::get_shader(const std::string & name)
+yage::app::assets::asset *
+yage::app::assets::pack::asset_factory::get_asset(const std::string & name)
 {
-  return shaders[name];
-}
-
-yage::app::assets::texture *
-yage::app::assets::pack::asset_factory::get_texture(const std::string & name)
-{
-  return textures[name];
+  return assets[name];
 }
 
 yage::core::error yage::app::assets::pack::asset_factory::destroy()
 {
+#if USE_DEBUG
   watcher.stop();
   watcher.join();
+#endif
 
-  for (auto & shader : shaders)
+  for (auto & asset : assets)
   {
-    delete shader.second;
+    delete asset.second;
   }
-  shaders.clear();
+  assets.clear();
 
   return yage::core::OK;
 }
@@ -303,6 +301,7 @@ yage::app::assets::pack::asset_factory::asset_cacher::get_cached_asset(
   return yage::core::error::OK;
 }
 
+#if USE_DEBUG
 void yage::app::assets::pack::asset_factory::pack_watcher::run()
 {
   while (true)
@@ -337,13 +336,20 @@ void yage::app::assets::pack::asset_factory::pack_watcher::run()
       parser.on_shader([this,
                         p](const std::string &                basename,
                            yage::app::assets::shader::sources sources) {
-        if (factory->shaders.find(basename) == factory->shaders.end())
+        if (factory->assets.find(basename) == factory->assets.end())
         {
           log(LOG_WARN, "New shader: %s. Please rerun the application",
               basename.c_str());
         }
 
-        auto * shader = factory->shaders[basename];
+        auto * shader = dynamic_cast<yage::app::assets::shader *>(
+              factory->assets[basename]);
+        if (!shader)
+        {
+          log(LOG_ERROR, "Failed to cast asset to shader: %s",
+              basename.c_str());
+          return;
+        }
         if (shader->src != sources)
         {
           log(LOG_DEBUG, "Marked shader for update: %s", basename.c_str());
@@ -354,11 +360,42 @@ void yage::app::assets::pack::asset_factory::pack_watcher::run()
           log(LOG_DEBUG, "Shader is up to date: %s", basename.c_str());
         }
       });
+      parser.on_texture([this,
+                         p](const std::string &                   basename,
+                            const yage::graphics::texture_param & param,
+                            const std::vector<std::string> &      sources) {
+        if (factory->assets.find(basename) == factory->assets.end())
+        {
+          log(LOG_WARN, "New texture: %s. Please rerun the application",
+              basename.c_str());
+        }
 
-      if (parser.parse(p, meta_files) != yage::core::error::OK)
+        auto * texture = dynamic_cast<yage::app::assets::texture *>(
+              factory->assets[basename]);
+        if (!texture)
+        {
+          log(LOG_ERROR, "Failed to cast asset to texture: %s",
+              basename.c_str());
+          return;
+        }
+
+        /* todo: compare sources */
+        if (texture->parameters != param)
+        {
+          log(LOG_DEBUG, "Marked texture for update: %s", basename.c_str());
+          texture->update(param, sources);
+        }
+        else
+        {
+          log(LOG_DEBUG, "Texture is up to date: %s", basename.c_str());
+        }
+      });
+
+      if (parser.parse(p, meta_files, false) != yage::core::error::OK)
       {
         log(LOG_ERROR, "Failed to parse pack file");
       }
     }
   }
 }
+#endif

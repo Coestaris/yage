@@ -32,8 +32,7 @@ private:
   std::string path;
   bool        destroyed = false;
 
-  std::unordered_map<std::string, yage::app::assets::shader *>  shaders;
-  std::unordered_map<std::string, yage::app::assets::texture *> textures;
+  std::unordered_map<std::string, yage::app::assets::asset *>  assets;
 
   class pack_parser
   {
@@ -89,6 +88,7 @@ private:
           const std::string & key, std::vector<uint8_t> & data) override;
   } cacher;
 
+#if USE_DEBUG
   class pack_watcher : public yage::core::util::named_thread
   {
   private:
@@ -110,12 +110,16 @@ private:
     }
 
   } watcher;
+#endif
 
 public:
   asset_factory(std::string path, std::string cache_path)
   : path(std::move(path))
   , cacher(std::move(cache_path))
-  , watcher(this) {};
+#if USE_DEBUG
+  , watcher(this)
+#endif
+          {};
 
   ~asset_factory()
   {
@@ -125,8 +129,7 @@ public:
   yage::core::error read_assets(yage::graphics::graphics * graphics) override;
   yage::core::error destroy() override;
 
-  yage::app::assets::shader *  get_shader(const std::string & name);
-  yage::app::assets::texture * get_texture(const std::string & name);
+  yage::app::assets::asset *  get_asset(const std::string & name) override;
 };
 
 /* Variables ================================================================ */

@@ -35,6 +35,8 @@ public:
   yage::graphics::texture_param parameters;
   std::vector<std::string>      image_paths;
 
+  std::string get_cache_key();
+
   texture(
         const std::string &               name,
         yage::app::assets::asset_cacher * cacher,
@@ -54,15 +56,28 @@ public:
     return loaded;
   }
 
-  yage::graphics::texture * get_pixmap() const
+  void bind(size_t slot)
   {
-    return pixmap;
+#if USE_DEBUG
+    if (is_loaded())
+    {
+      pixmap->bind(slot);
+    }
+#else
+    pixmap->bind(slot);
+#endif
   }
 
-  bool is_live() const override
+#if USE_DEBUG
+  void poll() override
   {
-    return live;
+    if (!live)
+    {
+      unload();
+      load();
+    }
   }
+#endif
 
   void update(
         const yage::graphics::texture_param & _parameters,
@@ -70,8 +85,7 @@ public:
   {
     parameters  = _parameters;
     image_paths = _image_paths;
-    live        = true;
-    loaded      = false;
+    live        = false;
   }
 };
 /* Variables ================================================================ */

@@ -60,9 +60,6 @@ public:
   add_shader(std::string source, yage::graphics::shader_type type)
         = 0;
 
-  /** Gets hash of shader sources, so we can check if we need to recompile */
-  virtual std::string get_hash() = 0;
-
   /** Compiles shader sources and returns compilation messages.
    * Note, that if there are errors, binary representation of shader is not
    * available. Shader is deleted from video memory after compilation,

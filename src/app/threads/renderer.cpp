@@ -45,15 +45,8 @@ void yage::app::threads::renderer::run()
     app->window->close();
     return;
   }
-  yage::app::assets::shader * shader
-        = app->asset_factory->get_shader("triangle");
-  if (shader->load() != yage::core::error::OK)
-  {
-    log(LOG_ERROR, "Failed to load shader");
-    app->window->close();
-    return;
-  }
-  auto * program = shader->get_program();
+
+  app->render_func->before_loop();
 
   while (true)
   {
@@ -75,18 +68,9 @@ void yage::app::threads::renderer::run()
       log(LOG_DEBUG, "Window is closed. Exiting renderer worker");
       break;
     }
-    if (!shader->is_live())
-    {
-      shader->unload();
-      shader->load();
-      program = shader->get_program();
-    }
 
     graphics->clear();
-    for (auto & public_data : app->objects_renderer)
-    {
-      graphics->draw_rect(public_data.position, public_data.size);
-    }
+    app->render_func->loop();
     instances_count = app->objects_renderer.size();
     graphics->flush();
 

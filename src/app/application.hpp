@@ -42,6 +42,11 @@ enum profiler_points
 class application
 {
 public:
+  ~application()
+  {
+    delete render_func;
+  }
+
   yage::app::assets::asset_factory * asset_factory;
 
   /* copy for logic */
@@ -56,6 +61,21 @@ public:
   yage::graphics::window * window;
 
   yage::app::input_manager input;
+
+  class custom_render_func
+  {
+  protected:
+    application * app;
+
+  public:
+    explicit custom_render_func(application * app)
+    : app(app)
+    {
+    }
+    virtual ~custom_render_func() = default;
+    virtual void before_loop()    = 0;
+    virtual void loop()           = 0;
+  } * render_func;
 
   application(
         yage::app::assets::asset_factory * asset_factory,

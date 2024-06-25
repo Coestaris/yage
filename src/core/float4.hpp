@@ -32,6 +32,11 @@ public:
   {
   }
   ~float4() = default;
+
+  bool operator==(const float4 & other) const
+  {
+    return x == other.x && y == other.y && z == other.z && w == other.w;
+  }
 };
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */

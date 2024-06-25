@@ -34,7 +34,6 @@ public:
   set_parameters(const yage::graphics::texture_param & parameters)
         = 0;
   virtual yage::core::error add_image(const std::string & path)         = 0;
-  virtual std::string       get_hash()                                  = 0;
   virtual yage::core::error compile()                                   = 0;
   virtual yage::core::error get_binary(std::vector<uint8_t> & out_data) = 0;
 };

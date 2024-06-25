@@ -47,7 +47,7 @@ public:
 #if USE_DEBUG
   /** False is data in asset store different from loaded data into memory.
    * In that case, asset should be reloaded. */
-  virtual bool is_live() const = 0;
+  virtual void poll() = 0;
 #endif
 
   const std::string & get_name() const

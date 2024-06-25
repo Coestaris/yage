@@ -65,24 +65,6 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::add_shader(
   return yage::core::error::OK;
 }
 
-std::string yage::platform::graphics::gl::shader_compiler::get_hash()
-{
-  if (sources.empty())
-  {
-    log(LOG_WARN, "No shaders to hash");
-    return {};
-  }
-
-  yage::core::fast_hasher hasher;
-  for (auto & [type, source] : sources)
-  {
-    hasher.add(std::to_string(type));
-    hasher.add(source);
-  }
-
-  return hasher.as_string();
-}
-
 yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
       std::vector<yage::graphics::shader_compiler::compile_message> &
             out_messages)

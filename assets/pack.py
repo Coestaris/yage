@@ -29,7 +29,7 @@ def main():
                 basename = os.path.splitext(basename)[0]
 
                 # If .meta file not exists, create it
-                if os.path.exists(f"{basename}.meta") == False:
+                if not os.path.exists(f"{basename}.meta"):
                     with tempfile.NamedTemporaryFile(mode="w",
                                                      delete=False) as meta:
                         metafile = meta.name

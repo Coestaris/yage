@@ -32,18 +32,13 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::add_image(
   return yage::core::INVALID_STATE;
 }
 
-std::string yage::platform::graphics::gl::texture_compiler::get_hash()
-{
-  return {};
-}
-
 yage::core::error yage::platform::graphics::gl::texture_compiler::compile()
 {
-  return yage::core::INVALID_STATE;
+  return yage::core::OK;
 }
 
 yage::core::error yage::platform::graphics::gl::texture_compiler::get_binary(
       std::vector<uint8_t> & out_data)
 {
-  return yage::core::INVALID_STATE;
+  return yage::core::OK;
 }

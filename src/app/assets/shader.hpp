@@ -27,16 +27,13 @@ public:
         = std::vector<std::pair<yage::graphics::shader_type, std::string>>;
 
 private:
-  yage::graphics::shader *   program {};
-  yage::graphics::graphics * graphics {};
+  yage::graphics::shader *   program  = nullptr;
+  yage::graphics::graphics * graphics = nullptr;
 
   bool live {};
   bool loaded {};
 
-  std::string get_cache_key(yage::graphics::shader_compiler * compiler)
-  {
-    return "shader" + name + compiler->get_hash();
-  }
+  std::string get_cache_key();
 
 public:
   sources src;
@@ -60,15 +57,28 @@ public:
     return loaded;
   }
 
-  yage::graphics::shader * get_program() const
+  void bind()
   {
-    return program;
+#if USE_DEBUG
+    if (program)
+    {
+      program->bind();
+    }
+#else
+    program->bind();
+#endif
   }
 
-  bool is_live() const override
+#if USE_DEBUG
+  void poll() override
   {
-    return live;
+    if (!live)
+    {
+      unload();
+      load();
+    }
   }
+#endif
 
   void update(sources new_src)
   {

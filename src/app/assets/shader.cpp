@@ -10,6 +10,7 @@
 #include <fstream>
 #include "app/assets/shader.hpp"
 #include "core/log.hpp"
+#include "core/hash.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -23,6 +24,7 @@ yage::core::error yage::app::assets::shader::load()
   {
     return yage::core::error::OK;
   }
+  live = true;
 
   yage::graphics::shader_compiler * compiler
         = graphics->create_shader_compiler();
@@ -37,11 +39,11 @@ yage::core::error yage::app::assets::shader::load()
     }
   }
 
-  std::string          cache_key = get_cache_key(compiler);
+  std::string          cache_key = get_cache_key();
   std::vector<uint8_t> data;
   if (cacher->get_cached_asset(cache_key, data) == yage::core::error::OK)
   {
-    log(LOG_DEBUG, "Loading shader from cache: %s", cache_key.c_str());
+    log(LOG_DEBUG, "Loading shader from cache: %s (%zu bytes)", cache_key.c_str(), data.size());
   }
   else
   {
@@ -115,8 +117,6 @@ yage::core::error yage::app::assets::shader::load()
     return yage::core::error::INVALID_STATE;
   }
 
-  live = true;
-
   return yage::core::OK;
 }
 
@@ -129,5 +129,17 @@ void yage::app::assets::shader::unload()
 
   program->destroy();
   program = nullptr;
-  loaded = false;
+  live    = false;
+  loaded  = false;
+}
+std::string yage::app::assets::shader::get_cache_key()
+{
+  yage::core::fast_hasher hasher;
+  for (auto & source : src)
+  {
+    hasher.add(source.second);
+    hasher.add(std::to_string(source.first));
+  }
+
+  return "shader" + name + hasher.as_string();
 }
