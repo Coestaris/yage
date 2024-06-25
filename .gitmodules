@@ -1,7 +1,7 @@
 [submodule "thirdparty/11Zip"]
 	path = thirdparty/11Zip
 	url = https://github.com/Sygmei/11Zip
-[submodule "thirdparty/json"]
-	path = thirdparty/json
-	url = https://github.com/nlohmann/json
+[submodule "thirdparty/jsoncpp"]
+	path = thirdparty/jsoncpp
+	url = https://github.com/open-source-parsers/jsoncpp.git
 	branch = master

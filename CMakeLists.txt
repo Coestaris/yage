@@ -44,6 +44,7 @@ if ((BACKEND_WIN_GL OR BACKEND_WIN_DX) AND NOT WIN32)
 endif ()
 
 # Here, to not affect the build process by our options
+set(SKIP_INSTALL_ALL ON)
 add_subdirectory(thirdparty/11Zip)
 set(JSONCPP_WITH_CMAKE_PACKAGE OFF)
 set(JSONCPP_WITH_PKGCONFIG_SUPPORT OFF)
