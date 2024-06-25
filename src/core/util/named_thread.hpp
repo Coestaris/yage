@@ -27,7 +27,8 @@ private:
 
   std::thread * thread = nullptr;
   std::string   name;
-  virtual void  run() = 0;
+
+  virtual void run() = 0;
 
 public:
   static inline std::string

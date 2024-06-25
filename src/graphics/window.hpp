@@ -14,7 +14,7 @@
 #include <mutex>
 #include <map>
 
-#include "graphics/image.hpp"
+#include "graphics/texture.hpp"
 #include "graphics/graphics.hpp"
 
 #include "core/error.hpp"
@@ -92,11 +92,11 @@ public:
     return yage::core::error::OK;
   }
 
-  virtual yage::core::error set_icon(image & icon) = 0;
-  virtual yage::core::error get_icon(image & icon) = 0;
+  virtual yage::core::error set_icon(texture & icon) = 0;
+  virtual yage::core::error get_icon(texture & icon) = 0;
 
-  virtual yage::core::error set_cursor(image & cursor) = 0;
-  virtual yage::core::error get_cursor(image & cursor) = 0;
+  virtual yage::core::error set_cursor(texture & cursor) = 0;
+  virtual yage::core::error get_cursor(texture & cursor) = 0;
 
   virtual yage::core::error set_geometry(geometry & geometry) = 0;
   virtual yage::core::error get_geometry(geometry & geometry)

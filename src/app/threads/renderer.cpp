@@ -45,14 +45,8 @@ void yage::app::threads::renderer::run()
     app->window->close();
     return;
   }
-  yage::app::assets::shader * shader = nullptr;
-  if (app->asset_factory->get_shader("triangle", &shader)
-      != yage::core::error::OK)
-  {
-    log(LOG_ERROR, "Failed to get shader");
-    app->window->close();
-    return;
-  }
+  yage::app::assets::shader * shader
+        = app->asset_factory->get_shader("triangle");
   if (shader->load() != yage::core::error::OK)
   {
     log(LOG_ERROR, "Failed to load shader");
@@ -80,6 +74,12 @@ void yage::app::threads::renderer::run()
     {
       log(LOG_DEBUG, "Window is closed. Exiting renderer worker");
       break;
+    }
+    if (!shader->is_live())
+    {
+      shader->unload();
+      shader->load();
+      program = shader->get_program();
     }
 
     graphics->clear();

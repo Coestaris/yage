@@ -20,6 +20,8 @@
 #include "platform/graphics/gl/glplatform.hpp"
 #include "platform/graphics/gl/shader_compiler.hpp"
 #include "platform/graphics/gl/shader.hpp"
+#include "texture_compiler.hpp"
+#include "texture.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -135,6 +137,60 @@ void APIENTRY GLDebugMessageCallback(
 #endif
 
 /* Shared functions ========================================================= */
+yage::graphics::shader_compiler *
+yage::platform::graphics::gl::graphics::create_shader_compiler()
+{
+  return new yage::platform::graphics::gl::shader_compiler(this);
+}
+
+yage::core::error
+yage::platform::graphics::gl::graphics::destroy_shader_compiler(
+      yage::graphics::shader_compiler * compiler)
+{
+  delete compiler;
+  return yage::core::error::OK;
+}
+
+yage::graphics::shader * yage::platform::graphics::gl::graphics::create_shader()
+{
+  return new yage::platform::graphics::gl::shader(this);
+}
+
+yage::core::error yage::platform::graphics::gl::graphics::destroy_shader(
+      yage::graphics::shader * shader)
+{
+  delete shader;
+  return yage::core::OK;
+}
+
+yage::graphics::texture_compiler *
+yage::platform::graphics::gl::graphics::create_texture_compiler()
+{
+  return new yage::platform::graphics::gl::texture_compiler(this);
+}
+
+yage::core::error
+yage::platform::graphics::gl::graphics::destroy_texture_compiler(
+      yage::graphics::texture_compiler * compiler)
+{
+  delete compiler;
+  return yage::core::error::OK;
+}
+
+yage::graphics::texture *
+yage::platform::graphics::gl::graphics::create_texture(
+      const yage::graphics::texture_param & parameters)
+{
+  return new yage::platform::graphics::gl::texture(this, parameters);
+}
+
+yage::core::error yage::platform::graphics::gl::graphics::destroy_texture(
+      yage::graphics::texture * texture)
+{
+  delete texture;
+  return yage::core::error::OK;
+}
+
 void yage::platform::graphics::gl::graphics::cache_extensions()
 {
   const char * ext = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
@@ -261,29 +317,4 @@ yage::core::error yage::platform::graphics::gl::graphics::draw_rect(
   glVertex2f(position.x, position.y + dim.y);         // Bottom Left
   glEnd(); // Finished Drawing The Quad
   return yage::core::error::OK;
-}
-
-yage::graphics::shader_compiler *
-yage::platform::graphics::gl::graphics::create_shader_compiler()
-{
-  return new yage::platform::graphics::gl::shader_compiler(this);
-}
-
-yage::core::error
-yage::platform::graphics::gl::graphics::destroy_shader_compiler(
-      yage::graphics::shader_compiler * compiler)
-{
-  delete compiler;
-  return yage::core::error::OK;
-}
-
-yage::graphics::shader * yage::platform::graphics::gl::graphics::create_shader()
-{
-  return new yage::platform::graphics::gl::shader(this);
-}
-
-yage::core::error yage::platform::graphics::gl::graphics::destroy_shader(
-      yage::graphics::shader * shader)
-{
-  return yage::core::EMPTY;
 }

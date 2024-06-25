@@ -27,24 +27,9 @@ yage::core::error yage::app::assets::shader::load()
   yage::graphics::shader_compiler * compiler
         = graphics->create_shader_compiler();
 
-  for (auto & source : sources)
+  for (auto & source : src)
   {
-    /* Read the source file */
-    std::ifstream file(source.second);
-    if (!file.is_open())
-    {
-      log(LOG_ERROR, "Failed to open shader source file: %s",
-          source.second.c_str());
-      return yage::core::error::FILE_NOT_FOUND;
-    }
-
-    std::string source_code(
-          (std::istreambuf_iterator<char>(file)),
-          std::istreambuf_iterator<char>());
-
-    file.close();
-
-    yage::core::error err = compiler->add_shader(source_code, source.first);
+    yage::core::error err = compiler->add_shader(source.second, source.first);
     if (err != yage::core::error::OK)
     {
       log(LOG_ERROR, "Failed to add shader source: %s", source.second.c_str());
@@ -56,11 +41,11 @@ yage::core::error yage::app::assets::shader::load()
   std::vector<uint8_t> data;
   if (cacher->get_cached_asset(cache_key, data) == yage::core::error::OK)
   {
-    log(LOG_INFO, "Loading shader from cache: %s", cache_key.c_str());
+    log(LOG_DEBUG, "Loading shader from cache: %s", cache_key.c_str());
   }
   else
   {
-    log(LOG_INFO, "Compiling shader: %s", cache_key.c_str());
+    log(LOG_DEBUG, "Compiling shader: %s", cache_key.c_str());
 
     std::vector<yage::graphics::shader_compiler::compile_message> messages;
     bool has_errors = false;
@@ -130,6 +115,8 @@ yage::core::error yage::app::assets::shader::load()
     return yage::core::error::INVALID_STATE;
   }
 
+  live = true;
+
   return yage::core::OK;
 }
 
@@ -139,9 +126,8 @@ void yage::app::assets::shader::unload()
   {
     return;
   }
-}
 
-bool yage::app::assets::shader::is_live() const
-{
-  return true;
+  program->destroy();
+  program = nullptr;
+  loaded = false;
 }

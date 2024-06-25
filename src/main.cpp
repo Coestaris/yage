@@ -180,6 +180,7 @@ int main(int argc, char * argv[])
 
   app.spawn_threads();
 
+  asset_factory.destroy();
   yage::platform::graphics::destroy_window(window);
 
   for (auto * game_object : app.objects_logic)

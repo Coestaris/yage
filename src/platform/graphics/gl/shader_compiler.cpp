@@ -12,6 +12,7 @@
 
 #include "platform/graphics/gl/shader_compiler.hpp"
 #include "core/log.hpp"
+#include "core/hash.hpp"
 #include "glplatform.hpp"
 
 /* Defines ================================================================== */
@@ -51,7 +52,7 @@ void yage::platform::graphics::gl::shader_compiler::clear()
 yage::core::error yage::platform::graphics::gl::shader_compiler::add_shader(
       std::string source, yage::graphics::shader_type type)
 {
-//  log(LOG_DEBUG, "Adding shader of type %d", type);
+  //  log(LOG_DEBUG, "Adding shader of type %d", type);
 
   if (sources.find(type) != sources.end())
   {
@@ -72,16 +73,14 @@ std::string yage::platform::graphics::gl::shader_compiler::get_hash()
     return {};
   }
 
-  /* we need to find a better hash function */
-  std::hash<std::string> hasher;
-  std::string            hash;
-
+  yage::core::fast_hasher hasher;
   for (auto & [type, source] : sources)
   {
-    hash += std::to_string(type) + source;
+    hasher.add(std::to_string(type));
+    hasher.add(source);
   }
 
-  return std::to_string(hasher(hash));
+  return hasher.as_string();
 }
 
 yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
@@ -98,7 +97,7 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
 
   for (auto & [type, source] : sources)
   {
-//    log(LOG_DEBUG, "Compiling shader of type %d", type);
+    //    log(LOG_DEBUG, "Compiling shader of type %d", type);
     GLuint gl_type;
     switch (type)
     {

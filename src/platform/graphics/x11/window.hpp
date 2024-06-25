@@ -89,22 +89,22 @@ public:
     throw std::runtime_error("Not implemented");
   }
 
-  yage::core::error set_icon(yage::graphics::image & icon) override
+  yage::core::error set_icon(yage::graphics::texture & icon) override
   {
     throw std::runtime_error("Not implemented");
   }
 
-  yage::core::error get_icon(yage::graphics::image & icon) override
+  yage::core::error get_icon(yage::graphics::texture & icon) override
   {
     throw std::runtime_error("Not implemented");
   }
 
-  yage::core::error set_cursor(yage::graphics::image & cursor) override
+  yage::core::error set_cursor(yage::graphics::texture & cursor) override
   {
     throw std::runtime_error("Not implemented");
   }
 
-  yage::core::error get_cursor(yage::graphics::image & cursor) override
+  yage::core::error get_cursor(yage::graphics::texture & cursor) override
   {
     throw std::runtime_error("Not implemented");
   }

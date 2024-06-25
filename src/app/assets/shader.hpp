@@ -22,12 +22,16 @@ namespace yage::app::assets
 /* Types ==================================================================== */
 class shader : public yage::app::assets::asset
 {
+public:
+  using sources
+        = std::vector<std::pair<yage::graphics::shader_type, std::string>>;
+
 private:
   yage::graphics::shader *   program {};
   yage::graphics::graphics * graphics {};
-  bool                       loaded = false;
 
-  std::vector<std::pair<yage::graphics::shader_type, std::string>> sources;
+  bool live {};
+  bool loaded {};
 
   std::string get_cache_key(yage::graphics::shader_compiler * compiler)
   {
@@ -35,15 +39,14 @@ private:
   }
 
 public:
+  sources src;
+
   shader(
-        std::string                       name,
+        const std::string &               name,
         yage::app::assets::asset_cacher * cacher,
-        yage::graphics::graphics *        graphics,
-        std::vector<std::pair<yage::graphics::shader_type, std::string>>
-              sources)
-  : asset(std::move(name), cacher)
+        yage::graphics::graphics *        graphics)
+  : asset(name, cacher)
   , graphics(graphics)
-  , sources(std::move(sources))
   {
   }
 
@@ -62,7 +65,16 @@ public:
     return program;
   }
 
-  bool is_live() const override;
+  bool is_live() const override
+  {
+    return live;
+  }
+
+  void update(sources new_src)
+  {
+    src  = std::move(new_src);
+    live = false;
+  }
 };
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
