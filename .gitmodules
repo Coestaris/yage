@@ -5,7 +5,3 @@
 	path = thirdparty/json
 	url = https://github.com/nlohmann/json
 	branch = master
-[submodule "thirdparty/jsoncpp"]
-	path = thirdparty/jsoncpp
-	url = https://github.com/open-source-parsers/jsoncpp.git
-	branch = master
