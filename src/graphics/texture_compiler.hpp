@@ -32,7 +32,7 @@ protected:
 
   /* little helper to load image,
    * so backends do not reinvent the wheel */
-  void image_to_rgba8888(
+  bool image_to_rgba8888(
         const std::string &     path,
         std::vector<rgba8888> & out_data,
         yage::core::float2 &    out_size);

@@ -50,7 +50,7 @@ static const std::unordered_map<std::string, yage::graphics::tex_wrap>
 // clang-format on
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-std::string yage::graphics::tex_type_to_string(yage::graphics::tex_type type)
+std::string yage::graphics::to_string(yage::graphics::tex_type type)
 {
   for (const auto & [key, value] : tex_type_map)
   {
@@ -75,7 +75,7 @@ yage::graphics::tex_type_from_string(const std::string & type)
 }
 
 std::string
-yage::graphics::tex_filter_to_string(yage::graphics::tex_filter filter)
+yage::graphics::to_string(yage::graphics::tex_filter filter)
 {
   for (const auto & [key, value] : tex_filter_map)
   {
@@ -99,7 +99,7 @@ yage::graphics::tex_filter_from_string(const std::string & filter)
   return yage::graphics::tex_filter::UNKNOWN;
 }
 
-std::string yage::graphics::tex_pixel_format_to_string(
+std::string yage::graphics::to_string(
       yage::graphics::tex_pixel_format format)
 {
   for (const auto & [key, value] : tex_pixel_format_map)
@@ -125,7 +125,7 @@ yage::graphics::tex_pixel_format_from_string(const std::string & format)
   return yage::graphics::tex_pixel_format::UNKNOWN;
 }
 
-std::string yage::graphics::tex_wrap_to_string(yage::graphics::tex_wrap wrap)
+std::string yage::graphics::to_string(yage::graphics::tex_wrap wrap)
 {
   for (const auto & [key, value] : tex_wrap_map)
   {

@@ -53,6 +53,7 @@ set(BUILD_OBJECT_LIBS OFF)
 set(BUILD_STATIC_LIBS OFF)
 set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF)
 add_subdirectory(thirdparty/jsoncpp)
+add_subdirectory(thirdparty/FreeImage)
 
 # Setup compiler
 set(CMAKE_CXX_STANDARD 17)
@@ -129,3 +130,6 @@ add_executable(yage ${PLAIN_SRC_FILES}
 
 target_link_libraries(yage elzip)
 target_link_libraries(yage jsoncpp_lib)
+
+target_include_directories(yage PRIVATE thirdparty/FreeImage/Source)
+target_link_libraries(yage FreeImage)

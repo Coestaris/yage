@@ -98,13 +98,14 @@ struct texture_param
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-std::string      tex_type_to_string(tex_type type);
+std::string to_string(tex_type type);
+std::string to_string(tex_filter filter);
+std::string to_string(tex_wrap wrap);
+std::string to_string(tex_pixel_format format);
+
 tex_type         tex_type_from_string(const std::string & type);
-std::string      tex_filter_to_string(tex_filter filter);
 tex_filter       tex_filter_from_string(const std::string & filter);
-std::string      tex_pixel_format_to_string(tex_pixel_format format);
 tex_pixel_format tex_pixel_format_from_string(const std::string & format);
-std::string      tex_wrap_to_string(tex_wrap wrap);
 tex_wrap         tex_wrap_from_string(const std::string & wrap);
 
 }
