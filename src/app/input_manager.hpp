@@ -25,14 +25,15 @@ class input_manager
 private:
   yage::graphics::input_events * input;
 
-  bool key_states[static_cast<size_t>(yage::core::key::MAX_KEYS)]        = { false };
-  bool mouse_states[static_cast<size_t>(yage::core::mouse::MAX_BUTTONS)] = { false };
+  bool key_states[static_cast<size_t>(yage::core::key::MAX_KEYS)] = { false };
+  bool mouse_states[static_cast<size_t>(yage::core::mouse::MAX_BUTTONS)]
+        = { false };
   yage::core::float2 mouse_pos;
 
-  yage::graphics::key_pressed_listener key_pressed_listener;
-  yage::graphics::key_released_listener key_released_listener;
-  yage::graphics::mouse_pressed_listener mouse_pressed_listener;
-  yage::graphics::mouse_moved_listener mouse_moved_listener;
+  yage::graphics::key_pressed_listener    key_pressed_listener;
+  yage::graphics::key_released_listener   key_released_listener;
+  yage::graphics::mouse_pressed_listener  mouse_pressed_listener;
+  yage::graphics::mouse_moved_listener    mouse_moved_listener;
   yage::graphics::mouse_released_listener mouse_released_listener;
 
 public:
@@ -43,6 +44,11 @@ public:
   yage::core::float2 mouse_position() const;
 
   void update();
+
+  yage::graphics::input_events * raw_input()
+  {
+    return input;
+  }
 };
 
 /* Variables ================================================================ */

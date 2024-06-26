@@ -43,7 +43,8 @@ yage::core::error yage::app::assets::shader::load()
   std::vector<uint8_t> data;
   if (cacher->get_cached_asset(cache_key, data) == yage::core::error::OK)
   {
-    log(LOG_DEBUG, "Loading shader from cache: %s (%zu bytes)", cache_key.c_str(), data.size());
+    log(LOG_DEBUG, "Loading shader from cache: %s (%zu bytes)",
+        cache_key.c_str(), data.size());
   }
   else
   {
@@ -104,6 +105,7 @@ yage::core::error yage::app::assets::shader::load()
 
   graphics->destroy_shader_compiler(compiler);
 
+  loaded  = true;
   program = graphics->create_shader();
   if (!program)
   {
@@ -127,10 +129,14 @@ void yage::app::assets::shader::unload()
     return;
   }
 
-  program->destroy();
-  program = nullptr;
-  live    = false;
-  loaded  = false;
+  if (program)
+  {
+    program->destroy();
+    graphics->destroy_shader(program);
+    program = nullptr;
+  }
+  live   = false;
+  loaded = false;
 }
 std::string yage::app::assets::shader::get_cache_key()
 {

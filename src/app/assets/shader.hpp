@@ -60,6 +60,8 @@ public:
   void bind()
   {
 #if USE_DEBUG
+    /* allow working without an actually
+     * loaded shader if debug mode is on */
     if (program)
     {
       program->bind();

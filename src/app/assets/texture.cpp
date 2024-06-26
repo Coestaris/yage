@@ -66,6 +66,7 @@ yage::core::error yage::app::assets::texture::load()
   }
 
   pixmap = graphics->create_texture(parameters);
+  loaded  = true;
   if (pixmap->set_binary(data) != yage::core::OK)
   {
     log(LOG_ERROR, "Failed to load texture: %s", cache_key.c_str());
@@ -84,8 +85,13 @@ void yage::app::assets::texture::unload()
     return;
   }
 
-  pixmap->destroy();
-  pixmap = nullptr;
+  if (pixmap)
+  {
+    pixmap->destroy();
+    graphics->destroy_texture(pixmap);
+    pixmap = nullptr;
+  }
+
   live   = false;
   loaded = false;
 }

@@ -29,9 +29,8 @@ private:
   yage::core::util::profiler * profiler;
   yage::app::frequency_keeper  keeper;
 
-  size_t                     instances_count;
+  size_t                     instances_count = 0;
   yage::graphics::graphics * graphics; /* cache */
-
 
   bool compile_shader();
 
@@ -71,7 +70,7 @@ public:
   , profiler(profiler)
   {
     int max_fps = 0;
-    app->window->get_max_fps(max_fps);
+    app->subrenderer->window->get_max_fps(max_fps);
     keeper = yage::app::frequency_keeper(max_fps);
   }
 };

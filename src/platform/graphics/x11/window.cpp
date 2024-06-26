@@ -451,7 +451,7 @@ yage::core::error yage::platform::graphics::x11::window::set_mode(
 
     case yage::graphics::settings::window_mode::WINDOWED_RESIZABLE:
     {
-      XSizeHints sizeHints;
+      XSizeHints sizeHints = {};
       sizeHints.flags      = PSize | PMinSize | PMaxSize;
       sizeHints.min_width  = 100; // Minimum width
       sizeHints.min_height = 100; // Minimum height
@@ -463,7 +463,7 @@ yage::core::error yage::platform::graphics::x11::window::set_mode(
 
     case yage::graphics::settings::window_mode::WINDOWED_FIXED:
     {
-      XSizeHints sizeHints;
+      XSizeHints sizeHints = {};
       sizeHints.flags      = PSize | PMinSize | PMaxSize;
       sizeHints.min_width  = settings.width;
       sizeHints.min_height = settings.height;

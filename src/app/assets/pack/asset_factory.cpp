@@ -31,7 +31,7 @@ yage::core::error yage::app::assets::pack::asset_factory::pack_parser::parse(
 {
   for (const auto & file : meta_files)
   {
-//    log(LOG_INFO, "Reading meta file: %s", file.c_str());
+    //    log(LOG_INFO, "Reading meta file: %s", file.c_str());
     std::ifstream ifs(file);
     if (!ifs.is_open())
     {
@@ -252,6 +252,7 @@ yage::core::error yage::app::assets::pack::asset_factory::destroy()
 
   for (auto & asset : assets)
   {
+    asset.second->unload();
     delete asset.second;
   }
   assets.clear();

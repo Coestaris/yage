@@ -34,13 +34,13 @@ private:
   size_t counter      = 0;
   bool   should_close = false;
 
-  float draw_time_ms;
-  float copy_time_ms;
-  float update_time_ms;
-  float particles_time_ms;
-  float physics_time_ms;
-  float ai_time_ms;
-  float sound_time_ms;
+  float draw_time_ms = 0;
+  float copy_time_ms = 0;
+  float update_time_ms = 0;
+  float particles_time_ms = 0;
+  float physics_time_ms = 0;
+  float ai_time_ms = 0;
+  float sound_time_ms = 0;
 
 public:
   statistics(

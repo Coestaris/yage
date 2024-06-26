@@ -27,21 +27,21 @@ void yage::app::threads::logic::run()
 
     /* Stage 1: Sync with updater before frame */
     profiler->passed(PROF_POINT_LOGIC_PRE_FRAME);
-    app->pre_frame_sync.wait();
+    app->common_data.pre_frame_sync.wait();
 
     /* Stage 2: Process input */
     profiler->start_cycle();
     profiler->passed(PROF_POINT_LOGIC_INPUT);
-    app->input.update();
+    app->get_input().update();
 
     /* Stage 3: Update objects */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_OBJECTS);
     std::vector<size_t> to_remove;
     size_t              index = 0;
-    for (auto & object : app->objects_logic)
+    for (auto & object : app->common_data.objects)
     {
       object->update();
-      if (object->should_be_deleted)
+      if (object->logic_data.should_be_deleted)
       {
         to_remove.push_back(index);
       }
@@ -49,11 +49,20 @@ void yage::app::threads::logic::run()
     }
     for (auto obj_index : to_remove)
     {
-      auto * obj = app->objects_logic[obj_index];
-      app->objects_logic.erase(app->objects_logic.begin() + obj_index);
+      auto * obj = app->common_data.objects[obj_index];
+      app->common_data.objects.erase(
+            app->common_data.objects.begin() + obj_index);
       delete obj;
     }
-    instances_count = app->objects_logic.size();
+    {
+      std::lock_guard<std::mutex> lock(app->logic_data.object_to_add_mutex);
+      app->common_data.objects.insert(
+            app->common_data.objects.end(),
+            app->logic_data.object_to_add.begin(),
+            app->logic_data.object_to_add.end());
+      app->logic_data.object_to_add.clear();
+    }
+    instances_count = app->common_data.objects.size();
 
     /* Stage 4: Update particles */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_PARTICLES);
@@ -73,7 +82,7 @@ void yage::app::threads::logic::run()
 
     /* Stage 8: Sync with renderer after frame */
     profiler->passed(PROF_POINT_LOGIC_POST_FRAME);
-    app->post_frame_sync.wait();
+    app->common_data.post_frame_sync.wait();
   }
 }
 

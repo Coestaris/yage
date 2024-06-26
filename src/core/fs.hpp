@@ -31,6 +31,8 @@ std::string absolute_path(std::string path);
 std::string basename(std::string path, bool with_extension = true);
 
 std::string get_temp_dir(const std::string& prefix = {});
+std::string get_cache_dir(const std::string& prefix = {});
+
 std::vector<std::string> list_files(const std::string& path, const std::string& pattern = "*");
 
 }

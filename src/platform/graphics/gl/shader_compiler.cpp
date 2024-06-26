@@ -215,5 +215,7 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::get_binary(
     return {};
   }
 
+  out_data = binary;
+
   return {};
 }

@@ -46,10 +46,18 @@ private:
   point                      first_point = 0;
 
 public:
+  ~simple_profiler()
+  {
+    delete[] prev_points;
+    delete[] points;
+  }
+
   simple_profiler(size_t max_points = 100)
   {
-    prev_points      = new yage::core::nano_seconds[max_points];
-    points           = new yage::core::nano_seconds[max_points];
+    prev_points = new yage::core::nano_seconds[max_points];
+    std::fill(prev_points, prev_points + max_points, 0);
+    points = new yage::core::nano_seconds[max_points];
+    std::fill(points, points + max_points, 0);
     this->max_points = max_points;
   }
 

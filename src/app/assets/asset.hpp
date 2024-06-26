@@ -22,10 +22,17 @@ namespace yage::app::assets
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
+/** Base class for all assets.
+ * Assets are resources that are loaded into memory and used by
+ * the application (e.g. textures, sounds, etc.). */
 class asset
 {
 protected:
+  /** Interface for performing caching operations. */
   yage::app::assets::asset_cacher * cacher = nullptr;
+
+  /** Programmer-readable name of the asset.
+   * It is used to identify the asset in the asset storage. */
   std::string                       name;
 
 public:
@@ -50,7 +57,8 @@ public:
   virtual void poll() = 0;
 #endif
 
-  const std::string & get_name() const
+  /** Returns the name of the asset. */
+  [[nodiscard]] const std::string & get_name() const
   {
     return name;
   }

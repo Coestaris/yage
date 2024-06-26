@@ -24,13 +24,13 @@
 /* Shared functions ========================================================= */
 void yage::app::threads::renderer::run()
 {
-  if (app->window->open() != yage::core::error::OK)
+  if (app->subrenderer->window->open() != yage::core::error::OK)
   {
     log(LOG_ERROR, "Failed to open window");
     return;
   }
 
-  graphics = app->window->get_graphics();
+  graphics = app->subrenderer->window->get_graphics();
   if (!graphics)
   {
     log(LOG_ERROR, "Unable to get graphics from window");
@@ -38,22 +38,22 @@ void yage::app::threads::renderer::run()
   }
 
   yage::core::error error;
-  if ((error = app->asset_factory->read_assets(graphics))
+  if ((error = app->subrenderer->asset_factory->read_assets(graphics))
       != yage::core::error::OK)
   {
     log(LOG_ERROR, "Failed to read assets: %d", error);
-    app->window->close();
+    app->subrenderer->window->close();
     return;
   }
 
-  app->render_func->before_loop();
+  app->subrenderer->before_loop();
 
   while (true)
   {
     /* Stage 1: Sync with updater before frame */
     profiler->start_cycle();
     profiler->passed(PROF_POINT_RENDERER_PRE_FRAME);
-    app->pre_frame_sync.wait();
+    app->common_data.pre_frame_sync.wait();
 
     /* Stage 2: Draw the frame using data from previous frame */
     profiler->passed(PROF_POINT_RENDERER_DRAW_START);
@@ -61,33 +61,33 @@ void yage::app::threads::renderer::run()
     if (stop_signal_listener.get_next(signal))
     {
       log(LOG_DEBUG, "Received signal: %d", signal);
-      app->window->close();
+      app->subrenderer->window->close();
     }
-    if (!app->window->is_open())
+    if (!app->subrenderer->window->is_open())
     {
       log(LOG_DEBUG, "Window is closed. Exiting renderer worker");
       break;
     }
 
     graphics->clear();
-    app->render_func->loop();
-    instances_count = app->objects_renderer.size();
+    app->subrenderer->loop();
+    instances_count = app->subrenderer->objects.size();
     graphics->flush();
 
     /* Stage 3: Sync with updater after frame */
     profiler->passed(PROF_POINT_RENDERER_DRAW_END);
-    app->post_frame_sync.wait();
+    app->common_data.post_frame_sync.wait();
 
     /* Stage 4: Copy data from updater to renderer (for next frame) */
-    app->objects_renderer.clear();
-    for (auto & object : app->objects_logic)
+    app->subrenderer->objects.clear();
+    for (auto & object : app->common_data.objects)
     {
-      app->objects_renderer.push_back(object->data);
+      app->subrenderer->objects.push_back(object->data);
     }
 
     /* Stage 5: Wait for vsync */
     profiler->passed(PROF_POINT_RENDERER_UPDATE_START);
-    if (app->window->update() != yage::core::error::OK)
+    if (app->subrenderer->window->update() != yage::core::error::OK)
     {
       log(LOG_ERROR, "Failed to update window");
       break;

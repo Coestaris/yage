@@ -7,6 +7,7 @@
 
 /* Includes ================================================================= */
 #include "core/fs.hpp"
+#include "core/log.hpp"
 
 #include <csignal>
 #include <sys/stat.h>
@@ -18,7 +19,7 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-bool yage::core::file_exists(const std::string& path)
+bool yage::core::file_exists(const std::string & path)
 {
   if (access(path.c_str(), F_OK) != -1)
   {
@@ -28,7 +29,7 @@ bool yage::core::file_exists(const std::string& path)
   return false;
 }
 
-bool yage::core::is_directory(const std::string& path)
+bool yage::core::is_directory(const std::string & path)
 {
   struct stat statbuf;
   if (stat(path.c_str(), &statbuf) != 0)
@@ -39,7 +40,7 @@ bool yage::core::is_directory(const std::string& path)
   return S_ISDIR(statbuf.st_mode);
 }
 
-bool yage::core::is_file(const std::string& path)
+bool yage::core::is_file(const std::string & path)
 {
   struct stat statbuf;
   if (stat(path.c_str(), &statbuf) != 0)
@@ -64,7 +65,7 @@ std::string yage::core::absolute_path(std::string path)
   return result;
 }
 
-std::string yage::core::get_temp_dir(const std::string& prefix)
+std::string yage::core::get_temp_dir(const std::string & prefix)
 {
   char * temp_dir = getenv("TMPDIR");
   if (temp_dir == nullptr)
@@ -99,8 +100,48 @@ std::string yage::core::get_temp_dir(const std::string& prefix)
   return dir;
 }
 
+std::string yage::core::get_cache_dir(const std::string & prefix)
+{
+  std::string dir;
+  auto        tmp = getenv("XDG_CACHE_HOME");
+  if (tmp)
+  {
+    dir = tmp;
+  }
+  else
+  {
+    tmp = getenv("HOME");
+    if (tmp)
+    {
+      dir = std::string(tmp) + "/.cache";
+    }
+    else
+    {
+      log(LOG_WARN,
+          "Using /tmp as cache directory. Cache may be lost on reboot.");
+      dir = yage::core::get_temp_dir(prefix);
+    }
+  }
+
+  if (!prefix.empty())
+  {
+    dir += "/" + prefix;
+  }
+  else
+  {
+    dir += "/yage";
+  }
+
+  if (mkdir(dir.c_str(), 0700) == -1 && errno != EEXIST)
+  {
+    return {};
+  }
+
+  return dir;
+}
+
 std::vector<std::string>
-yage::core::list_files(const std::string& path, const std::string& pattern)
+yage::core::list_files(const std::string & path, const std::string & pattern)
 {
   std::vector<std::string> files;
 
@@ -140,7 +181,7 @@ std::string yage::core::basename(std::string path, bool with_extension)
   return path.substr(pos + 1, dot_pos - pos - 1);
 }
 
-time_t yage::core::file_mtime(const std::string& path)
+time_t yage::core::file_mtime(const std::string & path)
 {
   struct stat statbuf;
   if (stat(path.c_str(), &statbuf) != 0)
@@ -151,7 +192,7 @@ time_t yage::core::file_mtime(const std::string& path)
   return statbuf.st_mtime;
 }
 
-time_t yage::core::file_ctime(const std::string& path)
+time_t yage::core::file_ctime(const std::string & path)
 {
   struct stat statbuf;
   if (stat(path.c_str(), &statbuf) != 0)

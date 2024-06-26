@@ -10,6 +10,8 @@
 
 /* Includes ================================================================= */
 #include <string>
+#include <algorithm>
+
 #include "core/os_events.hpp"
 #include "core/util/sync_point.hpp"
 #include "core/util/profiler.hpp"
@@ -39,56 +41,144 @@ enum profiler_points
   PROF_POINT_LOGIC_POST_FRAME,
 };
 
+namespace threads
+{
+class logic;
+class renderer;
+}
+
 class application
 {
-public:
-  ~application()
-  {
-    delete render_func;
-  }
-
-  yage::app::assets::asset_factory * asset_factory;
-
-  /* copy for logic */
-  std::vector<yage::app::object *> objects_logic;
-  /* copy for renderer */
-  std::vector<yage::app::object::public_data> objects_renderer;
-
-  yage::core::util::sync_point pre_frame_sync { 2 };
-  yage::core::util::sync_point post_frame_sync { 2 };
-
+private:
   yage::core::os_events *  os_events;
-  yage::graphics::window * window;
-
   yage::app::input_manager input;
 
-  class custom_render_func
+public:
+  class common_data
+  {
+  private:
+    std::vector<yage::app::object *> objects;
+
+    yage::core::util::sync_point pre_frame_sync { 2 };
+    yage::core::util::sync_point post_frame_sync { 2 };
+
+    friend class yage::app::threads::logic;
+    friend class yage::app::threads::renderer;
+    friend class application;
+
+  } common_data;
+
+  class logic_data
+  {
+  private:
+    std::vector<yage::app::object *> object_to_add;
+    std::mutex                       object_to_add_mutex;
+
+    friend class yage::app::threads::logic;
+    friend class application;
+
+  } logic_data;
+
+  /* acts like renderer data,
+   * and additionally used to perform custom rendering */
+  class subrenderer_
   {
   protected:
-    application * app;
+    application *                               app;
+    yage::app::assets::asset_factory *          asset_factory;
+    yage::graphics::window *                    window;
+    std::vector<yage::app::object::public_data> objects;
 
-  public:
-    explicit custom_render_func(application * app)
-    : app(app)
-    {
-    }
-    virtual ~custom_render_func() = default;
-    virtual void before_loop()    = 0;
-    virtual void loop()           = 0;
-  } * render_func;
+    friend class yage::app::threads::renderer;
+    friend class application;
+
+    virtual ~subrenderer_() = default;
+
+    subrenderer_(
+          yage::app::assets::asset_factory * asset_factory,
+          yage::graphics::window *           window)
+    : asset_factory(asset_factory)
+    , window(window) {};
+
+    virtual void before_loop() = 0;
+    virtual void loop()        = 0;
+
+  } * subrenderer;
 
   application(
-        yage::app::assets::asset_factory * asset_factory,
-        yage::graphics::window *           window,
-        yage::core::os_events *            os_events)
-  : asset_factory(asset_factory)
-  , os_events(os_events)
-  , window(window)
-  , input(&window->input)
+        yage::app::application::subrenderer_ * subrenderer,
+        yage::graphics::input_events *         input_events,
+        yage::core::os_events *                os_events)
+  : os_events(os_events)
+  , input(input_events)
+  , subrenderer(subrenderer)
   {
+    subrenderer->app = this;
   }
 
-  yage::core::error spawn_threads();
+  yage::core::error start();
+
+  void stop()
+  {
+    subrenderer->window->close();
+  }
+
+  void add_object(yage::app::object * object)
+  {
+    std::lock_guard<std::mutex> lock(logic_data.object_to_add_mutex);
+    logic_data.object_to_add.push_back(object);
+  }
+
+  void destroy_object(yage::app::object * object, bool hard = false)
+  {
+    if (hard)
+    {
+      auto it = std::find(
+            common_data.objects.begin(), common_data.objects.end(), object);
+      if (it != common_data.objects.end())
+      {
+        common_data.objects.erase(it);
+      }
+
+      delete object;
+    }
+    else
+    {
+      object->logic_data.should_be_deleted = true;
+    }
+  }
+
+  void destroy_all_objects(bool hard = false)
+  {
+    for (auto & object : common_data.objects)
+    {
+      if (hard)
+      {
+        delete object;
+      }
+      else
+      {
+        object->logic_data.should_be_deleted = true;
+      }
+    }
+
+    if (hard)
+    {
+      common_data.objects.clear();
+    }
+  }
+
+  yage::graphics::geometry get_geometry() const
+  {
+    yage::graphics::geometry geometry {};
+    subrenderer->window->get_geometry(geometry);
+    return geometry;
+  }
+
+  input_manager & get_input()
+  {
+    return input;
+  }
 };
 
 /* Variables ================================================================ */

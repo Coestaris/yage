@@ -44,19 +44,14 @@ public:
 
   void update(yage::core::milliseconds delta) override
   {
-    yage::graphics::geometry geometry {};
-    if (app->window->get_geometry(geometry) != yage::core::error::OK)
-    {
-      geometry.width == 800;
-      geometry.height == 600;
-    }
+    yage::graphics::geometry geometry = app->get_geometry();
 
-    auto mouse_pos = app->input.mouse_position();
-    if (app->input.mouse_pressed(yage::core::mouse::LEFT)
+    auto mouse_pos = app->get_input().mouse_position();
+    if (app->get_input().mouse_pressed(yage::core::mouse::LEFT)
         && mouse_pos.x > data.position.x && mouse_pos.x < data.position.x + 100
         && mouse_pos.y > data.position.y && mouse_pos.y < data.position.y + 100)
     {
-      destroy();
+      app->destroy_object(this);
       return;
     }
 
@@ -86,19 +81,21 @@ public:
     data.position = { 100, 100 };
     data.size     = { 100, 100 };
 
-    app->window->input.mouse_pressed.add_listener(&mouse_pressed_listener);
+    app->get_input().raw_input()->mouse_pressed.add_listener(
+          &mouse_pressed_listener);
   }
 
   ~controller_obj() override
   {
-    app->window->input.mouse_pressed.remove_listener(&mouse_pressed_listener);
+    app->get_input().raw_input()->mouse_pressed.remove_listener(
+          &mouse_pressed_listener);
   }
 
   void update(yage::core::milliseconds delta) override
   {
-    if (app->input.key_pressed(yage::core::key::ESCAPE))
+    if (app->get_input().key_pressed(yage::core::key::ESCAPE))
     {
-      app->window->close();
+      app->stop();
     }
 
     yage::graphics::mouse_click_data click_data {};
@@ -106,15 +103,15 @@ public:
     {
       if (click_data.button == yage::core::mouse::RIGHT)
       {
-        app->objects_logic.push_back(new movable_obj(app, data.position));
+        app->add_object(new movable_obj(app, data.position));
       }
     }
 
-    data.position = app->input.mouse_position();
+    data.position = app->get_input().mouse_position();
   }
 };
 
-class custom_render_func : public yage::app::application::custom_render_func
+class subrenderer : public yage::app::application::subrenderer_
 {
 private:
   yage::app::assets::shader *  triangle;
@@ -123,63 +120,35 @@ private:
 
   yage::graphics::graphics * graphics;
 
-  std::vector<yage::app::assets::asset *> assets;
-
-  yage::app::assets::asset * load_asset(const std::string & name)
-  {
-    auto * asset = app->asset_factory->get_asset(name);
-    if (asset)
-    {
-      if (asset->load() != yage::core::error::OK)
-      {
-        log(LOG_ERROR, "Failed to load asset %s", name.c_str());
-        return nullptr;
-      }
-      assets.push_back(asset);
-    }
-    return asset;
-  }
-
-#if USE_DEBUG
-  void poll_assets()
-  {
-    for (auto * asset : assets)
-    {
-      asset->poll();
-    }
-  }
-#endif
-
-public:
-  explicit custom_render_func(yage::app::application * app)
-  : yage::app::application::custom_render_func(app)
-  {
-  }
-
+private:
   void before_loop() override
   {
-    graphics = app->window->get_graphics();
+    graphics = window->get_graphics();
 
-    triangle = dynamic_cast<yage::app::assets::shader *>(load_asset("triangle"));
-    image  = dynamic_cast<yage::app::assets::texture *>(load_asset("image"));
-    image2 = dynamic_cast<yage::app::assets::texture *>(load_asset("image2"));
+    triangle = asset_factory->load_asset<yage::app::assets::shader>("triangle");
+    image    = asset_factory->load_asset<yage::app::assets::texture>("image");
+    image2   = asset_factory->load_asset<yage::app::assets::texture>("image2");
   }
 
   void loop() override
   {
-#if USE_DEBUG
-    poll_assets();
-#endif
+    asset_factory->poll_assets();
 
     triangle->bind();
     image->bind(0);
     image2->bind(1);
 
-    for (auto & public_data : app->objects_renderer)
+    for (auto & public_data : objects)
     {
       graphics->draw_rect(public_data.position, public_data.size);
     }
   }
+
+public:
+  subrenderer(
+        yage::app::assets::asset_factory * asset_factory,
+        yage::graphics::window *           window)
+  : subrenderer_(asset_factory, window) {};
 };
 
 std::string lookup_asset_path()
@@ -232,10 +201,10 @@ int main(int argc, char * argv[])
     return 1;
   }
   yage::app::assets::pack::asset_factory asset_factory(
-        asset_path, yage::core::get_temp_dir("yagecache"));
+        asset_path, yage::core::get_cache_dir());
 
-  yage::app::application app(&asset_factory, window, &events);
-  app.render_func = new custom_render_func(&app);
+  subrenderer            subrenderer(&asset_factory, window);
+  yage::app::application app(&subrenderer, &window->input, &events);
 
   for (int i = 0; i < 10; i++)
   {
@@ -243,19 +212,16 @@ int main(int argc, char * argv[])
           = { static_cast<float>(rand() % (settings.width - 200)),
               static_cast<float>(rand() % settings.height - 200) };
 
-    app.objects_logic.push_back(new movable_obj(&app, position));
+    app.add_object(new movable_obj(&app, position));
   }
-  app.objects_logic.push_back(new controller_obj(&app));
+  app.add_object(new controller_obj(&app));
 
-  app.spawn_threads();
+  app.start();
+
+  app.destroy_all_objects(true);
 
   asset_factory.destroy();
   yage::platform::graphics::destroy_window(window);
-
-  for (auto * game_object : app.objects_logic)
-  {
-    delete game_object;
-  }
 
   return 0;
 }

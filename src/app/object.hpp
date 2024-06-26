@@ -19,6 +19,11 @@ namespace yage::app
 /* Types ==================================================================== */
 class application;
 
+namespace threads
+{
+  class logic;
+}
+
 class object
 {
 private:
@@ -30,18 +35,27 @@ protected:
   virtual void update(yage::core::milliseconds delta) = 0;
 
 public:
-  bool should_be_deleted = false;
-
-  virtual ~object() = default;
-  explicit object(yage::app::application * app)
-  : app(app) {};
-
   /* for now, let's assume that all game objects have position */
   struct public_data
   {
     yage::core::float2 position;
     yage::core::float2 size;
   } data;
+
+  class logic_data
+  {
+  private:
+    bool should_be_deleted = false;
+
+    friend class yage::app::threads::logic;
+    friend class object;
+    friend class application;
+
+  } logic_data;
+
+  virtual ~object() = default;
+  explicit object(yage::app::application * app)
+  : app(app) {};
 
   void update()
   {
@@ -59,11 +73,6 @@ public:
     }
 
     update(delta);
-  }
-
-  void destroy()
-  {
-    should_be_deleted = true;
   }
 };
 

@@ -22,7 +22,7 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-yage::core::error yage::app::application::spawn_threads()
+yage::core::error yage::app::application::start()
 {
   /*
    * Threading model:
@@ -49,8 +49,8 @@ yage::core::error yage::app::application::spawn_threads()
 
   /* Sync points are no longer needed.
    * Shutdown them to avoid deadlocks */
-  pre_frame_sync.shutdown();
-  post_frame_sync.shutdown();
+  common_data.pre_frame_sync.shutdown();
+  common_data.post_frame_sync.shutdown();
 
   /* Ask logic/statistics thread to politely close */
   logic.close();
