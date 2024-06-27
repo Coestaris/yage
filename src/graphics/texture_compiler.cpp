@@ -8,6 +8,7 @@
 
 /* Includes ================================================================= */
 #include "texture_compiler.hpp"
+#define FREEIMAGE_LIB
 #include "FreeImage.h"
 #include "core/log.hpp"
 

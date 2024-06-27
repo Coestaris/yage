@@ -53,7 +53,7 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile()
     {
       if (image_paths.size() != 1)
       {
-        log(LOG_ERROR, "Invalid number of images for 2D texture: %zu",
+        log(LOG_ERROR, "Invalid number of images for 2D texture: %lld",
             image_paths.size());
         return yage::core::INVALID_ARGUMENT;
       }

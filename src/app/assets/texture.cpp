@@ -39,7 +39,7 @@ yage::core::error yage::app::assets::texture::load()
   std::vector<uint8_t> data;
   if (cacher->get_cached_asset(cache_key, data) == yage::core::OK)
   {
-    log(LOG_DEBUG, "Loading texture from cache: %s (%zu bytes)",
+    log(LOG_DEBUG, "Loading texture from cache: %s (%lld bytes)",
         cache_key.c_str(), data.size());
   }
   else

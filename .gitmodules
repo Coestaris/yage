@@ -5,7 +5,6 @@
 	path = thirdparty/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
 	branch = master
-[submodule "thirdparty/FreeImage"]
-	path = thirdparty/FreeImage
-	url = https://github.com/mlomb/FreeImage.git
-	branch = 3.18
+[submodule "thirdparty/free_image"]
+	path = thirdparty/free_image
+	url = https://github.com/danoli3/FreeImage.git

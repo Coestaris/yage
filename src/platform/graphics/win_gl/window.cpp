@@ -20,10 +20,8 @@
 /* Macros =================================================================== */
 /* Types ==================================================================== */
 /* Variables ================================================================ */
-
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-
 static void log_pfd(PIXELFORMATDESCRIPTOR * pdf)
 {
   log(LOG_DEBUG, "PIXELFORMATDESCRIPTOR:");
@@ -57,27 +55,26 @@ static void log_pfd(PIXELFORMATDESCRIPTOR * pdf)
 
 /* TODO: can be moved to common part,
  * since have a lot of common code with DirectX */
-yage::core::error yage::platform::graphics::win_gl::window::open(
-      std::string & title, yage::graphics::geometry & geometry, bool fullscreen)
+yage::core::error yage::platform::graphics::win_gl::window::open()
 {
-  log(LOG_INFO, "Opening window: %s. Geometry: %d %d %d %d. Fullscreen: %d",
-      title.c_str(), geometry.x, geometry.y, geometry.width, geometry.height,
-      fullscreen);
+  log(LOG_INFO, "Opening window: %s. Geometry: %d %d. Fullscreen: %s",
+      settings.title.c_str(), settings.width, settings.height,
+      yage::graphics::to_string(settings.win_mode).c_str());
 
   RECT WindowRect;
-  WindowRect.left   = (long)0;
-  WindowRect.right  = (long)geometry.width;
-  WindowRect.top    = (long)0;
-  WindowRect.bottom = (long)geometry.height;
+  WindowRect.left   = 0;
+  WindowRect.right  = settings.width;
+  WindowRect.top    = 0;
+  WindowRect.bottom = settings.height;
 
-  hInstance = GetModuleHandle(NULL);
+  hInstance = GetModuleHandle(nullptr);
 
   log(LOG_DEBUG, "hInstance: 0x%p", hInstance);
 
   WNDCLASS wc;
   /* Redraw On Size, And Own DC For Window. */
   wc.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-  wc.lpfnWndProc   = (WNDPROC)wnd_proc;
+  wc.lpfnWndProc   = reinterpret_cast<WNDPROC>(wnd_proc);
   wc.cbClsExtra    = 0;
   wc.cbWndExtra    = 0;
   wc.hInstance     = hInstance;
@@ -98,13 +95,13 @@ yage::core::error yage::platform::graphics::win_gl::window::open(
   DWORD  dwExStyle;   /* Window Extended Style */
   DWORD  dwStyle;     /* Window Style */
 
-  if (fullscreen)
+  if (settings.win_mode == yage::graphics::settings::window_mode::FULLSCREEN)
   {
     DEVMODE dmScreenSettings;
     memset(&dmScreenSettings, 0, sizeof(dmScreenSettings));
     dmScreenSettings.dmSize       = sizeof(dmScreenSettings);
-    dmScreenSettings.dmPelsWidth  = geometry.width;
-    dmScreenSettings.dmPelsHeight = geometry.height;
+    dmScreenSettings.dmPelsWidth  = settings.width;
+    dmScreenSettings.dmPelsHeight = settings.height;
     dmScreenSettings.dmBitsPerPel = BITS_PER_PIXEL;
     dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 
@@ -142,19 +139,19 @@ yage::core::error yage::platform::graphics::win_gl::window::open(
   if (!(hWnd = CreateWindowEx(
               dwExStyle,              /* Extended Style For The Window */
               "OpenGL",               /* Class Name */
-              title.c_str(),          /* Window Title */
+              settings.title.c_str(), /* Window Title */
               dwStyle |               /* Defined Window Style */
                     WS_CLIPSIBLINGS | /* Required Window Style */
                     WS_CLIPCHILDREN,  /* Required Window Style */
-              geometry.x,             /* Window Position */
-              geometry.y,             /* Window Position */
+              0,                      /* Window Position */
+              0,                      /* Window Position */
               WindowRect.right - WindowRect.left, /* Calculate Window Width */
               WindowRect.bottom - WindowRect.top, /* Calculate Window Height */
 
-              NULL,      /* No Parent Window */
-              NULL,      /* No Menu */
+              nullptr,   /* No Parent Window */
+              nullptr,   /* No Menu */
               hInstance, /* Instance */
-              NULL       /* Don't Pass Anything To WM_CREATE */
+              nullptr    /* Don't Pass Anything To WM_CREATE */
               )))
   {
     close();
@@ -172,8 +169,8 @@ yage::core::error yage::platform::graphics::win_gl::window::open(
           PFD_DOUBLEBUFFER |       /* Must Support Double Buffering */
           PFD_GENERIC_ACCELERATED; /* Must Support Hardware Acceleration */
 
-  pfd.iPixelType      = PFD_TYPE_RGBA;        /* Request An RGBA Format */
-  pfd.cColorBits      = (BYTE)BITS_PER_PIXEL; /* Select Our Color Depth */
+  pfd.iPixelType      = PFD_TYPE_RGBA;  /* Request An RGBA Format */
+  pfd.cColorBits      = BITS_PER_PIXEL; /* Select Our Color Depth */
   pfd.cRedBits        = 0;
   pfd.cRedShift       = 0;
   pfd.cGreenBits      = 0;
@@ -240,13 +237,12 @@ yage::core::error yage::platform::graphics::win_gl::window::open(
   }
 
   /* Set GWLP_USERDATA to this pointer */
-  SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)this);
-
+  SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
   ShowWindow(hWnd, SW_SHOW); /* Show The Window */
   SetForegroundWindow(hWnd); /* Slightly Higher Priority */
   SetFocus(hWnd);            /* Sets Keyboard Focus To The Window */
 
-  if (context.init(BITS_PER_PIXEL, geometry.width, geometry.height)
+  if (context.init(BITS_PER_PIXEL, settings.width, settings.height)
       != yage::core::error::OK)
   {
     log(LOG_ERROR, "Failed to initialize graphics context");
@@ -265,9 +261,6 @@ yage::core::error yage::platform::graphics::win_gl::window::close()
   {
     return yage::core::error::OK;
   }
-
-  yage::core::event<void> event;
-  window_closed.publish(event);
 
   if (hRC)
   {
@@ -346,161 +339,162 @@ bool yage::platform::graphics::win_gl::window::is_open()
   return opened;
 }
 
-static yage::core::io::key convert_key(WPARAM winkey)
+static yage::core::key convert_key(WPARAM winkey)
 {
-  static const std::unordered_map<WPARAM, yage::core::io::key> keymap = {
+  static const std::unordered_map<WPARAM, yage::core::key> keymap = {
     /* Control keys */
-    { VK_RETURN, yage::core::io::key::ENTER },
-    { VK_DELETE, yage::core::io::key::DEL },
-    { VK_BACK, yage::core::io::key::BACKSPACE },
-    { VK_ESCAPE, yage::core::io::key::ESCAPE },
-    { VK_TAB, yage::core::io::key::TAB },
-    { VK_SPACE, yage::core::io::key::SPACE },
-    { VK_SNAPSHOT, yage::core::io::key::PAUSE },
-    { VK_PAUSE, yage::core::io::key::SYS_REQ },
-    { VK_SCROLL, yage::core::io::key::SCROLL_LOCK },
-    { VK_HOME, yage::core::io::key::HOME },
-    { VK_LEFT, yage::core::io::key::LEFT },
-    { VK_UP, yage::core::io::key::UP },
-    { VK_RIGHT, yage::core::io::key::RIGHT },
-    { VK_DOWN, yage::core::io::key::DOWN },
-    { VK_PRIOR, yage::core::io::key::PAGE_UP },
-    { VK_NEXT, yage::core::io::key::PAGE_DOWN },
-    { VK_END, yage::core::io::key::END },
+    { VK_RETURN, yage::core::key::ENTER },
+    { VK_DELETE, yage::core::key::DEL },
+    { VK_BACK, yage::core::key::BACKSPACE },
+    { VK_ESCAPE, yage::core::key::ESCAPE },
+    { VK_TAB, yage::core::key::TAB },
+    { VK_SPACE, yage::core::key::SPACE },
+    { VK_SNAPSHOT, yage::core::key::PAUSE },
+    { VK_PAUSE, yage::core::key::SYS_REQ },
+    { VK_SCROLL, yage::core::key::SCROLL_LOCK },
+    { VK_HOME, yage::core::key::HOME },
+    { VK_LEFT, yage::core::key::LEFT },
+    { VK_UP, yage::core::key::UP },
+    { VK_RIGHT, yage::core::key::RIGHT },
+    { VK_DOWN, yage::core::key::DOWN },
+    { VK_PRIOR, yage::core::key::PAGE_UP },
+    { VK_NEXT, yage::core::key::PAGE_DOWN },
+    { VK_END, yage::core::key::END },
 
     /* Special keys */
-    { VK_OEM_1, yage::core::io::key::SK1 },
-    { VK_OEM_2, yage::core::io::key::SK2 },
-    { VK_OEM_102, yage::core::io::key::SK3 },
-    { VK_OEM_4, yage::core::io::key::SK4 },
-    { VK_OEM_5, yage::core::io::key::SK3 },
-    { VK_OEM_6, yage::core::io::key::SK5 },
-    { VK_OEM_7, yage::core::io::key::SK6 },
-    { VK_OEM_3, yage::core::io::key::SK7 },
-    { VK_OEM_COMMA, yage::core::io::key::SK8 },
-    { VK_OEM_PERIOD, yage::core::io::key::SK9 },
-    { VK_OEM_MINUS, yage::core::io::key::SK10 },
-    { VK_OEM_PLUS, yage::core::io::key::SK11 },
+    { VK_OEM_1, yage::core::key::SK1 },
+    { VK_OEM_2, yage::core::key::SK2 },
+    { VK_OEM_102, yage::core::key::SK3 },
+    { VK_OEM_4, yage::core::key::SK4 },
+    { VK_OEM_5, yage::core::key::SK3 },
+    { VK_OEM_6, yage::core::key::SK5 },
+    { VK_OEM_7, yage::core::key::SK6 },
+    { VK_OEM_3, yage::core::key::SK7 },
+    { VK_OEM_COMMA, yage::core::key::SK8 },
+    { VK_OEM_PERIOD, yage::core::key::SK9 },
+    { VK_OEM_MINUS, yage::core::key::SK10 },
+    { VK_OEM_PLUS, yage::core::key::SK11 },
 
     /* Letters */
-    { 'A', yage::core::io::key::A },
-    { 'B', yage::core::io::key::B },
-    { 'C', yage::core::io::key::C },
-    { 'D', yage::core::io::key::D },
-    { 'E', yage::core::io::key::E },
-    { 'F', yage::core::io::key::F },
-    { 'G', yage::core::io::key::G },
-    { 'H', yage::core::io::key::H },
-    { 'I', yage::core::io::key::I },
-    { 'J', yage::core::io::key::J },
-    { 'K', yage::core::io::key::K },
-    { 'L', yage::core::io::key::L },
-    { 'M', yage::core::io::key::M },
-    { 'N', yage::core::io::key::N },
-    { 'O', yage::core::io::key::O },
-    { 'P', yage::core::io::key::P },
-    { 'Q', yage::core::io::key::Q },
-    { 'R', yage::core::io::key::R },
-    { 'S', yage::core::io::key::S },
-    { 'T', yage::core::io::key::T },
-    { 'U', yage::core::io::key::U },
-    { 'V', yage::core::io::key::V },
-    { 'W', yage::core::io::key::W },
-    { 'X', yage::core::io::key::X },
-    { 'Y', yage::core::io::key::Y },
-    { 'Z', yage::core::io::key::Z },
+    { 'A', yage::core::key::A },
+    { 'B', yage::core::key::B },
+    { 'C', yage::core::key::C },
+    { 'D', yage::core::key::D },
+    { 'E', yage::core::key::E },
+    { 'F', yage::core::key::F },
+    { 'G', yage::core::key::G },
+    { 'H', yage::core::key::H },
+    { 'I', yage::core::key::I },
+    { 'J', yage::core::key::J },
+    { 'K', yage::core::key::K },
+    { 'L', yage::core::key::L },
+    { 'M', yage::core::key::M },
+    { 'N', yage::core::key::N },
+    { 'O', yage::core::key::O },
+    { 'P', yage::core::key::P },
+    { 'Q', yage::core::key::Q },
+    { 'R', yage::core::key::R },
+    { 'S', yage::core::key::S },
+    { 'T', yage::core::key::T },
+    { 'U', yage::core::key::U },
+    { 'V', yage::core::key::V },
+    { 'W', yage::core::key::W },
+    { 'X', yage::core::key::X },
+    { 'Y', yage::core::key::Y },
+    { 'Z', yage::core::key::Z },
 
     /* Numbers */
-    { '0', yage::core::io::key::K0 },
-    { '1', yage::core::io::key::K1 },
-    { '2', yage::core::io::key::K2 },
-    { '3', yage::core::io::key::K3 },
-    { '4', yage::core::io::key::K4 },
-    { '5', yage::core::io::key::K5 },
-    { '6', yage::core::io::key::K6 },
-    { '7', yage::core::io::key::K7 },
-    { '8', yage::core::io::key::K8 },
-    { '9', yage::core::io::key::K9 },
+    { '0', yage::core::key::K0 },
+    { '1', yage::core::key::K1 },
+    { '2', yage::core::key::K2 },
+    { '3', yage::core::key::K3 },
+    { '4', yage::core::key::K4 },
+    { '5', yage::core::key::K5 },
+    { '6', yage::core::key::K6 },
+    { '7', yage::core::key::K7 },
+    { '8', yage::core::key::K8 },
+    { '9', yage::core::key::K9 },
 
     /* Misc functions */
-    { VK_SELECT, yage::core::io::key::SELECT },
-    { VK_PRINT, yage::core::io::key::PRINT },
-    { VK_EXECUTE, yage::core::io::key::EXECUTE },
-    { VK_INSERT, yage::core::io::key::INSERT },
-    { VK_MENU, yage::core::io::key::MENU },
-    { VK_CANCEL, yage::core::io::key::CANCEL },
-    { VK_HELP, yage::core::io::key::HELP },
-    { VK_CANCEL, yage::core::io::key::BREAK },
-    { VK_NUMLOCK, yage::core::io::key::NUM_LOCK },
-    { VK_CLEAR, yage::core::io::key::CLEAR },
+    { VK_SELECT, yage::core::key::SELECT },
+    { VK_PRINT, yage::core::key::PRINT },
+    { VK_EXECUTE, yage::core::key::EXECUTE },
+    { VK_INSERT, yage::core::key::INSERT },
+    { VK_MENU, yage::core::key::MENU },
+    { VK_CANCEL, yage::core::key::CANCEL },
+    { VK_HELP, yage::core::key::HELP },
+    { VK_CANCEL, yage::core::key::BREAK },
+    { VK_NUMLOCK, yage::core::key::NUM_LOCK },
+    { VK_CLEAR, yage::core::key::CLEAR },
 
     /* Keypad functions */
-    { VK_MULTIPLY, yage::core::io::key::KP_MULTIPLY },
-    { VK_ADD, yage::core::io::key::KP_ADD },
-    { VK_SEPARATOR, yage::core::io::key::KP_SEPARATOR },
-    { VK_SUBTRACT, yage::core::io::key::KP_SUBTRACT },
-    { VK_DECIMAL, yage::core::io::key::KP_DECIMAL },
-    { VK_DIVIDE, yage::core::io::key::KP_DIVIDE },
-    { VK_NUMPAD0, yage::core::io::key::KP_0 },
-    { VK_NUMPAD1, yage::core::io::key::KP_1 },
-    { VK_NUMPAD2, yage::core::io::key::KP_2 },
-    { VK_NUMPAD3, yage::core::io::key::KP_3 },
-    { VK_NUMPAD4, yage::core::io::key::KP_4 },
-    { VK_NUMPAD5, yage::core::io::key::KP_5 },
-    { VK_NUMPAD6, yage::core::io::key::KP_6 },
-    { VK_NUMPAD7, yage::core::io::key::KP_7 },
-    { VK_NUMPAD8, yage::core::io::key::KP_8 },
-    { VK_NUMPAD9, yage::core::io::key::KP_9 },
+    { VK_MULTIPLY, yage::core::key::KP_MULTIPLY },
+    { VK_ADD, yage::core::key::KP_ADD },
+    { VK_SEPARATOR, yage::core::key::KP_SEPARATOR },
+    { VK_SUBTRACT, yage::core::key::KP_SUBTRACT },
+    { VK_DECIMAL, yage::core::key::KP_DECIMAL },
+    { VK_DIVIDE, yage::core::key::KP_DIVIDE },
+    { VK_NUMPAD0, yage::core::key::KP_0 },
+    { VK_NUMPAD1, yage::core::key::KP_1 },
+    { VK_NUMPAD2, yage::core::key::KP_2 },
+    { VK_NUMPAD3, yage::core::key::KP_3 },
+    { VK_NUMPAD4, yage::core::key::KP_4 },
+    { VK_NUMPAD5, yage::core::key::KP_5 },
+    { VK_NUMPAD6, yage::core::key::KP_6 },
+    { VK_NUMPAD7, yage::core::key::KP_7 },
+    { VK_NUMPAD8, yage::core::key::KP_8 },
+    { VK_NUMPAD9, yage::core::key::KP_9 },
 
     /* Function keys */
-    { VK_F1, yage::core::io::key::F1 },
-    { VK_F2, yage::core::io::key::F2 },
-    { VK_F3, yage::core::io::key::F3 },
-    { VK_F4, yage::core::io::key::F4 },
-    { VK_F5, yage::core::io::key::F5 },
-    { VK_F6, yage::core::io::key::F6 },
-    { VK_F7, yage::core::io::key::F7 },
-    { VK_F8, yage::core::io::key::F8 },
-    { VK_F9, yage::core::io::key::F9 },
-    { VK_F10, yage::core::io::key::F10 },
-    { VK_F11, yage::core::io::key::F11 },
-    { VK_F12, yage::core::io::key::F12 },
+    { VK_F1, yage::core::key::F1 },
+    { VK_F2, yage::core::key::F2 },
+    { VK_F3, yage::core::key::F3 },
+    { VK_F4, yage::core::key::F4 },
+    { VK_F5, yage::core::key::F5 },
+    { VK_F6, yage::core::key::F6 },
+    { VK_F7, yage::core::key::F7 },
+    { VK_F8, yage::core::key::F8 },
+    { VK_F9, yage::core::key::F9 },
+    { VK_F10, yage::core::key::F10 },
+    { VK_F11, yage::core::key::F11 },
+    { VK_F12, yage::core::key::F12 },
 
     /* Key state modifier keys */
-    { VK_SHIFT, yage::core::io::key::SHIFT_L },
-    { VK_LSHIFT, yage::core::io::key::SHIFT_L },
-    { VK_RSHIFT, yage::core::io::key::SHIFT_R },
-    { VK_CONTROL, yage::core::io::key::CONTROL_L },
-    { VK_LCONTROL, yage::core::io::key::CONTROL_L },
-    { VK_RCONTROL, yage::core::io::key::CONTROL_R },
-    { VK_CAPITAL, yage::core::io::key::CAPS_LOCK },
-    { VK_LWIN, yage::core::io::key::META_L },
-    { VK_RWIN, yage::core::io::key::META_R },
-    { VK_LMENU, yage::core::io::key::ALT_L },
-    { VK_RMENU, yage::core::io::key::ALT_R },
+    { VK_SHIFT, yage::core::key::SHIFT_L },
+    { VK_LSHIFT, yage::core::key::SHIFT_L },
+    { VK_RSHIFT, yage::core::key::SHIFT_R },
+    { VK_CONTROL, yage::core::key::CONTROL_L },
+    { VK_LCONTROL, yage::core::key::CONTROL_L },
+    { VK_RCONTROL, yage::core::key::CONTROL_R },
+    { VK_CAPITAL, yage::core::key::CAPS_LOCK },
+    { VK_LWIN, yage::core::key::META_L },
+    { VK_RWIN, yage::core::key::META_R },
+    { VK_LMENU, yage::core::key::ALT_L },
+    { VK_RMENU, yage::core::key::ALT_R },
   };
 
 #if USE_DEBUG
   if (keymap.find(winkey) == keymap.end())
   {
-    log(LOG_WARN, "Key not found: 0x%llx (%c)", winkey, (char)winkey);
+    log(LOG_WARN, "Key not found: 0x%llx (%c)", winkey,
+        static_cast<char>(winkey));
   }
 #endif
 
   return keymap.at(winkey);
 }
 
-static yage::core::io::mouse convert_button(WPARAM winbutton)
+static yage::core::mouse convert_button(WPARAM winbutton)
 {
-  static const std::unordered_map<WPARAM, yage::core::io::mouse> buttonmap
-        = { { WM_LBUTTONDOWN, yage::core::io::mouse::LEFT },
-            { WM_RBUTTONDOWN, yage::core::io::mouse::RIGHT },
-            { WM_MBUTTONDOWN, yage::core::io::mouse::MIDDLE },
-            { WM_XBUTTONDOWN, yage::core::io::mouse::X1 },
-            { WM_LBUTTONUP, yage::core::io::mouse::LEFT },
-            { WM_RBUTTONUP, yage::core::io::mouse::RIGHT },
-            { WM_MBUTTONUP, yage::core::io::mouse::MIDDLE },
-            { WM_XBUTTONUP, yage::core::io::mouse::X1 } };
+  static const std::unordered_map<WPARAM, yage::core::mouse> buttonmap
+        = { { WM_LBUTTONDOWN, yage::core::mouse::LEFT },
+            { WM_RBUTTONDOWN, yage::core::mouse::RIGHT },
+            { WM_MBUTTONDOWN, yage::core::mouse::MIDDLE },
+            { WM_XBUTTONDOWN, yage::core::mouse::X1 },
+            { WM_LBUTTONUP, yage::core::mouse::LEFT },
+            { WM_RBUTTONUP, yage::core::mouse::RIGHT },
+            { WM_MBUTTONUP, yage::core::mouse::MIDDLE },
+            { WM_XBUTTONUP, yage::core::mouse::X1 } };
 
 #if USE_DEBUG
   if (buttonmap.find(winbutton) == buttonmap.end())
@@ -515,40 +509,38 @@ LRESULT CALLBACK yage::platform::graphics::win_gl::window::wnd_proc(
       HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   /* Get The Window Context */
-  auto * win = (yage::platform::graphics::win_gl::window *)GetWindowLongPtr(
-        hWnd, GWLP_USERDATA);
+  auto * win = reinterpret_cast<yage::platform::graphics::win_gl::window *>(
+        GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
   /* Handle key presses */
   switch (uMsg)
   {
     case WM_KEYDOWN:
     {
-      win->key_pressed.publish(convert_key(wParam));
+      win->input.key_pressed.push(convert_key(wParam));
       break;
     }
 
     case WM_KEYUP:
     {
-      win->key_released.publish(convert_key(wParam));
+      win->input.key_released.push(convert_key(wParam));
       break;
     }
 
     case WM_SYSCHAR:
     case WM_CHAR:
     {
-      auto character = (wchar_t)wParam;
-      win->char_entered.publish(character);
+      win->input.char_entered.push(static_cast<wchar_t>(wParam));
       break;
     }
 
       /* Handle scrolling */
     case WM_MOUSEWHEEL:
     {
-      auto amount = GET_WHEEL_DELTA_WPARAM(wParam);
-      struct yage::graphics::mouse_scroll_data scroll_data
-            = { 0, (float)amount / WHEEL_DELTA };
-
-      win->mouse_scrolled.publish(scroll_data);
+      yage::graphics::mouse_scroll_data scroll_data
+            = { 0, static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam))
+                         / WHEEL_DELTA };
+      win->input.mouse_scrolled.push(scroll_data);
       break;
     }
 
@@ -565,11 +557,11 @@ LRESULT CALLBACK yage::platform::graphics::win_gl::window::wnd_proc(
       if (GetCursorPos(&p))
       {
         ScreenToClient(hWnd, &p);
-        click_data.x = (float)p.x;
-        click_data.y = (float)p.y;
+        click_data.x = static_cast<float>(p.x);
+        click_data.y = static_cast<float>(p.y);
       }
 
-      win->mouse_pressed.publish(click_data);
+      win->input.mouse_pressed.push(click_data);
       break;
     }
 
@@ -585,11 +577,11 @@ LRESULT CALLBACK yage::platform::graphics::win_gl::window::wnd_proc(
       if (GetCursorPos(&p))
       {
         ScreenToClient(hWnd, &p);
-        click_data.x = (float)p.x;
-        click_data.y = (float)p.y;
+        click_data.x = static_cast<float>(p.x);
+        click_data.y = static_cast<float>(p.y);
       }
 
-      win->mouse_released.publish(click_data);
+      win->input.mouse_released.push(click_data);
       break;
     }
 
@@ -601,11 +593,11 @@ LRESULT CALLBACK yage::platform::graphics::win_gl::window::wnd_proc(
       if (GetCursorPos(&p))
       {
         ScreenToClient(hWnd, &p);
-        click_data.x = (float)p.x;
-        click_data.y = (float)p.y;
+        click_data.x = static_cast<float>(p.x);
+        click_data.y = static_cast<float>(p.y);
       }
 
-      win->mouse_moved.publish(click_data);
+      win->input.mouse_moved.push(click_data);
       break;
     }
 

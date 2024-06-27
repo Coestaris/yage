@@ -217,7 +217,7 @@ void yage::platform::graphics::gl::graphics::cache_extensions()
 
 void yage::platform::graphics::gl::graphics::print_extensions()
 {
-  log(LOG_INFO, "gl extensions: %lu", extensions.size());
+  log(LOG_INFO, "gl extensions: %lld", extensions.size());
 #define MAX_EXTENSIONS 3
   std::stringbuf buf;
   std::ostream   os(&buf);
@@ -228,7 +228,7 @@ void yage::platform::graphics::gl::graphics::print_extensions()
     {
       os << std::setw(40) << extensions[i + j] << " ";
     }
-    log(LOG_DEBUG, " [%4lu-%4lu] %s", i, i + MAX_EXTENSIONS, buf.str().c_str());
+    log(LOG_DEBUG, " [%4lld-%4lld] %s", i, i + MAX_EXTENSIONS, buf.str().c_str());
   }
 }
 

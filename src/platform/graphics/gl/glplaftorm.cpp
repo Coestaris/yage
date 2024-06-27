@@ -7,6 +7,7 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
+#include <GL/gl.h>
 #if YAGE_PLATFORM_X11
 #include <GL/glx.h>
 #elif __WIN32__ || _WIN32
@@ -35,7 +36,8 @@ void * yage::platform::graphics::gl::gl_lookup(const char * func, bool required)
   }
 
 #if WIN32
-  auto proc = wglGetProcAddress(func);
+  auto proc = reinterpret_cast<void *>(
+        wglGetProcAddress(reinterpret_cast<LPCSTR>(func)));
 #else
   auto proc = reinterpret_cast<void *>(
         glXGetProcAddress(reinterpret_cast<const GLubyte *>(func)));

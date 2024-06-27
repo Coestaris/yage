@@ -43,7 +43,7 @@ yage::core::error yage::app::assets::shader::load()
   std::vector<uint8_t> data;
   if (cacher->get_cached_asset(cache_key, data) == yage::core::error::OK)
   {
-    log(LOG_DEBUG, "Loading shader from cache: %s (%zu bytes)",
+    log(LOG_DEBUG, "Loading shader from cache: %s (%lld bytes)",
         cache_key.c_str(), data.size());
   }
   else

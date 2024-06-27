@@ -57,7 +57,7 @@ protected:
   yage::graphics::settings settings;
 
 public:
-  yage::graphics::input_events             input;
+  yage::graphics::input_events input;
 
   window(yage::graphics::settings & settings)
   : settings(settings)
@@ -115,4 +115,6 @@ public:
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
+std::string to_string(yage::graphics::settings::window_mode mode);
+
 }
