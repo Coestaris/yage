@@ -30,19 +30,6 @@ public:
 
   yage::core::error        set_binary(std::vector<uint8_t> binary) override;
   yage::core::error        destroy() override;
-  std::vector<std::string> get_uniforms() override;
-  std::vector<std::string> get_attributes() override;
-  yage::core::error        bind() override;
-  yage::core::error        unbind() override;
-
-  int               get_uniform_location_direct(std::string name) override;
-  yage::core::error set_uniform_1i(int location, int value) override;
-  yage::core::error set_uniform_1f(int location, float value) override;
-  yage::core::error
-  set_uniform_2f(int location, glm::vec2 value) override;
-  yage::core::error
-  set_uniform_3f(int location, glm::vec3 value) override;
-  yage::core::error set_uniform_mat4f(int location, float * value) override;
 };
 
 /* Variables ================================================================ */

@@ -82,7 +82,10 @@ void yage::app::threads::renderer::run()
     app->subrenderer->objects.clear();
     for (auto & object : app->common_data.objects)
     {
-      app->subrenderer->objects.push_back(object->data);
+      if (object->data.visible)
+      {
+        app->subrenderer->objects.push_back(object->data.primitive);
+      }
     }
 
     /* Stage 5: Wait for vsync */

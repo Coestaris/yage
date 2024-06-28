@@ -84,10 +84,10 @@ public:
   class subrenderer_
   {
   protected:
-    application *                               app;
-    yage::app::assets::asset_factory *          asset_factory;
-    yage::graphics::window *                    window;
-    std::vector<yage::app::object::public_data> objects;
+    application *                                   app;
+    yage::app::assets::asset_factory *              asset_factory;
+    yage::graphics::window *                        window;
+    std::vector<yage::graphics::render_primitive *> objects;
 
     friend class yage::app::threads::renderer;
     friend class application;

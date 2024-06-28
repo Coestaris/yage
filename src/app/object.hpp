@@ -11,6 +11,7 @@
 /* Includes ================================================================= */
 #include "core/time.hpp"
 #include "glm/vec2.hpp"
+#include "graphics/render_primitive.hpp"
 
 namespace yage::app
 {
@@ -35,11 +36,11 @@ protected:
   virtual void update(yage::core::milliseconds delta) = 0;
 
 public:
-  /* for now, let's assume that all game objects have position */
-  struct public_data
+  struct renderer_data
   {
-    glm::vec2 position;
-    glm::vec2 size;
+    bool visible;
+    yage::graphics::render_primitive * primitive;
+
   } data;
 
   class logic_data

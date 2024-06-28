@@ -16,6 +16,7 @@
 #include "app/application.hpp"
 #include "core/util/sync_point.hpp"
 #include "core/util/profiler.hpp"
+#include "graphics/render_pass.hpp"
 
 namespace yage::app::threads
 {

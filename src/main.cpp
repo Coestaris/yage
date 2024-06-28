@@ -29,118 +29,49 @@ class movable_obj : public yage::app::object
 public:
   ~movable_obj() override = default;
 
-  float x_inc = 2;
-  float y_inc = 2;
-
-  explicit movable_obj(
-        yage::app::application * app, glm::vec2 start_pos)
+  explicit movable_obj(yage::app::application * app)
   : yage::app::object(app)
   {
-    data.position = start_pos;
-    x_inc         = 0.1 * (rand() % 2 ? 1 : -1);
-    y_inc         = 0.1 * (rand() % 2 ? 1 : -1);
-    data.size     = { 100, 100 };
   }
 
   void update(yage::core::milliseconds delta) override
   {
-    yage::graphics::geometry geometry = app->get_geometry();
-
-    auto mouse_pos = app->get_input().mouse_position();
-    if (app->get_input().mouse_pressed(yage::core::mouse::LEFT)
-        && mouse_pos.x > data.position.x && mouse_pos.x < data.position.x + 100
-        && mouse_pos.y > data.position.y && mouse_pos.y < data.position.y + 100)
-    {
-      app->destroy_object(this);
-      return;
-    }
-
-    data.position.x += x_inc * delta;
-    data.position.y += y_inc * delta;
-
-    if (data.position.x > geometry.width - data.size.x || data.position.x < 0)
-    {
-      x_inc *= -1;
-    }
-
-    if (data.position.y > geometry.height - data.size.y || data.position.y < 0)
-    {
-      y_inc *= -1;
-    }
-  }
-};
-
-class controller_obj : public yage::app::object
-{
-public:
-  yage::graphics::mouse_pressed_listener mouse_pressed_listener;
-
-  explicit controller_obj(yage::app::application * app)
-  : yage::app::object(app)
-  {
-    data.position = { 100, 100 };
-    data.size     = { 100, 100 };
-
-    app->get_input().raw_input()->mouse_pressed.add_listener(
-          &mouse_pressed_listener);
-  }
-
-  ~controller_obj() override
-  {
-    app->get_input().raw_input()->mouse_pressed.remove_listener(
-          &mouse_pressed_listener);
-  }
-
-  void update(yage::core::milliseconds delta) override
-  {
-    if (app->get_input().key_pressed(yage::core::key::ESCAPE))
-    {
-      app->stop();
-    }
-
-    yage::graphics::mouse_click_data click_data {};
-    if (mouse_pressed_listener.get_next(click_data))
-    {
-      if (click_data.button == yage::core::mouse::RIGHT)
-      {
-        app->add_object(new movable_obj(app, data.position));
-      }
-    }
-
-    data.position = app->get_input().mouse_position();
   }
 };
 
 class subrenderer : public yage::app::application::subrenderer_
 {
 private:
-  yage::app::assets::shader *  triangle;
-  yage::app::assets::texture * image;
-  yage::app::assets::texture * image2;
-
-  yage::graphics::graphics * graphics;
+  std::vector<yage::graphics::render_pass *> passes;
+  yage::graphics::graphics *                 graphics {};
 
 private:
   void before_loop() override
   {
     graphics = window->get_graphics();
-
-    triangle = asset_factory->load_asset<yage::app::assets::shader>("triangle");
-    image    = asset_factory->load_asset<yage::app::assets::texture>("image");
-    image2   = asset_factory->load_asset<yage::app::assets::texture>("image2");
+    passes   = yage::platform::graphics::trivial_render_chain(graphics);
   }
 
   void loop() override
   {
     asset_factory->poll_assets();
 
-    triangle->bind();
-    image->bind(0);
-    image2->bind(1);
-
-    for (auto & public_data : objects)
+    for (auto & pass : passes)
     {
-      graphics->draw_rect(public_data.position, public_data.size);
+      if (pass->get_skip())
+      {
+        continue;
+      }
+
+      pass->begin();
+      if (pass->get_type() == yage::graphics::pass_type::OBJECT_PASS)
+      {
+        for (auto & object : objects)
+        {
+          pass->on_object(object);
+        }
+      }
+      pass->end();
     }
   }
 
@@ -208,13 +139,8 @@ int main(int argc, char * argv[])
 
   for (int i = 0; i < 10; i++)
   {
-    glm::vec2 position
-          = { static_cast<float>(rand() % (settings.width - 200)),
-              static_cast<float>(rand() % settings.height - 200) };
-
-    app.add_object(new movable_obj(&app, position));
+    app.add_object(new movable_obj(&app));
   }
-  app.add_object(new controller_obj(&app));
 
   app.start();
 

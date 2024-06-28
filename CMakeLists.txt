@@ -55,6 +55,10 @@ set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF)
 add_subdirectory(thirdparty/jsoncpp)
 set(BUILD_SHARED_LIBS ON)
 add_subdirectory(thirdparty/free_image)
+set(GLM_ENABLE_CXX_98 ON)
+set(GLM_ENABLE_CXX_11 ON)
+set(GLM_ENABLE_CXX_14 ON)
+set(GLM_ENABLE_CXX_17 ON)
 add_subdirectory(thirdparty/glm)
 
 # Setup compiler

@@ -57,20 +57,6 @@ public:
     return loaded;
   }
 
-  void bind()
-  {
-#if USE_DEBUG
-    /* allow working without an actually
-     * loaded shader if debug mode is on */
-    if (program)
-    {
-      program->bind();
-    }
-#else
-    program->bind();
-#endif
-  }
-
 #if USE_DEBUG
   void poll() override
   {
