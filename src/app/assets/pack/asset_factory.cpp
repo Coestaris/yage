@@ -31,11 +31,11 @@ yage::core::error yage::app::assets::pack::asset_factory::pack_parser::parse(
 {
   for (const auto & file : meta_files)
   {
-    //    log(LOG_INFO, "Reading meta file: %s", file.c_str());
+    //    logging(LOG_INFO, "Reading meta file: %s", file.c_str());
     std::ifstream ifs(file);
     if (!ifs.is_open())
     {
-      log(LOG_ERROR, "Failed to open meta file: %s", file.c_str());
+      logging(LOG_ERROR, "Failed to open meta file: %s", file.c_str());
       return yage::core::FILE_NOT_FOUND;
     }
 
@@ -43,8 +43,8 @@ yage::core::error yage::app::assets::pack::asset_factory::pack_parser::parse(
     Json::Reader reader;
     if (!reader.parse(ifs, root))
     {
-      log(LOG_ERROR, "Failed to parse meta file: %s", file.c_str());
-      log(LOG_ERROR, "%s", reader.getFormattedErrorMessages().c_str());
+      logging(LOG_ERROR, "Failed to parse meta file: %s", file.c_str());
+      logging(LOG_ERROR, "%s", reader.getFormattedErrorMessages().c_str());
       if (fail_on_error)
       {
         return yage::core::INVALID_STATE;
@@ -55,7 +55,7 @@ yage::core::error yage::app::assets::pack::asset_factory::pack_parser::parse(
     auto t = root["type"];
     if (t.isNull())
     {
-      log(LOG_ERROR, "Type is not specified in meta file: %s", file.c_str());
+      logging(LOG_ERROR, "Type is not specified in meta file: %s", file.c_str());
       if (fail_on_error)
       {
         return yage::core::INVALID_STATE;
@@ -70,7 +70,7 @@ yage::core::error yage::app::assets::pack::asset_factory::pack_parser::parse(
       auto sources = parse_shader_sources(dir, root);
       if (sources.empty())
       {
-        log(LOG_ERROR, "Failed to parse shader sources from meta file: %s",
+        logging(LOG_ERROR, "Failed to parse shader sources from meta file: %s",
             file.c_str());
         if (fail_on_error)
         {
@@ -87,7 +87,7 @@ yage::core::error yage::app::assets::pack::asset_factory::pack_parser::parse(
       auto [param, sources] = parse_texture_sources(dir, root);
       if (sources.empty())
       {
-        log(LOG_ERROR, "Failed to parse texture sources from meta file: %s",
+        logging(LOG_ERROR, "Failed to parse texture sources from meta file: %s",
             file.c_str());
         if (fail_on_error)
         {
@@ -101,7 +101,7 @@ yage::core::error yage::app::assets::pack::asset_factory::pack_parser::parse(
     }
     else
     {
-      log(LOG_ERROR, "Unknown type '%s' in meta file: %s", t.asString().c_str(),
+      logging(LOG_ERROR, "Unknown type '%s' in meta file: %s", t.asString().c_str(),
           file.c_str());
       if (fail_on_error)
       {
@@ -141,7 +141,7 @@ yage::app::assets::pack::asset_factory::pack_parser::parse_texture_sources(
         = yage::graphics::tex_wrap_from_string(root["wrap_t"].asString());
   param.wrap_r
         = yage::graphics::tex_wrap_from_string(root["wrap_r"].asString());
-  param.border_color = yage::core::float4(
+  param.border_color = glm::vec4(
         root["border_color"][0].asFloat(), root["border_color"][1].asFloat(),
         root["border_color"][2].asFloat(), root["border_color"][3].asFloat());
 
@@ -172,7 +172,7 @@ yage::app::assets::pack::asset_factory::pack_parser::parse_shader_sources(
       std::ifstream sourcef(s);
       if (!sourcef.is_open())
       {
-        log(LOG_ERROR, "Failed to open shader source file: %s", s.c_str());
+        logging(LOG_ERROR, "Failed to open shader source file: %s", s.c_str());
         continue;
       }
 
@@ -194,12 +194,12 @@ yage::core::error yage::app::assets::pack::asset_factory::read_assets(
   extract_path = yage::core::get_temp_dir();
   if (extract_path.empty())
   {
-    log(LOG_ERROR, "Failed to get temporary directory");
+    logging(LOG_ERROR, "Failed to get temporary directory");
     return yage::core::INVALID_STATE;
   }
   extract_path += "/assets";
 
-  log(LOG_INFO, "Extracting assets to: %s", extract_path.c_str());
+  logging(LOG_INFO, "Extracting assets to: %s", extract_path.c_str());
   elz::extractZip(path, extract_path);
 
   /* 2. Read .meta files */
@@ -226,7 +226,7 @@ yage::core::error yage::app::assets::pack::asset_factory::read_assets(
 
   if (parser.parse(extract_path, meta_files) != yage::core::error::OK)
   {
-    log(LOG_ERROR, "Failed to parse pack file");
+    logging(LOG_ERROR, "Failed to parse pack file");
     return yage::core::INVALID_STATE;
   }
 
@@ -270,7 +270,7 @@ yage::app::assets::pack::asset_factory::asset_cacher::cache_asset(
 
   if (!ofs.is_open())
   {
-    log(LOG_ERROR, "Failed to open file for writing: %s", dst.c_str());
+    logging(LOG_ERROR, "Failed to open file for writing: %s", dst.c_str());
     return yage::core::FILE_NOT_FOUND;
   }
 
@@ -324,11 +324,11 @@ void yage::app::assets::pack::asset_factory::pack_watcher::run()
 
     if (last_mtime != mtime)
     {
-      log(LOG_INFO, "Pack file has been modified, reloading assets");
+      logging(LOG_INFO, "Pack file has been modified, reloading assets");
       last_mtime = mtime;
 
       std::string p = factory->extract_path + "_new";
-      log(LOG_DEBUG, "Extracting assets to: %s", p.c_str());
+      logging(LOG_DEBUG, "Extracting assets to: %s", p.c_str());
       elz::extractZip(factory->path, p);
 
       std::vector<std::string> meta_files = yage::core::list_files(p, "*.meta");
@@ -339,7 +339,7 @@ void yage::app::assets::pack::asset_factory::pack_watcher::run()
                            yage::app::assets::shader::sources sources) {
         if (factory->assets.find(basename) == factory->assets.end())
         {
-          log(LOG_WARN, "New shader: %s. Please rerun the application",
+          logging(LOG_WARN, "New shader: %s. Please rerun the application",
               basename.c_str());
         }
 
@@ -347,18 +347,18 @@ void yage::app::assets::pack::asset_factory::pack_watcher::run()
               factory->assets[basename]);
         if (!shader)
         {
-          log(LOG_ERROR, "Failed to cast asset to shader: %s",
+          logging(LOG_ERROR, "Failed to cast asset to shader: %s",
               basename.c_str());
           return;
         }
         if (shader->src != sources)
         {
-          log(LOG_DEBUG, "Marked shader for update: %s", basename.c_str());
+          logging(LOG_DEBUG, "Marked shader for update: %s", basename.c_str());
           shader->update(sources);
         }
         else
         {
-          log(LOG_DEBUG, "Shader is up to date: %s", basename.c_str());
+          logging(LOG_DEBUG, "Shader is up to date: %s", basename.c_str());
         }
       });
       parser.on_texture([this,
@@ -367,7 +367,7 @@ void yage::app::assets::pack::asset_factory::pack_watcher::run()
                             const std::vector<std::string> &      sources) {
         if (factory->assets.find(basename) == factory->assets.end())
         {
-          log(LOG_WARN, "New texture: %s. Please rerun the application",
+          logging(LOG_WARN, "New texture: %s. Please rerun the application",
               basename.c_str());
         }
 
@@ -375,7 +375,7 @@ void yage::app::assets::pack::asset_factory::pack_watcher::run()
               factory->assets[basename]);
         if (!texture)
         {
-          log(LOG_ERROR, "Failed to cast asset to texture: %s",
+          logging(LOG_ERROR, "Failed to cast asset to texture: %s",
               basename.c_str());
           return;
         }
@@ -383,18 +383,18 @@ void yage::app::assets::pack::asset_factory::pack_watcher::run()
         /* todo: compare sources */
         if (texture->parameters != param)
         {
-          log(LOG_DEBUG, "Marked texture for update: %s", basename.c_str());
+          logging(LOG_DEBUG, "Marked texture for update: %s", basename.c_str());
           texture->update(param, sources);
         }
         else
         {
-          log(LOG_DEBUG, "Texture is up to date: %s", basename.c_str());
+          logging(LOG_DEBUG, "Texture is up to date: %s", basename.c_str());
         }
       });
 
       if (parser.parse(p, meta_files, false) != yage::core::error::OK)
       {
-        log(LOG_ERROR, "Failed to parse pack file");
+        logging(LOG_ERROR, "Failed to parse pack file");
       }
     }
   }

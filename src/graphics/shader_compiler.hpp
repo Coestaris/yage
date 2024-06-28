@@ -14,8 +14,6 @@
 #include <cstdint>
 
 #include "graphics/graphics.hpp"
-#include "core/float2.hpp"
-#include "core/float3.hpp"
 #include "shader_type.hpp"
 
 namespace yage::graphics

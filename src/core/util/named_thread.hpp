@@ -65,9 +65,9 @@ public:
   void start_inplace()
   {
     named_thread::thread_names[std::this_thread::get_id()] = name;
-    log(LOG_INFO, "Thread '%s' started", name.c_str());
+    logging(LOG_INFO, "Thread '%s' started", name.c_str());
     run();
-    log(LOG_INFO, "Thread '%s' finished", name.c_str());
+    logging(LOG_INFO, "Thread '%s' finished", name.c_str());
   }
 
   void join()

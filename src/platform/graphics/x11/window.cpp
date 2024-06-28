@@ -185,7 +185,7 @@ static yage::core::key convert_key(uint32_t keycode)
 #if USE_DEBUG
   if (keymap.find(keycode) == keymap.end())
   {
-    log(LOG_WARN, "Key not found: 0x%x (%c)", keycode,
+    logging(LOG_WARN, "Key not found: 0x%x (%c)", keycode,
         static_cast<char>(keycode));
     return yage::core::key::UNKNOWN;
   }
@@ -219,23 +219,23 @@ yage::core::error yage::platform::graphics::x11::window::open()
 {
   if (opened)
   {
-    log(LOG_ERROR, "Window is already opened!");
+    logging(LOG_ERROR, "Window is already opened!");
     return yage::core::error::INVALID_STATE;
   }
 
   if (settings.width <= 0 || settings.height <= 0)
   {
-    log(LOG_ERROR, "Invalid window size");
+    logging(LOG_ERROR, "Invalid window size");
     return yage::core::error::INVALID_ARGUMENT;
   }
 
   working_thread = std::this_thread::get_id();
 
-  log(LOG_DEBUG, "Opening X11 window");
+  logging(LOG_DEBUG, "Opening X11 window");
   display = XOpenDisplay(NULL);
   if (display == NULL)
   {
-    log(LOG_ERROR, "Cannot open display");
+    logging(LOG_ERROR, "Cannot open display");
     return yage::core::error::EXTERNAL_API_ERROR;
   }
   int screenId = DefaultScreen(display);
@@ -243,10 +243,10 @@ yage::core::error yage::platform::graphics::x11::window::open()
   /* Check GLX version */
   GLint majorGLX, minorGLX = 0;
   glXQueryVersion(display, &majorGLX, &minorGLX);
-  log(LOG_DEBUG, "GLX version: %d.%d", majorGLX, minorGLX);
+  logging(LOG_DEBUG, "GLX version: %d.%d", majorGLX, minorGLX);
   if (majorGLX <= 1 && minorGLX < 2)
   {
-    log(LOG_ERROR, "GLX 1.2 or greater is required");
+    logging(LOG_ERROR, "GLX 1.2 or greater is required");
     XCloseDisplay(display);
     return yage::core::error::EXTERNAL_API_ERROR;
   }
@@ -271,13 +271,13 @@ yage::core::error yage::platform::graphics::x11::window::open()
   };
   // clang-format on
 
-  log(LOG_DEBUG, "Getting framebuffer config for screen %d", screenId);
+  logging(LOG_DEBUG, "Getting framebuffer config for screen %d", screenId);
   int           fbcount;
   GLXFBConfig * fbc
         = glXChooseFBConfig(display, screenId, glxAttribs, &fbcount);
   if (fbc == nullptr)
   {
-    log(LOG_ERROR, "Failed to retrieve a framebuffer config");
+    logging(LOG_ERROR, "Failed to retrieve a framebuffer config");
     XCloseDisplay(display);
     return yage::core::error::EXTERNAL_API_ERROR;
   }
@@ -292,7 +292,7 @@ yage::core::error yage::platform::graphics::x11::window::open()
       glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
       glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLES, &samples);
 
-      log(LOG_DEBUG,
+      logging(LOG_DEBUG,
           "Matching fbconfig %d, visual ID 0x%2lx: SAMPLE_BUFFERS = %d,"
           " SAMPLES = %d",
           i, vi->visualid, samp_buf, samples);
@@ -314,14 +314,14 @@ yage::core::error yage::platform::graphics::x11::window::open()
   visual = glXGetVisualFromFBConfig(display, bestFbc);
   if (visual == 0)
   {
-    log(LOG_ERROR, "Could not create correct visual window");
+    logging(LOG_ERROR, "Could not create correct visual window");
     XCloseDisplay(display);
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
   if (screenId != visual->screen)
   {
-    log(LOG_ERROR, "screenId != visual->screen");
+    logging(LOG_ERROR, "screenId != visual->screen");
     XCloseDisplay(display);
     return yage::core::error::EXTERNAL_API_ERROR;
   }
@@ -355,12 +355,12 @@ yage::core::error yage::platform::graphics::x11::window::open()
   /*
    * Setup GLX
    */
-  log(LOG_DEBUG, "Creating GLX context");
+  logging(LOG_DEBUG, "Creating GLX context");
   glx_context
         = glXCreateNewContext(display, bestFbc, GLX_RGBA_TYPE, nullptr, True);
   if (!glx_context)
   {
-    log(LOG_ERROR, "Failed to create GLX context");
+    logging(LOG_ERROR, "Failed to create GLX context");
     XCloseDisplay(display);
     return yage::core::error::EXTERNAL_API_ERROR;
   }
@@ -370,20 +370,20 @@ yage::core::error yage::platform::graphics::x11::window::open()
   /* Verifying that context is a direct context */
   if (!glXIsDirect(display, glx_context))
   {
-    log(LOG_INFO, "Indirect GLX rendering context obtained");
+    logging(LOG_INFO, "Indirect GLX rendering context obtained");
   }
   else
   {
-    log(LOG_INFO, "Direct GLX rendering context obtained");
+    logging(LOG_INFO, "Direct GLX rendering context obtained");
   }
 
-  log(LOG_DEBUG, "Making GLX context current");
+  logging(LOG_DEBUG, "Making GLX context current");
   glXMakeCurrent(display, win, glx_context);
 
   if (context.init(16, settings.width, settings.height)
       != yage::core::error::OK)
   {
-    log(LOG_ERROR, "Failed to initialize graphics context");
+    logging(LOG_ERROR, "Failed to initialize graphics context");
     XCloseDisplay(display);
     return yage::core::error::EXTERNAL_API_ERROR;
   }
@@ -427,11 +427,11 @@ yage::core::error yage::platform::graphics::x11::window::set_mode(
 {
   if (working_thread != std::this_thread::get_id())
   {
-    log(LOG_ERROR, "Close called from different thread!");
+    logging(LOG_ERROR, "Close called from different thread!");
     return yage::core::error::INVALID_THREAD;
   }
 
-  log(LOG_DEBUG, "Setting window mode to %d", static_cast<int>(mode));
+  logging(LOG_DEBUG, "Setting window mode to %d", static_cast<int>(mode));
   settings.win_mode = mode;
 
   switch (settings.win_mode)
@@ -482,11 +482,11 @@ yage::core::error yage::platform::graphics::x11::window::set_geometry(
 {
   if (working_thread != std::this_thread::get_id())
   {
-    log(LOG_ERROR, "Close called from different thread!");
+    logging(LOG_ERROR, "Close called from different thread!");
     return yage::core::error::INVALID_THREAD;
   }
 
-  log(LOG_DEBUG, "Setting window geometry to %d x %d", geometry.width,
+  logging(LOG_DEBUG, "Setting window geometry to %d x %d", geometry.width,
       geometry.height);
 
   settings.width  = geometry.width;
@@ -505,11 +505,11 @@ yage::platform::graphics::x11::window::set_title(std::string title)
 {
   if (working_thread != std::this_thread::get_id())
   {
-    log(LOG_ERROR, "Close called from different thread!");
+    logging(LOG_ERROR, "Close called from different thread!");
     return yage::core::error::INVALID_THREAD;
   }
 
-  log(LOG_DEBUG, "Setting window title to %s", title.c_str());
+  logging(LOG_DEBUG, "Setting window title to %s", title.c_str());
 
   settings.title = title;
 
@@ -526,7 +526,7 @@ yage::core::error yage::platform::graphics::x11::window::update()
 {
   if (working_thread != std::this_thread::get_id())
   {
-    log(LOG_ERROR, "Close called from different thread!");
+    logging(LOG_ERROR, "Close called from different thread!");
     return yage::core::error::INVALID_THREAD;
   }
 
@@ -556,11 +556,11 @@ yage::core::error yage::platform::graphics::x11::window::close()
 
   if (working_thread != std::this_thread::get_id())
   {
-    log(LOG_WARN, "Close called from different thread!");
+    logging(LOG_WARN, "Close called from different thread!");
     return yage::core::error::OK;
   }
 
-  log(LOG_INFO, "Closing window");
+  logging(LOG_INFO, "Closing window");
 
   /* send event to unblock event loop */
   XEvent ev;
@@ -571,15 +571,15 @@ yage::core::error yage::platform::graphics::x11::window::close()
   ev.xclient.format       = 32;
   ev.xclient.data.l[0]    = wmDeleteMessage;
   ev.xclient.data.l[1]    = CurrentTime;
-  log(LOG_DEBUG, "Sending close signal to event_loop");
+  logging(LOG_DEBUG, "Sending close signal to event_loop");
   XSendEvent(display, win, False, NoEventMask, &ev);
   XFlush(display);
   event_loop.join();
 
-  log(LOG_DEBUG, "Destroying X11 window");
+  logging(LOG_DEBUG, "Destroying X11 window");
   glXDestroyContext(display, glx_context);
 
-  log(LOG_DEBUG, "Closing X11 display");
+  logging(LOG_DEBUG, "Closing X11 display");
   XFree(visual);
   XFreeColormap(display, colormap);
   XDestroyWindow(display, win);

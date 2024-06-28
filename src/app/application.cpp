@@ -45,7 +45,7 @@ yage::core::error yage::app::application::start()
   statistics.start();
 
   renderer.join();
-  log(LOG_INFO, "Renderer thread has finished");
+  logging(LOG_INFO, "Renderer thread has finished");
 
   /* Sync points are no longer needed.
    * Shutdown them to avoid deadlocks */
@@ -59,7 +59,7 @@ yage::core::error yage::app::application::start()
   logic.join();
   statistics.join();
 
-  log(LOG_INFO, "Logic thread has finished");
+  logging(LOG_INFO, "Logic thread has finished");
 
   renderer_profiler.flush();
   logic_profiler.flush();

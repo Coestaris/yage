@@ -10,7 +10,8 @@
 
 /* Includes ================================================================= */
 #include <string>
-#include "core/float4.hpp"
+#include "glm/vec4.hpp"
+
 namespace yage::graphics
 {
 /* Defines ================================================================== */
@@ -72,14 +73,14 @@ enum class tex_wrap
 
 struct texture_param
 {
-  tex_type           type;
-  tex_pixel_format   format;
-  yage::core::float4 border_color;
-  tex_filter         min_filter;
-  tex_filter         mag_filter;
-  tex_wrap           wrap_s;
-  tex_wrap           wrap_t;
-  tex_wrap           wrap_r;
+  tex_type         type;
+  tex_pixel_format format;
+  glm::vec4        border_color;
+  tex_filter       min_filter;
+  tex_filter       mag_filter;
+  tex_wrap         wrap_s;
+  tex_wrap         wrap_t;
+  tex_wrap         wrap_r;
 
   bool operator==(const texture_param & other) const
   {

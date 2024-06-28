@@ -9,8 +9,8 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "core/float2.hpp"
 #include "core/time.hpp"
+#include "glm/vec2.hpp"
 
 namespace yage::app
 {
@@ -38,8 +38,8 @@ public:
   /* for now, let's assume that all game objects have position */
   struct public_data
   {
-    yage::core::float2 position;
-    yage::core::float2 size;
+    glm::vec2 position;
+    glm::vec2 size;
   } data;
 
   class logic_data

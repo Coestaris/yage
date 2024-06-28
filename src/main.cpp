@@ -33,7 +33,7 @@ public:
   float y_inc = 2;
 
   explicit movable_obj(
-        yage::app::application * app, yage::core::float2 start_pos)
+        yage::app::application * app, glm::vec2 start_pos)
   : yage::app::object(app)
   {
     data.position = start_pos;
@@ -163,7 +163,7 @@ std::string lookup_asset_path()
     for (const auto & extension : extensions)
     {
       std::string path = variant + extension;
-      log(LOG_DEBUG, "Checking for %s", path.c_str());
+      logging(LOG_DEBUG, "Checking for %s", path.c_str());
       if (yage::core::file_exists(path))
       {
         return path;
@@ -197,7 +197,7 @@ int main(int argc, char * argv[])
   std::string asset_path = lookup_asset_path();
   if (asset_path.empty())
   {
-    log(LOG_ERROR, "Failed to find assets.pack file");
+    logging(LOG_ERROR, "Failed to find assets.pack file");
     return 1;
   }
   yage::app::assets::pack::asset_factory asset_factory(
@@ -208,7 +208,7 @@ int main(int argc, char * argv[])
 
   for (int i = 0; i < 10; i++)
   {
-    yage::core::float2 position
+    glm::vec2 position
           = { static_cast<float>(rand() % (settings.width - 200)),
               static_cast<float>(rand() % settings.height - 200) };
 

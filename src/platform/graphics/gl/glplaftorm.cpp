@@ -51,7 +51,7 @@ void * yage::platform::graphics::gl::gl_lookup(const char * func, bool required)
     }
     else
     {
-      log(LOG_ERROR, "Function %s not found", func);
+      logging(LOG_ERROR, "Function %s not found", func);
     }
 
     return nullptr;

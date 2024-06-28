@@ -43,13 +43,13 @@ yage::graphics::shader::set_uniform_1f(std::string name, float value)
 }
 
 yage::core::error yage::graphics::shader::set_uniform_2f(
-      std::string name, yage::core::float2 value)
+      std::string name, glm::vec2 value)
 {
   return set_uniform_2f(get_uniform_location(std::move(name)), value);
 }
 
 yage::core::error yage::graphics::shader::set_uniform_3f(
-      std::string name, yage::core::float3 value)
+      std::string name, glm::vec3 value)
 {
   return set_uniform_3f(get_uniform_location(std::move(name)), value);
 }
@@ -83,12 +83,12 @@ yage::graphics::shader::set_uniform_1f(int location, float value)
   return yage::core::NOT_IMPLEMENTED;
 }
 yage::core::error
-yage::graphics::shader::set_uniform_2f(int location, yage::core::float2 value)
+yage::graphics::shader::set_uniform_2f(int location, glm::vec2 value)
 {
   return yage::core::NOT_IMPLEMENTED;
 }
 yage::core::error
-yage::graphics::shader::set_uniform_3f(int location, yage::core::float3 value)
+yage::graphics::shader::set_uniform_3f(int location, glm::vec3 value)
 {
   return yage::core::NOT_IMPLEMENTED;
 }

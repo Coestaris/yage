@@ -22,7 +22,7 @@ yage::core::os_events * instance = nullptr;
 /* Static functions ========================================================= */
 static void stop_handler(int signal)
 {
-  log(LOG_WARN, "Received stop signal: %d", signal);
+  logging(LOG_WARN, "Received stop signal: %d", signal);
   if (instance)
   {
     instance->on_stop_signal.push(signal);
@@ -31,7 +31,7 @@ static void stop_handler(int signal)
 
 void handler(int signal, siginfo_t * info, void * context)
 {
-  log(LOG_FATAL, "Received illness signal: %d", signal);
+  logging(LOG_FATAL, "Received illness signal: %d", signal);
 
   if (instance)
   {

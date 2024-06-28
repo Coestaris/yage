@@ -26,14 +26,14 @@ void yage::app::threads::renderer::run()
 {
   if (app->subrenderer->window->open() != yage::core::error::OK)
   {
-    log(LOG_ERROR, "Failed to open window");
+    logging(LOG_ERROR, "Failed to open window");
     return;
   }
 
   graphics = app->subrenderer->window->get_graphics();
   if (!graphics)
   {
-    log(LOG_ERROR, "Unable to get graphics from window");
+    logging(LOG_ERROR, "Unable to get graphics from window");
     return;
   }
 
@@ -41,7 +41,7 @@ void yage::app::threads::renderer::run()
   if ((error = app->subrenderer->asset_factory->read_assets(graphics))
       != yage::core::error::OK)
   {
-    log(LOG_ERROR, "Failed to read assets: %d", error);
+    logging(LOG_ERROR, "Failed to read assets: %d", error);
     app->subrenderer->window->close();
     return;
   }
@@ -60,12 +60,12 @@ void yage::app::threads::renderer::run()
     int signal = 0;
     if (stop_signal_listener.get_next(signal))
     {
-      log(LOG_DEBUG, "Received signal: %d", signal);
+      logging(LOG_DEBUG, "Received signal: %d", signal);
       app->subrenderer->window->close();
     }
     if (!app->subrenderer->window->is_open())
     {
-      log(LOG_DEBUG, "Window is closed. Exiting renderer worker");
+      logging(LOG_DEBUG, "Window is closed. Exiting renderer worker");
       break;
     }
 
@@ -89,7 +89,7 @@ void yage::app::threads::renderer::run()
     profiler->passed(PROF_POINT_RENDERER_UPDATE_START);
     if (app->subrenderer->window->update() != yage::core::error::OK)
     {
-      log(LOG_ERROR, "Failed to update window");
+      logging(LOG_ERROR, "Failed to update window");
       break;
     }
 

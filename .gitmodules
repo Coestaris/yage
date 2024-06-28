@@ -8,3 +8,6 @@
 [submodule "thirdparty/free_image"]
 	path = thirdparty/free_image
 	url = https://github.com/danoli3/FreeImage.git
+[submodule "thirdparty/glm"]
+	path = thirdparty/glm
+	url = https://github.com/g-truc/glm.git

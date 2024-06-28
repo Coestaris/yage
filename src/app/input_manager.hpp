@@ -12,7 +12,7 @@
 #include "graphics/input_events.hpp"
 #include "core/keyboard.hpp"
 #include "core/mouse.hpp"
-#include "core/float2.hpp"
+#include "glm/vec2.hpp"
 
 namespace yage::app
 {
@@ -28,7 +28,7 @@ private:
   bool key_states[static_cast<size_t>(yage::core::key::MAX_KEYS)] = { false };
   bool mouse_states[static_cast<size_t>(yage::core::mouse::MAX_BUTTONS)]
         = { false };
-  yage::core::float2 mouse_pos;
+  glm::vec2 mouse_pos;
 
   yage::graphics::key_pressed_listener    key_pressed_listener;
   yage::graphics::key_released_listener   key_released_listener;
@@ -41,7 +41,7 @@ public:
 
   bool               key_pressed(yage::core::key key) const;
   bool               mouse_pressed(yage::core::mouse button) const;
-  yage::core::float2 mouse_position() const;
+  glm::vec2 mouse_position() const;
 
   void update();
 

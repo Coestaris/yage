@@ -34,7 +34,7 @@ public:
 
     if (queue.size() >= max_queue_size)
     {
-      log(LOG_WARN, "%s: queue is full, dropping data", name.c_str());
+      logging(LOG_WARN, "%s: queue is full, dropping data", name.c_str());
       return;
     }
 

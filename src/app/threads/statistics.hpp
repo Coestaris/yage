@@ -9,10 +9,10 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "core/math.hpp"
 #include "core/util/named_thread.hpp"
 #include "app/threads/logic.hpp"
 #include "app/threads/renderer.hpp"
+#include "glm/common.hpp"
 
 namespace yage::app::threads
 {
@@ -64,21 +64,24 @@ public:
       }
 
       // clang-format off
-      draw_time_ms = yage::core::lerp(draw_time_ms, renderer->get_draw_time(), lerp_alpha);
-      copy_time_ms = yage::core::lerp(copy_time_ms, renderer->get_copy_time(), lerp_alpha);
-      update_time_ms = yage::core::lerp(update_time_ms, logic->get_update_time(), lerp_alpha);
-      particles_time_ms = yage::core::lerp(particles_time_ms, logic->get_particles_time(), lerp_alpha);
-      physics_time_ms = yage::core::lerp(physics_time_ms, logic->get_physics_time(), lerp_alpha);
-      ai_time_ms = yage::core::lerp(ai_time_ms, logic->get_ai_time(), lerp_alpha);
-      sound_time_ms = yage::core::lerp(sound_time_ms, logic->get_sound_time(), lerp_alpha);
+      draw_time_ms = glm::mix(draw_time_ms, renderer->get_draw_time(), lerp_alpha);
+      copy_time_ms = glm::mix(copy_time_ms, renderer->get_copy_time(), lerp_alpha);
+      update_time_ms = glm::mix(update_time_ms, logic->get_update_time(), lerp_alpha);
+      particles_time_ms = glm::mix(particles_time_ms, logic->get_particles_time(), lerp_alpha);
+      physics_time_ms = glm::mix(physics_time_ms, logic->get_physics_time(), lerp_alpha);
+      ai_time_ms = glm::mix(ai_time_ms, logic->get_ai_time(), lerp_alpha);
+      sound_time_ms = glm::mix(sound_time_ms, logic->get_sound_time(), lerp_alpha);
       // clang-format on
 
+      /* Prescaler, to check data multiple
+       * times per one log period */
       if (counter++ % (log_period_ms / poll_period_ms) != 0)
       {
         continue;
       }
-      log(LOG_INFO,
-          "Obj: %lld (%lld). FPS: %2.2f (%.1f, %.1f). Logic: "
+
+      logging(LOG_INFO,
+          "Obj: %zu (%zu). FPS: %2.2f (%.1f, %.1f). Logic: "
           "%.1f, %.1f, %.1f, %.1f, %.1f",
           renderer->get_instances_count(), logic->get_instances_count(),
           renderer->get_keeper_cps(), draw_time_ms, copy_time_ms,

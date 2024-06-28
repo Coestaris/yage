@@ -19,16 +19,16 @@ namespace yage::core
 /* Macros =================================================================== */
 #if 1
 #if __USE_SHORT_FILE__
-#define log(__level, __fmt, ...)                                               \
+#define logging(__level, __fmt, ...)                                           \
   yage::core::get_global_logger()->_log(                                       \
         __level, __fmt, __SHORT_FILE__, __LINE__, ##__VA_ARGS__)
 #else
-#define log(__level, __fmt, ...)                                               \
+#define logging(__level, __fmt, ...)                                           \
   yage::core::get_global_logger()->_log(                                       \
         __level, __fmt, __FILE__, __LINE__, ##__VA_ARGS__)
 #endif
 #else
-#define log(__level, __fmt, ...)                                               \
+#define logging(__level, __fmt, ...)                                           \
   do                                                                           \
   {                                                                            \
   } while (0)

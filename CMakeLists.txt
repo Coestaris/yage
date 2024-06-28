@@ -55,6 +55,7 @@ set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF)
 add_subdirectory(thirdparty/jsoncpp)
 set(BUILD_SHARED_LIBS ON)
 add_subdirectory(thirdparty/free_image)
+add_subdirectory(thirdparty/glm)
 
 # Setup compiler
 set(CMAKE_CXX_STANDARD 17)
@@ -134,3 +135,6 @@ target_link_libraries(yage jsoncpp_lib)
 
 target_include_directories(yage PRIVATE thirdparty/free_image/Source)
 target_link_libraries(yage FreeImage)
+
+target_include_directories(yage PRIVATE thirdparty/glm)
+target_link_libraries(yage glm)

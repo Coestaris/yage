@@ -11,11 +11,11 @@
 /* Includes ================================================================= */
 #include <string>
 #include "core/error.hpp"
-#include "core/float2.hpp"
 
 #include "graphics/shader.hpp"
 #include "graphics/shader_compiler.hpp"
 #include "graphics/texture_param.hpp"
+#include "glm/vec2.hpp"
 
 namespace yage::graphics
 {
@@ -45,8 +45,8 @@ public:
   virtual yage::graphics::texture * create_texture(const yage::graphics::texture_param & parameters) = 0;
   virtual yage::core::error destroy_texture(yage::graphics::texture * texture) = 0;
 
-  virtual yage::core::error draw_line(yage::core::float2 a, yage::core::float2 b) = 0;
-  virtual yage::core::error draw_rect(yage::core::float2 position, yage::core::float2 dim) = 0;
+  virtual yage::core::error draw_line(glm::vec2 a, glm::vec2 b) = 0;
+  virtual yage::core::error draw_rect(glm::vec2 position, glm::vec2 dim) = 0;
 };
 
 /* Variables ================================================================ */

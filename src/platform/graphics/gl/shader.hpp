@@ -39,9 +39,9 @@ public:
   yage::core::error set_uniform_1i(int location, int value) override;
   yage::core::error set_uniform_1f(int location, float value) override;
   yage::core::error
-  set_uniform_2f(int location, yage::core::float2 value) override;
+  set_uniform_2f(int location, glm::vec2 value) override;
   yage::core::error
-  set_uniform_3f(int location, yage::core::float3 value) override;
+  set_uniform_3f(int location, glm::vec3 value) override;
   yage::core::error set_uniform_mat4f(int location, float * value) override;
 };
 

@@ -52,11 +52,11 @@ void yage::platform::graphics::gl::shader_compiler::clear()
 yage::core::error yage::platform::graphics::gl::shader_compiler::add_shader(
       std::string source, yage::graphics::shader_type type)
 {
-  //  log(LOG_DEBUG, "Adding shader of type %d", type);
+  //  logging(LOG_DEBUG, "Adding shader of type %d", type);
 
   if (sources.find(type) != sources.end())
   {
-    log(LOG_ERROR, "Shader of type %d already exists", type);
+    logging(LOG_ERROR, "Shader of type %d already exists", type);
     return yage::core::error::ALREADY_EXISTS;
   }
 
@@ -71,7 +71,7 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
 {
   if (sources.empty())
   {
-    log(LOG_ERROR, "No shaders to compile");
+    logging(LOG_ERROR, "No shaders to compile");
     return yage::core::error::EMPTY;
   }
 
@@ -79,7 +79,7 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
 
   for (auto & [type, source] : sources)
   {
-    //    log(LOG_DEBUG, "Compiling shader of type %d", type);
+    //    logging(LOG_DEBUG, "Compiling shader of type %d", type);
     GLuint gl_type;
     switch (type)
     {
@@ -90,14 +90,14 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
         gl_type = GL_FRAGMENT_SHADER;
         break;
       default:
-        log(LOG_ERROR, "Unknown shader type %d", type);
+        logging(LOG_ERROR, "Unknown shader type %d", type);
         return {};
     }
 
     GLuint shader = glCreateShader(gl_type);
     if (!shader)
     {
-      log(LOG_ERROR, "Failed to create shader");
+      logging(LOG_ERROR, "Failed to create shader");
       return yage::core::error::EXTERNAL_API_ERROR;
     }
 
@@ -201,7 +201,7 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
         program, binary_length, nullptr, &binary_format, binary.data());
   glDeleteProgram(program);
 
-  log(LOG_INFO, "Shader compiled successfully: %d bytes", binary_length);
+  logging(LOG_INFO, "Shader compiled successfully: %d bytes", binary_length);
 
   return yage::core::error::OK;
 }
@@ -211,7 +211,7 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::get_binary(
 {
   if (binary.empty())
   {
-    log(LOG_ERROR, "No binary data available");
+    logging(LOG_ERROR, "No binary data available");
     return {};
   }
 

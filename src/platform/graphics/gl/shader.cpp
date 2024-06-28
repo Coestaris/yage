@@ -68,13 +68,13 @@ yage::platform::graphics::gl::shader::set_uniform_1f(int location, float value)
 }
 
 yage::core::error yage::platform::graphics::gl::shader::set_uniform_2f(
-      int location, yage::core::float2 value)
+      int location, glm::vec2 value)
 {
   return yage::core::error::NOT_IMPLEMENTED;
 }
 
 yage::core::error yage::platform::graphics::gl::shader::set_uniform_3f(
-      int location, yage::core::float3 value)
+      int location, glm::vec3 value)
 {
   return yage::core::error::NOT_IMPLEMENTED;
 }

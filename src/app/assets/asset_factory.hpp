@@ -81,7 +81,7 @@ public:
     {
       if (asset->load() != yage::core::error::OK)
       {
-        log(LOG_ERROR, "Failed to load asset %s", name.c_str());
+        logging(LOG_ERROR, "Failed to load asset %s", name.c_str());
         return nullptr;
       }
       loaded_assets.push_back(asset);

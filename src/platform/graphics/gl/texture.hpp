@@ -10,7 +10,6 @@
 
 /* Includes ================================================================= */
 #include "graphics/texture.hpp"
-#include "core/float3.hpp"
 
 namespace yage::platform::graphics::gl
 {

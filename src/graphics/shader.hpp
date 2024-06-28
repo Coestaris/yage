@@ -13,10 +13,10 @@
 #include <vector>
 #include <cstdint>
 #include <unordered_map>
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 
 #include "graphics/graphics.hpp"
-#include "core/float2.hpp"
-#include "core/float3.hpp"
 
 namespace yage::graphics
 {
@@ -54,14 +54,14 @@ public:
 
   virtual yage::core::error set_uniform_1i(int location, int value);
   virtual yage::core::error set_uniform_1f(int location, float value);
-  virtual yage::core::error set_uniform_2f(int location, yage::core::float2 value);
-  virtual yage::core::error set_uniform_3f(int location, yage::core::float3 value);
+  virtual yage::core::error set_uniform_2f(int location, glm::vec2 value);
+  virtual yage::core::error set_uniform_3f(int location, glm::vec3 value);
   virtual yage::core::error set_uniform_mat4f(int location, float * value);
 
   yage::core::error set_uniform_1i(std::string name, int value);
   yage::core::error set_uniform_1f(std::string name, float value);
-  yage::core::error set_uniform_2f(std::string name, yage::core::float2 value);
-  yage::core::error set_uniform_3f(std::string name, yage::core::float3 value);
+  yage::core::error set_uniform_2f(std::string name, glm::vec2 value);
+  yage::core::error set_uniform_3f(std::string name, glm::vec3 value);
   yage::core::error set_uniform_mat4f(std::string name, float * value);
 };
 

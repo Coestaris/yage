@@ -26,10 +26,10 @@ static __attribute__((constructor(101))) void init()
 bool yage::graphics::texture_compiler::image_to_rgba8888(
       const std::string &                                       path,
       std::vector<yage::graphics::texture_compiler::rgba8888> & out_data,
-      yage::core::float2 &                                      out_size)
+      glm::vec2 &                                      out_size)
 {
   FreeImage_SetOutputMessage([](FREE_IMAGE_FORMAT, const char * message) {
-    log(LOG_ERROR, "FreeImage: %s", message);
+    logging(LOG_ERROR, "FreeImage: %s", message);
   });
   FIBITMAP * bitmap = FreeImage_Load(
         FreeImage_GetFIFFromFilename(path.c_str()), path.c_str());

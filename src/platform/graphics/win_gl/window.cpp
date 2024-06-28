@@ -24,40 +24,40 @@
 /* Shared functions ========================================================= */
 static void log_pfd(PIXELFORMATDESCRIPTOR * pdf)
 {
-  log(LOG_DEBUG, "PIXELFORMATDESCRIPTOR:");
-  log(LOG_DEBUG, "    nSize = %d", pdf->nSize);
-  log(LOG_DEBUG, "    nVersion = %d", pdf->nVersion);
-  log(LOG_DEBUG, "    dwFlags = %lu", pdf->dwFlags);
-  log(LOG_DEBUG, "    iPixelType = %d", pdf->iPixelType);
-  log(LOG_DEBUG, "    cColorBits = %d", pdf->cColorBits);
-  log(LOG_DEBUG, "    cRedBits = %d", pdf->cRedBits);
-  log(LOG_DEBUG, "    cRedShift = %d", pdf->cRedShift);
-  log(LOG_DEBUG, "    cGreenBits = %d", pdf->cGreenBits);
-  log(LOG_DEBUG, "    cGreenShift = %d", pdf->cGreenShift);
-  log(LOG_DEBUG, "    cBlueBits = %d", pdf->cBlueBits);
-  log(LOG_DEBUG, "    cBlueShift = %d", pdf->cBlueShift);
-  log(LOG_DEBUG, "    cAlphaBits = %d", pdf->cAlphaBits);
-  log(LOG_DEBUG, "    cAlphaShift = %d", pdf->cAlphaShift);
-  log(LOG_DEBUG, "    cAccumBits = %d", pdf->cAccumBits);
-  log(LOG_DEBUG, "    cAccumRedBits = %d", pdf->cAccumRedBits);
-  log(LOG_DEBUG, "    cAccumGreenBits = %d", pdf->cAccumGreenBits);
-  log(LOG_DEBUG, "    cAccumBlueBits = %d", pdf->cAccumBlueBits);
-  log(LOG_DEBUG, "    cAccumAlphaBits = %d", pdf->cAccumAlphaBits);
-  log(LOG_DEBUG, "    cDepthBits = %d", pdf->cDepthBits);
-  log(LOG_DEBUG, "    cStencilBits = %d", pdf->cStencilBits);
-  log(LOG_DEBUG, "    cAuxBuffers = %d", pdf->cAuxBuffers);
-  log(LOG_DEBUG, "    iLayerType = %d", pdf->iLayerType);
-  log(LOG_DEBUG, "    bReserved = %d", pdf->bReserved);
-  log(LOG_DEBUG, "    dwLayerMask = %lu", pdf->dwLayerMask);
-  log(LOG_DEBUG, "    dwVisibleMask = %lu", pdf->dwVisibleMask);
-  log(LOG_DEBUG, "    dwDamageMask = %lu", pdf->dwDamageMask);
+  logging(LOG_DEBUG, "PIXELFORMATDESCRIPTOR:");
+  logging(LOG_DEBUG, "    nSize = %d", pdf->nSize);
+  logging(LOG_DEBUG, "    nVersion = %d", pdf->nVersion);
+  logging(LOG_DEBUG, "    dwFlags = %lu", pdf->dwFlags);
+  logging(LOG_DEBUG, "    iPixelType = %d", pdf->iPixelType);
+  logging(LOG_DEBUG, "    cColorBits = %d", pdf->cColorBits);
+  logging(LOG_DEBUG, "    cRedBits = %d", pdf->cRedBits);
+  logging(LOG_DEBUG, "    cRedShift = %d", pdf->cRedShift);
+  logging(LOG_DEBUG, "    cGreenBits = %d", pdf->cGreenBits);
+  logging(LOG_DEBUG, "    cGreenShift = %d", pdf->cGreenShift);
+  logging(LOG_DEBUG, "    cBlueBits = %d", pdf->cBlueBits);
+  logging(LOG_DEBUG, "    cBlueShift = %d", pdf->cBlueShift);
+  logging(LOG_DEBUG, "    cAlphaBits = %d", pdf->cAlphaBits);
+  logging(LOG_DEBUG, "    cAlphaShift = %d", pdf->cAlphaShift);
+  logging(LOG_DEBUG, "    cAccumBits = %d", pdf->cAccumBits);
+  logging(LOG_DEBUG, "    cAccumRedBits = %d", pdf->cAccumRedBits);
+  logging(LOG_DEBUG, "    cAccumGreenBits = %d", pdf->cAccumGreenBits);
+  logging(LOG_DEBUG, "    cAccumBlueBits = %d", pdf->cAccumBlueBits);
+  logging(LOG_DEBUG, "    cAccumAlphaBits = %d", pdf->cAccumAlphaBits);
+  logging(LOG_DEBUG, "    cDepthBits = %d", pdf->cDepthBits);
+  logging(LOG_DEBUG, "    cStencilBits = %d", pdf->cStencilBits);
+  logging(LOG_DEBUG, "    cAuxBuffers = %d", pdf->cAuxBuffers);
+  logging(LOG_DEBUG, "    iLayerType = %d", pdf->iLayerType);
+  logging(LOG_DEBUG, "    bReserved = %d", pdf->bReserved);
+  logging(LOG_DEBUG, "    dwLayerMask = %lu", pdf->dwLayerMask);
+  logging(LOG_DEBUG, "    dwVisibleMask = %lu", pdf->dwVisibleMask);
+  logging(LOG_DEBUG, "    dwDamageMask = %lu", pdf->dwDamageMask);
 }
 
 /* TODO: can be moved to common part,
  * since have a lot of common code with DirectX */
 yage::core::error yage::platform::graphics::win_gl::window::open()
 {
-  log(LOG_INFO, "Opening window: %s. Geometry: %d %d. Fullscreen: %s",
+  logging(LOG_INFO, "Opening window: %s. Geometry: %d %d. Fullscreen: %s",
       settings.title.c_str(), settings.width, settings.height,
       yage::graphics::to_string(settings.win_mode).c_str());
 
@@ -69,7 +69,7 @@ yage::core::error yage::platform::graphics::win_gl::window::open()
 
   hInstance = GetModuleHandle(nullptr);
 
-  log(LOG_DEBUG, "hInstance: 0x%p", hInstance);
+  logging(LOG_DEBUG, "hInstance: 0x%p", hInstance);
 
   WNDCLASS wc;
   /* Redraw On Size, And Own DC For Window. */
@@ -84,10 +84,10 @@ yage::core::error yage::platform::graphics::win_gl::window::open()
   wc.lpszMenuName  = NULL;     /* We Don't Want A Menu */
   wc.lpszClassName = "OpenGL"; /* Set The Class Name */
 
-  log(LOG_DEBUG, "Trying to register window class");
+  logging(LOG_DEBUG, "Trying to register window class");
   if (!RegisterClass(&wc))
   {
-    log(LOG_ERROR, "Failed To Register The Window Class: %lu", GetLastError());
+    logging(LOG_ERROR, "Failed To Register The Window Class: %lu", GetLastError());
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
@@ -106,11 +106,11 @@ yage::core::error yage::platform::graphics::win_gl::window::open()
     dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 
     /* NOTE: CDS_FULLSCREEN Gets Rid Of Start Bar. */
-    log(LOG_DEBUG, "Trying to change display settings");
+    logging(LOG_DEBUG, "Trying to change display settings");
     if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN)
         != DISP_CHANGE_SUCCESSFUL)
     {
-      log(LOG_ERROR, "The Requested Fullscreen Mode Is Not Supported: %lu",
+      logging(LOG_ERROR, "The Requested Fullscreen Mode Is Not Supported: %lu",
           GetLastError());
       return yage::core::error::EXTERNAL_API_ERROR;
     }
@@ -126,16 +126,16 @@ yage::core::error yage::platform::graphics::win_gl::window::open()
               | WS_MAXIMIZEBOX; /* Windows Style */
   }
 
-  log(LOG_DEBUG,
+  logging(LOG_DEBUG,
       "Trying to adjust window to true requested size. dw=0x%lx, dwEx=0x%lx",
       dwStyle, dwExStyle);
   if (!AdjustWindowRectEx(&WindowRect, dwStyle, FALSE, dwExStyle))
   {
-    log(LOG_ERROR, "Failed To Adjust Window Rect: %lu", GetLastError());
+    logging(LOG_ERROR, "Failed To Adjust Window Rect: %lu", GetLastError());
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
-  log(LOG_DEBUG, "Trying to create window");
+  logging(LOG_DEBUG, "Trying to create window");
   if (!(hWnd = CreateWindowEx(
               dwExStyle,              /* Extended Style For The Window */
               "OpenGL",               /* Class Name */
@@ -155,7 +155,7 @@ yage::core::error yage::platform::graphics::win_gl::window::open()
               )))
   {
     close();
-    log(LOG_ERROR, "Window Creation Error: %lu", GetLastError());
+    logging(LOG_ERROR, "Window Creation Error: %lu", GetLastError());
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
@@ -195,43 +195,43 @@ yage::core::error yage::platform::graphics::win_gl::window::open()
 
   log_pfd(&pfd);
 
-  log(LOG_DEBUG, "Trying to get device context. hWnd=0x%p", hWnd);
+  logging(LOG_DEBUG, "Trying to get device context. hWnd=0x%p", hWnd);
   if (!(hDC = GetDC(hWnd)))
   {
     close();
-    log(LOG_ERROR, "Can't Create A GL Device Context: %lu", GetLastError());
+    logging(LOG_ERROR, "Can't Create A GL Device Context: %lu", GetLastError());
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
-  log(LOG_DEBUG, "Trying to find a suitable pixel format. hDC=0x%p", hDC);
+  logging(LOG_DEBUG, "Trying to find a suitable pixel format. hDC=0x%p", hDC);
   if (!(PixelFormat = ChoosePixelFormat(hDC, &pfd)))
   {
     close();
-    log(LOG_ERROR, "Can't Find A Suitable PixelFormat: %lu", GetLastError());
+    logging(LOG_ERROR, "Can't Find A Suitable PixelFormat: %lu", GetLastError());
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
-  log(LOG_DEBUG, "Trying to set pixel format: %u", PixelFormat);
+  logging(LOG_DEBUG, "Trying to set pixel format: %u", PixelFormat);
   if (!SetPixelFormat(hDC, PixelFormat, &pfd))
   {
     close();
-    log(LOG_ERROR, "Can't Set The PixelFormat: %lu", GetLastError());
+    logging(LOG_ERROR, "Can't Set The PixelFormat: %lu", GetLastError());
   }
 
-  log(LOG_DEBUG, "Trying to create rendering context. hDC=0x%p", hDC);
+  logging(LOG_DEBUG, "Trying to create rendering context. hDC=0x%p", hDC);
   if (!(hRC = wglCreateContext(hDC)))
   {
     close();
-    log(LOG_ERROR, "Can't Create A GL Rendering Context: %lu", GetLastError());
+    logging(LOG_ERROR, "Can't Create A GL Rendering Context: %lu", GetLastError());
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
-  log(LOG_DEBUG, "Trying to activate rendering context. hDC=0x%p, hRC=0x%p",
+  logging(LOG_DEBUG, "Trying to activate rendering context. hDC=0x%p, hRC=0x%p",
       hDC, hRC);
   if (!wglMakeCurrent(hDC, hRC))
   {
     close();
-    log(LOG_ERROR, "Can't Activate The GL Rendering Context: %lu",
+    logging(LOG_ERROR, "Can't Activate The GL Rendering Context: %lu",
         GetLastError());
     return yage::core::error::EXTERNAL_API_ERROR;
   }
@@ -245,7 +245,7 @@ yage::core::error yage::platform::graphics::win_gl::window::open()
   if (context.init(BITS_PER_PIXEL, settings.width, settings.height)
       != yage::core::error::OK)
   {
-    log(LOG_ERROR, "Failed to initialize graphics context");
+    logging(LOG_ERROR, "Failed to initialize graphics context");
     close();
     return yage::core::error::EXTERNAL_API_ERROR;
   }
@@ -267,13 +267,13 @@ yage::core::error yage::platform::graphics::win_gl::window::close()
     /* Try to Release The DC And RC Contexts? */
     if (!wglMakeCurrent(NULL, NULL))
     {
-      log(LOG_WARN, "Release Of DC And RC Failed");
+      logging(LOG_WARN, "Release Of DC And RC Failed");
     }
 
     /* Try to Delete The RC? */
     if (!wglDeleteContext(hRC))
     {
-      log(LOG_WARN, "Release Rendering Context Failed");
+      logging(LOG_WARN, "Release Rendering Context Failed");
     }
 
     hRC = NULL;
@@ -282,21 +282,21 @@ yage::core::error yage::platform::graphics::win_gl::window::close()
   /* Try to Release The DC */
   if (hDC && !ReleaseDC(hWnd, hDC))
   {
-    log(LOG_WARN, "Release Device Context Failed");
+    logging(LOG_WARN, "Release Device Context Failed");
     hDC = NULL; // Set DC To NULL
   }
 
   /* Try to destroy The Window? */
   if (hWnd && !DestroyWindow(hWnd))
   {
-    log(LOG_WARN, "Could Not Release hWnd");
+    logging(LOG_WARN, "Could Not Release hWnd");
     hWnd = NULL; /* Set hWnd To NULL */
   }
 
   /* Try to Unregister Class */
   if (!UnregisterClass("OpenGL", hInstance))
   {
-    log(LOG_WARN, "Could Not Unregister Class");
+    logging(LOG_WARN, "Could Not Unregister Class");
     hInstance = NULL; // Set hInstance To NULL
   }
 
@@ -327,7 +327,7 @@ yage::core::error yage::platform::graphics::win_gl::window::update()
 
   if (!SwapBuffers(hDC))
   {
-    log(LOG_ERROR, "SwapBuffers failed: %lu. hDC=0x%p", GetLastError(), hDC);
+    logging(LOG_ERROR, "SwapBuffers failed: %lu. hDC=0x%p", GetLastError(), hDC);
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
@@ -476,7 +476,7 @@ static yage::core::key convert_key(WPARAM winkey)
 #if USE_DEBUG
   if (keymap.find(winkey) == keymap.end())
   {
-    log(LOG_WARN, "Key not found: 0x%llx (%c)", winkey,
+    logging(LOG_WARN, "Key not found: 0x%llx (%c)", winkey,
         static_cast<char>(winkey));
   }
 #endif
@@ -499,7 +499,7 @@ static yage::core::mouse convert_button(WPARAM winbutton)
 #if USE_DEBUG
   if (buttonmap.find(winbutton) == buttonmap.end())
   {
-    log(LOG_WARN, "Button not found: 0x%llx", winbutton);
+    logging(LOG_WARN, "Button not found: 0x%llx", winbutton);
   }
 #endif
   return buttonmap.at(winbutton);

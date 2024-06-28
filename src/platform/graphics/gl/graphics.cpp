@@ -131,7 +131,7 @@ void APIENTRY GLDebugMessageCallback(
       break;
   }
 
-  log(LOG_ERROR, "GL Error. ID=%d, Type=%s, Severity=%s, Source=%s. %s", id,
+  logging(LOG_ERROR, "GL Error. ID=%d, Type=%s, Severity=%s, Source=%s. %s", id,
       _type, _severity, _source, msg);
 }
 #endif
@@ -197,7 +197,7 @@ void yage::platform::graphics::gl::graphics::cache_extensions()
 
   if (!ext)
   {
-    log(LOG_ERROR, "Failed to get gl extensions");
+    logging(LOG_ERROR, "Failed to get gl extensions");
     return;
   }
 
@@ -217,7 +217,7 @@ void yage::platform::graphics::gl::graphics::cache_extensions()
 
 void yage::platform::graphics::gl::graphics::print_extensions()
 {
-  log(LOG_INFO, "gl extensions: %lld", extensions.size());
+  logging(LOG_INFO, "gl extensions: %zu", extensions.size());
 #define MAX_EXTENSIONS 3
   std::stringbuf buf;
   std::ostream   os(&buf);
@@ -228,7 +228,7 @@ void yage::platform::graphics::gl::graphics::print_extensions()
     {
       os << std::setw(40) << extensions[i + j] << " ";
     }
-    log(LOG_DEBUG, " [%4lld-%4lld] %s", i, i + MAX_EXTENSIONS, buf.str().c_str());
+    logging(LOG_DEBUG, " [%4zu-%4zu] %s", i, i + MAX_EXTENSIONS, buf.str().c_str());
   }
 }
 
@@ -242,10 +242,10 @@ bool yage::platform::graphics::gl::graphics::has_extension(
 yage::core::error yage::platform::graphics::gl::graphics::init(
       int bits_per_pixel, int width, int height)
 {
-  log(LOG_INFO, "gl vendor: %s", glGetString(GL_VENDOR));
-  log(LOG_INFO, "gl renderer: %s", glGetString(GL_RENDERER));
-  log(LOG_INFO, "gl version: %s", glGetString(GL_VERSION));
-  log(LOG_INFO, "gl shading language version: %s",
+  logging(LOG_INFO, "gl vendor: %s", glGetString(GL_VENDOR));
+  logging(LOG_INFO, "gl renderer: %s", glGetString(GL_RENDERER));
+  logging(LOG_INFO, "gl version: %s", glGetString(GL_VERSION));
+  logging(LOG_INFO, "gl shading language version: %s",
       glGetString(GL_SHADING_LANGUAGE_VERSION));
 
   cache_extensions();
@@ -265,7 +265,7 @@ yage::core::error yage::platform::graphics::gl::graphics::init(
   }
   else
   {
-    log(LOG_WARN, "GL_KHR_debug not found. Some debug features may not work");
+    logging(LOG_WARN, "GL_KHR_debug not found. Some debug features may not work");
   }
 #endif
 
@@ -297,13 +297,13 @@ yage::core::error yage::platform::graphics::gl::graphics::flush()
 }
 
 yage::core::error yage::platform::graphics::gl::graphics::draw_line(
-      yage::core::float2 a, yage::core::float2 b)
+      glm::vec2 a, glm::vec2 b)
 {
   return yage::core::error::OK;
 }
 
 yage::core::error yage::platform::graphics::gl::graphics::draw_rect(
-      yage::core::float2 position, yage::core::float2 dim)
+      glm::vec2 position, glm::vec2 dim)
 {
   /* Draw a rectangle */
   glBegin(GL_QUADS);                                  // Start Drawing A Quad

@@ -34,7 +34,7 @@ yage::core::error yage::app::assets::shader::load()
     yage::core::error err = compiler->add_shader(source.second, source.first);
     if (err != yage::core::error::OK)
     {
-      log(LOG_ERROR, "Failed to add shader source: %s", source.second.c_str());
+      logging(LOG_ERROR, "Failed to add shader source: %s", source.second.c_str());
       return err;
     }
   }
@@ -43,12 +43,12 @@ yage::core::error yage::app::assets::shader::load()
   std::vector<uint8_t> data;
   if (cacher->get_cached_asset(cache_key, data) == yage::core::error::OK)
   {
-    log(LOG_DEBUG, "Loading shader from cache: %s (%lld bytes)",
+    logging(LOG_DEBUG, "Loading shader from cache: %s (%zu bytes)",
         cache_key.c_str(), data.size());
   }
   else
   {
-    log(LOG_DEBUG, "Compiling shader: %s", cache_key.c_str());
+    logging(LOG_DEBUG, "Compiling shader: %s", cache_key.c_str());
 
     std::vector<yage::graphics::shader_compiler::compile_message> messages;
     bool has_errors = false;
@@ -59,7 +59,7 @@ yage::core::error yage::app::assets::shader::load()
 
     if (!messages.empty())
     {
-      log(LOG_INFO, "Shader messages:");
+      logging(LOG_INFO, "Shader messages:");
     }
 
     for (auto & message : messages)
@@ -84,18 +84,18 @@ yage::core::error yage::app::assets::shader::load()
         log_level = LOG_INFO;
       }
 
-      log(log_level, " [%d] > %s ", message.line, message.message.c_str());
+      logging(log_level, " [%d] > %s ", message.line, message.message.c_str());
     }
 
     if (has_errors)
     {
-      log(LOG_ERROR, "Failed to compile shader %s", cache_key.c_str());
+      logging(LOG_ERROR, "Failed to compile shader %s", cache_key.c_str());
       return yage::core::error::INVALID_STATE;
     }
 
     if (compiler->get_binary(data) != yage::core::error::OK)
     {
-      log(LOG_ERROR, "Failed to get binary representation of shader of %s",
+      logging(LOG_ERROR, "Failed to get binary representation of shader of %s",
           cache_key.c_str());
       return yage::core::error::INVALID_STATE;
     }
@@ -109,13 +109,13 @@ yage::core::error yage::app::assets::shader::load()
   program = graphics->create_shader();
   if (!program)
   {
-    log(LOG_ERROR, "Failed to create shader program");
+    logging(LOG_ERROR, "Failed to create shader program");
     return yage::core::error::INVALID_STATE;
   }
 
   if (program->set_binary(data) != yage::core::error::OK)
   {
-    log(LOG_ERROR, "Failed to set binary representation of shader");
+    logging(LOG_ERROR, "Failed to set binary representation of shader");
     return yage::core::error::INVALID_STATE;
   }
 

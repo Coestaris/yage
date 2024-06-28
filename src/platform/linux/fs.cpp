@@ -117,7 +117,7 @@ std::string yage::core::get_cache_dir(const std::string & prefix)
     }
     else
     {
-      log(LOG_WARN,
+      logging(LOG_WARN,
           "Using /tmp as cache directory. Cache may be lost on reboot.");
       dir = yage::core::get_temp_dir(prefix);
     }

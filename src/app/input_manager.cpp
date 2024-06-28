@@ -25,7 +25,7 @@ bool yage::app::input_manager::mouse_pressed(yage::core::mouse button) const
   return mouse_states[static_cast<size_t>(button)];
 }
 
-yage::core::float2 yage::app::input_manager::mouse_position() const
+glm::vec2 yage::app::input_manager::mouse_position() const
 {
   return mouse_pos;
 }
