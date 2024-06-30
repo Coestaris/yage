@@ -8,7 +8,6 @@
 
 /* Includes ================================================================= */
 #include "texture_compiler.hpp"
-#define FREEIMAGE_LIB
 #include "FreeImage.h"
 #include "core/log.hpp"
 
@@ -17,11 +16,6 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
-static __attribute__((constructor(101))) void init()
-{
-  FreeImage_Initialise();
-}
-
 /* Shared functions ========================================================= */
 bool yage::graphics::texture_compiler::image_to_rgba8888(
       const std::string &                                       path,

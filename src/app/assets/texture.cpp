@@ -7,6 +7,8 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
+#include <cinttypes>
+
 #include "graphics/texture_compiler.hpp"
 #include "app/assets/texture.hpp"
 #include "core/hash.hpp"
@@ -39,8 +41,9 @@ yage::core::error yage::app::assets::texture::load()
   std::vector<uint8_t> data;
   if (cacher->get_cached_asset(cache_key, data) == yage::core::OK)
   {
-    logging(LOG_DEBUG, "Loading texture from cache: %s (%zu bytes)",
-        cache_key.c_str(), data.size());
+    logging(
+          LOG_DEBUG, "Loading texture from cache: %s (%" PRIuPTR " bytes)",
+          cache_key.c_str(), data.size());
   }
   else
   {
@@ -66,7 +69,7 @@ yage::core::error yage::app::assets::texture::load()
   }
 
   pixmap = graphics->create_texture(parameters);
-  loaded  = true;
+  loaded = true;
   if (pixmap->set_binary(data) != yage::core::OK)
   {
     logging(LOG_ERROR, "Failed to load texture: %s", cache_key.c_str());

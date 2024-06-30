@@ -7,7 +7,7 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include <fstream>
+#include <cinttypes>
 #include "app/assets/shader.hpp"
 #include "core/log.hpp"
 #include "core/hash.hpp"
@@ -34,7 +34,9 @@ yage::core::error yage::app::assets::shader::load()
     yage::core::error err = compiler->add_shader(source.second, source.first);
     if (err != yage::core::error::OK)
     {
-      logging(LOG_ERROR, "Failed to add shader source: %s", source.second.c_str());
+      logging(
+            LOG_ERROR, "Failed to add shader source: %s",
+            source.second.c_str());
       return err;
     }
   }
@@ -43,8 +45,9 @@ yage::core::error yage::app::assets::shader::load()
   std::vector<uint8_t> data;
   if (cacher->get_cached_asset(cache_key, data) == yage::core::error::OK)
   {
-    logging(LOG_DEBUG, "Loading shader from cache: %s (%zu bytes)",
-        cache_key.c_str(), data.size());
+    logging(
+          LOG_DEBUG, "Loading shader from cache: %s (%" PRIuPTR " bytes)",
+          cache_key.c_str(), data.size());
   }
   else
   {
@@ -95,8 +98,9 @@ yage::core::error yage::app::assets::shader::load()
 
     if (compiler->get_binary(data) != yage::core::error::OK)
     {
-      logging(LOG_ERROR, "Failed to get binary representation of shader of %s",
-          cache_key.c_str());
+      logging(
+            LOG_ERROR, "Failed to get binary representation of shader of %s",
+            cache_key.c_str());
       return yage::core::error::INVALID_STATE;
     }
 

@@ -1,0 +1,26 @@
+diff --git CMakeLists.txt CMakeLists.txt
+--- CMakeLists.txt
++++ CMakeLists.txt
+@@ -34,6 +34,9 @@ if(NOT ELZIP_EXCLUDE_MINIZIP)
+ 
+     endif()
+ 
++    if (ELZIP_BUILD_STATIC)
++        set(BUILD_SHARED_LIBS OFF)
++    endif ()
+     add_subdirectory(extlibs/minizip EXCLUDE_FROM_ALL)
+ endif()
+ 
+@@ -58,7 +61,11 @@ file(GLOB LZIP_SOURCES
+     src/zipper.cpp
+ )
+ 
+-add_library(elzip ${LZIP_HEADERS} ${LZIP_SOURCES})
++if (ELZIP_BUILD_STATIC)
++    add_library(elzip STATIC ${LZIP_HEADERS} ${LZIP_SOURCES})
++else()
++    add_library(elzip SHARED ${LZIP_HEADERS} ${LZIP_SOURCES})
++endif()
+ target_link_libraries(elzip minizip)
+ 
+ if (NOT HAS_FILESYSTEM)

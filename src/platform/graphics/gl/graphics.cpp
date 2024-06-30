@@ -10,6 +10,7 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 
+#include <cinttypes>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
@@ -131,8 +132,9 @@ void APIENTRY GLDebugMessageCallback(
       break;
   }
 
-  logging(LOG_ERROR, "GL Error. ID=%d, Type=%s, Severity=%s, Source=%s. %s", id,
-      _type, _severity, _source, msg);
+  logging(
+        LOG_ERROR, "GL Error. ID=%d, Type=%s, Severity=%s, Source=%s. %s", id,
+        _type, _severity, _source, msg);
 }
 #endif
 
@@ -217,7 +219,7 @@ void yage::platform::graphics::gl::graphics::cache_extensions()
 
 void yage::platform::graphics::gl::graphics::print_extensions()
 {
-  logging(LOG_INFO, "gl extensions: %zu", extensions.size());
+  logging(LOG_INFO, "gl extensions: %" PRIuPTR, extensions.size());
 #define MAX_EXTENSIONS 3
   std::stringbuf buf;
   std::ostream   os(&buf);
@@ -228,7 +230,9 @@ void yage::platform::graphics::gl::graphics::print_extensions()
     {
       os << std::setw(40) << extensions[i + j] << " ";
     }
-    logging(LOG_DEBUG, " [%4zu-%4zu] %s", i, i + MAX_EXTENSIONS, buf.str().c_str());
+    logging(
+          LOG_DEBUG, " [%4" PRIuPTR "-%4" PRIuPTR "] %s", i, i + MAX_EXTENSIONS,
+          buf.str().c_str());
   }
 }
 
@@ -245,8 +249,9 @@ yage::core::error yage::platform::graphics::gl::graphics::init(
   logging(LOG_INFO, "gl vendor: %s", glGetString(GL_VENDOR));
   logging(LOG_INFO, "gl renderer: %s", glGetString(GL_RENDERER));
   logging(LOG_INFO, "gl version: %s", glGetString(GL_VERSION));
-  logging(LOG_INFO, "gl shading language version: %s",
-      glGetString(GL_SHADING_LANGUAGE_VERSION));
+  logging(
+        LOG_INFO, "gl shading language version: %s",
+        glGetString(GL_SHADING_LANGUAGE_VERSION));
 
   cache_extensions();
   print_extensions();
@@ -265,7 +270,8 @@ yage::core::error yage::platform::graphics::gl::graphics::init(
   }
   else
   {
-    logging(LOG_WARN, "GL_KHR_debug not found. Some debug features may not work");
+    logging(
+          LOG_WARN, "GL_KHR_debug not found. Some debug features may not work");
   }
 #endif
 
@@ -296,8 +302,8 @@ yage::core::error yage::platform::graphics::gl::graphics::flush()
   return yage::core::error::OK;
 }
 
-yage::core::error yage::platform::graphics::gl::graphics::draw_line(
-      glm::vec2 a, glm::vec2 b)
+yage::core::error
+yage::platform::graphics::gl::graphics::draw_line(glm::vec2 a, glm::vec2 b)
 {
   return yage::core::error::OK;
 }

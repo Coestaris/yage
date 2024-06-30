@@ -43,23 +43,13 @@ if ((BACKEND_WIN_GL OR BACKEND_WIN_DX) AND NOT WIN32)
     message(FATAL_ERROR "Windows backend is only available on Windows")
 endif ()
 
+add_executable(yage)
+
 # Here, to not affect the build process by our options
-set(SKIP_INSTALL_ALL ON)
-add_subdirectory(thirdparty/11Zip)
-set(JSONCPP_WITH_CMAKE_PACKAGE OFF)
-set(JSONCPP_WITH_PKGCONFIG_SUPPORT OFF)
-set(JSONCPP_WITH_TESTS OFF)
-set(BUILD_OBJECT_LIBS OFF)
-set(BUILD_STATIC_LIBS OFF)
-set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF)
-add_subdirectory(thirdparty/jsoncpp)
-set(BUILD_SHARED_LIBS ON)
-add_subdirectory(thirdparty/free_image)
-set(GLM_ENABLE_CXX_98 ON)
-set(GLM_ENABLE_CXX_11 ON)
-set(GLM_ENABLE_CXX_14 ON)
-set(GLM_ENABLE_CXX_17 ON)
-add_subdirectory(thirdparty/glm)
+include(cmake/thirdparty/elzip.cmake)
+include(cmake/thirdparty/free_image.cmake)
+include(cmake/thirdparty/glm.cmake)
+include(cmake/thirdparty/jsoncpp.cmake)
 
 # Setup compiler
 set(CMAKE_CXX_STANDARD 17)
@@ -128,17 +118,7 @@ foreach (src_file ${SRC_FILES})
     list(APPEND PLAIN_SRC_FILES ${src_files})
 endforeach ()
 
+target_include_directories(yage PRIVATE src)
+target_sources(yage PRIVATE ${PLAIN_SRC_FILES})
+
 util_add_short_filename_property(${PLAIN_SRC_FILES})
-
-include_directories(${CMAKE_SOURCE_DIR}/src)
-add_executable(yage ${PLAIN_SRC_FILES}
-        src/graphics/graphics.hpp)
-
-target_link_libraries(yage elzip)
-target_link_libraries(yage jsoncpp_lib)
-
-target_include_directories(yage PRIVATE thirdparty/free_image/Source)
-target_link_libraries(yage FreeImage)
-
-target_include_directories(yage PRIVATE thirdparty/glm)
-target_link_libraries(yage glm)

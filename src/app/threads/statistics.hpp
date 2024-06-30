@@ -9,6 +9,8 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include <cinttypes>
+
 #include "core/util/named_thread.hpp"
 #include "app/threads/logic.hpp"
 #include "app/threads/renderer.hpp"
@@ -34,13 +36,13 @@ private:
   size_t counter      = 0;
   bool   should_close = false;
 
-  float draw_time_ms = 0;
-  float copy_time_ms = 0;
-  float update_time_ms = 0;
+  float draw_time_ms      = 0;
+  float copy_time_ms      = 0;
+  float update_time_ms    = 0;
   float particles_time_ms = 0;
-  float physics_time_ms = 0;
-  float ai_time_ms = 0;
-  float sound_time_ms = 0;
+  float physics_time_ms   = 0;
+  float ai_time_ms        = 0;
+  float sound_time_ms     = 0;
 
 public:
   statistics(
@@ -80,13 +82,14 @@ public:
         continue;
       }
 
-      logging(LOG_INFO,
-          "Obj: %zu (%zu). FPS: %2.2f (%.1f, %.1f). Logic: "
-          "%.1f, %.1f, %.1f, %.1f, %.1f",
-          renderer->get_instances_count(), logic->get_instances_count(),
-          renderer->get_keeper_cps(), draw_time_ms, copy_time_ms,
-          update_time_ms, particles_time_ms, physics_time_ms, ai_time_ms,
-          sound_time_ms);
+      logging(
+            LOG_INFO,
+            "Obj: %" PRIuPTR " (%" PRIuPTR "). FPS: %2.2f (%.1f, %.1f). Logic: "
+            "%.1f, %.1f, %.1f, %.1f, %.1f",
+            renderer->get_instances_count(), logic->get_instances_count(),
+            renderer->get_keeper_cps(), draw_time_ms, copy_time_ms,
+            update_time_ms, particles_time_ms, physics_time_ms, ai_time_ms,
+            sound_time_ms);
     }
   }
 

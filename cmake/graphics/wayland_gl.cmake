@@ -5,4 +5,4 @@ set(SRC_FILES ${SRC_FILES}
         src/platform/graphics/gl/*.cpp
 )
 
-add_definitions(-DYAGE_PLATFORM_WAYLAND)
+target_compile_definitions(yage PRIVATE -DYAGE_PLATFORM_WAYLAND)

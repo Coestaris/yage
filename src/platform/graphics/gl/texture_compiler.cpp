@@ -7,7 +7,9 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
+#include <cinttypes>
 #include <GL/gl.h>
+#include <GL/glext.h>
 #include "texture_compiler.hpp"
 #include "core/log.hpp"
 
@@ -54,13 +56,14 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile()
     {
       if (image_paths.size() != 1)
       {
-        logging(LOG_ERROR, "Invalid number of images for 2D texture: %zu",
-            image_paths.size());
+        logging(
+              LOG_ERROR, "Invalid number of images for 2D texture: %" PRIuPTR,
+              image_paths.size());
         return yage::core::INVALID_ARGUMENT;
       }
 
       std::vector<rgba8888> image_data;
-      glm::vec2    image_size;
+      glm::vec2             image_size;
       if (!image_to_rgba8888(image_paths[0], image_data, image_size))
       {
         logging(LOG_ERROR, "Failed to load image: %s", image_paths[0].c_str());
@@ -173,12 +176,11 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile()
         break;
 
         default:
-          logging(LOG_ERROR, "Unsupported texture format: %s",
-              yage::graphics::to_string(parameters.format).c_str());
+          logging(
+                LOG_ERROR, "Unsupported texture format: %s",
+                yage::graphics::to_string(parameters.format).c_str());
           return yage::core::INVALID_ARGUMENT;
       }
-
-
     }
     break;
 
@@ -186,8 +188,9 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile()
     case yage::graphics::tex_type::TEXTURE_3D:
     case yage::graphics::tex_type::TEXTURE_CUBE_MAP:
     default:
-      logging(LOG_ERROR, "Unsupported texture type: %s",
-          yage::graphics::to_string(parameters.type).c_str());
+      logging(
+            LOG_ERROR, "Unsupported texture type: %s",
+            yage::graphics::to_string(parameters.type).c_str());
       return yage::core::INVALID_ARGUMENT;
   }
 

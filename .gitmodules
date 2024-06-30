@@ -1,13 +1,16 @@
 [submodule "thirdparty/11Zip"]
-	path = thirdparty/11Zip
+	path = thirdparty/elzip
 	url = https://github.com/Sygmei/11Zip
+	commit = 516e161d5c96aa8f2603fb30b10b7770a87332c2
 [submodule "thirdparty/jsoncpp"]
 	path = thirdparty/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
-	branch = master
+	commit = 516e161d5c96aa8f2603fb30b10b7770a87332c2
 [submodule "thirdparty/free_image"]
 	path = thirdparty/free_image
 	url = https://github.com/danoli3/FreeImage.git
+    commit = f3dd8949e5ecf03fa625731a1adc7de5fa7bc2cc
 [submodule "thirdparty/glm"]
 	path = thirdparty/glm
 	url = https://github.com/g-truc/glm.git
+	commit = 33b4a621a697a305bc3a7610d290677b96beb181
