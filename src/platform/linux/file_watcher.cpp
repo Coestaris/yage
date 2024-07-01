@@ -38,6 +38,9 @@ struct file_watcher_impl
   std::string watched_file;
 };
 
+/* Variables ================================================================ */
+/* Static functions ========================================================= */
+/* Shared functions ========================================================= */
 void yage::core::file_watcher::start_watching()
 {
   if (watched_files.empty() || watched_files.size() > 1)
@@ -161,6 +164,3 @@ void yage::core::file_watcher::stop_watching()
   delete ctx;
 }
 
-/* Variables ================================================================ */
-/* Static functions ========================================================= */
-/* Shared functions ========================================================= */

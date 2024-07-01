@@ -151,7 +151,7 @@ yage::app::assets::pack::asset_factory::pack_parser::parse_texture_sources(
 
   for (const auto & texture : root["textures"])
   {
-    sources.push_back(dir + "/" + texture.asString());
+    sources.push_back(yage::core::join_path(dir, texture.asString()));
   }
 
   return { param, sources };
@@ -172,7 +172,7 @@ yage::app::assets::pack::asset_factory::pack_parser::parse_shader_sources(
     Json::Value source = root[key];
     if (!source.isNull())
     {
-      std::string   s = dir + "/" + source.asString();
+      std::string   s = yage::core::join_path(dir, source.asString());
       std::ifstream sourcef(s);
       if (!sourcef.is_open())
       {
@@ -201,7 +201,7 @@ yage::core::error yage::app::assets::pack::asset_factory::read_assets(
     logging(LOG_ERROR, "Failed to get temporary directory");
     return yage::core::INVALID_STATE;
   }
-  extract_path += "/assets";
+  extract_path = yage::core::join_path(extract_path, "assets");
 
   logging(LOG_INFO, "Extracting assets to: %s", extract_path.c_str());
   elz::extractZip(path, extract_path);
@@ -269,7 +269,7 @@ yage::app::assets::pack::asset_factory::asset_cacher::cache_asset(
       const std::string & key, const std::vector<uint8_t> & data)
 {
   /* save keys as files */
-  std::string   dst = cache_path + "/" + key;
+  std::string   dst = yage::core::join_path(cache_path, key);
   std::ofstream ofs(dst, std::ios::binary | std::ios::trunc | std::ios::out);
 
   if (!ofs.is_open())
@@ -288,7 +288,7 @@ yage::core::error
 yage::app::assets::pack::asset_factory::asset_cacher::get_cached_asset(
       const std::string & key, std::vector<uint8_t> & data)
 {
-  std::string   src = cache_path + "/" + key;
+  std::string   src = yage::core::join_path(cache_path, key);
   std::ifstream ifs(src, std::ios::binary);
 
   if (!ifs.is_open())

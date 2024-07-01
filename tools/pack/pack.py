@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse
+
 #
 # @file pack.py
 # @date 24-06-2024
@@ -10,10 +10,13 @@ import glob
 import json
 import logging
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
 import zipfile
 from watchdog.observers import Observer
+import argparse
 
 
 class Fore:
@@ -40,6 +43,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-d", "--dir", type=str, default=".", help="Directory to watch")
     parser.add_argument("-o", "--output", type=str, default="assets.pack", help="Output file")
     parser.add_argument("-w", "--watchdog", action="store_true", default=False)
+    parser.add_argument("--no-compress", action="store_true", help="Do not compress the output file")
     parser.add_argument("-l", "--log", type=str, default="info", choices=["debug", "info", "warning", "error", "critical"],
                         help="Log level. Note: 'debug' log level may print sensitive information,\n"
                              "produce a lot of output and program may run slower/incorectly")
@@ -47,10 +51,18 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def fast_copy(src: str, dst: str):
+    if sys.platform == "win32":
+        os.system(f"copy /Y {src} {dst}")
+    else:
+        shutil.copy(src, dst)
+
+
 class PackHandler:
-    def __init__(self, dir: str, output: str):
+    def __init__(self, dir: str, output: str, no_compress: bool = False):
         self.dir = dir
         self.output = output
+        self.no_compress = no_compress
 
     # Files to copy to assets.pack, without any processing
     DIRECT_EXTENSIONS = [".fsh", ".vsh", ".meta"]
@@ -60,51 +72,60 @@ class PackHandler:
     IMAGE_EXTENSIONS = [".png", ".jpeg"]
 
     def pack(self):
-        # Create pack file in a temporary location, so that we don't
-        #   corrupt it if something goes wrong
-        with tempfile.NamedTemporaryFile(delete=False) as temp:
-            out_temp = temp.name
+        logging.debug(f"[0] Start packing {self.dir} to {self.output}")
 
-        with zipfile.ZipFile(out_temp, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for ext in self.DIRECT_EXTENSIONS:
-                for file in glob.glob(os.path.join(self.dir, "*" + ext)):
-                    logging.debug(f"Adding %s to assets.pack", file)
-                    zipf.write(file, os.path.basename(file))
+        # Collect all files into a temporary directory,
+        # to not call zipf.write() for each file
+        out_temp_dir = tempfile.mkdtemp()
 
-            for ext in self.IMAGE_EXTENSIONS:
-                for file in glob.glob(os.path.join(self.dir, "*" + ext)):
-                    basename = os.path.basename(file)
-                    # Get rid of the extension
-                    basename = os.path.splitext(basename)[0]
+        logging.debug(f"[1] Processing direct extensions: {self.DIRECT_EXTENSIONS}")
+        for ext in self.DIRECT_EXTENSIONS:
+            for file in glob.glob(os.path.join(self.dir, "*" + ext)):
+                logging.info(f"Adding %s to assets.pack", file)
+                fast_copy(file, out_temp_dir)
 
-                    # If .meta file not exists, create it
-                    if not os.path.exists(f"{basename}.meta"):
-                        with tempfile.NamedTemporaryFile(mode="w",
-                                                         delete=False) as meta:
-                            metafile = meta.name
-                            meta_content = {
-                                "type": "texture",
-                                "tex_type": "TEXTURE_2D",
-                                "format": "RGBA",
-                                "border_color": [0, 0, 0, 0],
-                                "min_filter": "LINEAR",
-                                "mag_filter": "LINEAR",
-                                "wrap_s": "CLAMP_TO_EDGE",
-                                "wrap_t": "CLAMP_TO_EDGE",
-                                "wrap_r": "CLAMP_TO_EDGE",
-                                "textures": [os.path.basename(file)]
-                            }
-                            meta.write(json.dumps(meta_content))
-                    else:
-                        metafile = f"{basename}.meta"
+        logging.debug(f"[2] Processing image extensions: {self.IMAGE_EXTENSIONS}")
+        for ext in self.IMAGE_EXTENSIONS:
+            for file in glob.glob(os.path.join(self.dir, "*" + ext)):
+                basename = os.path.basename(file)
+                # Get rid of the extension
+                basename = os.path.splitext(basename)[0]
 
-                    logging.debug(f"Adding %s to assets.pack", file)
-                    zipf.write(file, basename + ext)
-                    zipf.write(metafile, f"{basename}.meta")
+                # If .meta file not exists, create it
+                metafile = os.path.join(self.dir, f"{basename}.meta")
+                if not os.path.exists(metafile):
+                    with open(os.path.join(out_temp_dir, f"{basename}.meta"), "w") as meta:
+                        meta_content = {
+                            "type": "texture",
+                            "tex_type": "TEXTURE_2D",
+                            "format": "RGBA",
+                            "border_color": [0, 0, 0, 0],
+                            "min_filter": "LINEAR",
+                            "mag_filter": "LINEAR",
+                            "wrap_s": "CLAMP_TO_EDGE",
+                            "wrap_t": "CLAMP_TO_EDGE",
+                            "wrap_r": "CLAMP_TO_EDGE",
+                            "textures": [os.path.basename(file)]
+                        }
+                        meta.write(json.dumps(meta_content))
+                else:
+                    fast_copy(metafile, out_temp_dir)
 
-        # Move the temporary file to the final location
-        logging.info(f"Moving {out_temp} to {self.output}")
-        os.replace(out_temp, self.output)
+                logging.debug(f"Adding %s to assets.pack", file)
+                fast_copy(file, out_temp_dir)
+
+        logging.info(f"Packing {out_temp_dir} to {self.output}")
+
+        # Create a zip archive in a temporary directory
+        #   so application can read it while it's being written
+        out_zip = os.path.join(out_temp_dir, os.path.basename(self.output))
+        with zipfile.ZipFile(out_zip, "w", zipfile.ZIP_DEFLATED if not self.no_compress else zipfile.ZIP_STORED) as zipf:
+            for root, _, files in os.walk(out_temp_dir):
+                for file in files:
+                    zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), out_temp_dir))
+
+        # Move the temporary archive to the output directory
+        shutil.move(out_zip, self.output)
 
     def dispatch(self, event):
         if event.event_type == "modified" or event.event_type == "created":
@@ -138,7 +159,10 @@ def main():
         sys.exit(1)
     args.output = os.path.abspath(args.output)
 
-    pack_handler = PackHandler(args.dir, args.output)
+    if args.no_compress:
+        logging.warning("Output file will not be compressed")
+
+    pack_handler = PackHandler(args.dir, args.output, args.no_compress)
 
     if args.watchdog:
         logging.info(f"Watching {args.dir} for changes")
