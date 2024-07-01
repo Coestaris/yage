@@ -55,6 +55,7 @@ class window
 {
 protected:
   yage::graphics::settings settings;
+  std::function<void()>    before_close_callback;
 
 public:
   yage::graphics::input_events input;
@@ -110,6 +111,11 @@ public:
   {
     title = settings.title;
     return yage::core::error::OK;
+  }
+
+  virtual void set_before_close(std::function<void()> callback)
+  {
+    before_close_callback = callback;
   }
 };
 

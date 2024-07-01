@@ -19,6 +19,7 @@
 #include "json/json.h"
 #include "core/util/named_thread.hpp"
 #include "app/assets/texture.hpp"
+#include "core/fs.hpp"
 
 namespace yage::app::assets::pack
 {
@@ -32,7 +33,7 @@ private:
   std::string path;
   bool        destroyed = false;
 
-  std::unordered_map<std::string, yage::app::assets::asset *>  assets;
+  std::unordered_map<std::string, yage::app::assets::asset *> assets;
 
   class pack_parser
   {
@@ -89,16 +90,17 @@ private:
   } cacher;
 
 #if USE_DEBUG
-  class pack_watcher : public yage::core::util::named_thread
+  class pack_watchdog : public yage::core::util::named_thread
   {
   private:
-    bool            should_stop = false;
-    time_t          last_mtime  = 0;
-    asset_factory * factory;
+    bool                     should_stop = false;
+    yage::core::file_watcher file_watcher;
+    asset_factory *          factory;
 
   public:
-    explicit pack_watcher(asset_factory * factory)
-    : named_thread("pack_watcher")
+    explicit pack_watchdog(asset_factory * factory)
+    : named_thread("pack_wdg")
+    , file_watcher({ factory->path })
     , factory(factory)
     {
     }
@@ -109,7 +111,7 @@ private:
       should_stop = true;
     }
 
-  } watcher;
+  } watchdog;
 #endif
 
 public:
@@ -117,7 +119,7 @@ public:
   : path(std::move(path))
   , cacher(std::move(cache_path))
 #if USE_DEBUG
-  , watcher(this)
+  , watchdog(this)
 #endif
           {};
 
@@ -129,7 +131,7 @@ public:
   yage::core::error read_assets(yage::graphics::graphics * graphics) override;
   yage::core::error destroy() override;
 
-  yage::app::assets::asset *  get_asset(const std::string & name) override;
+  yage::app::assets::asset * get_asset(const std::string & name) override;
 };
 
 /* Variables ================================================================ */

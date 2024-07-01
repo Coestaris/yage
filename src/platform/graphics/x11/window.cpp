@@ -576,6 +576,9 @@ yage::core::error yage::platform::graphics::x11::window::close()
   XFlush(display);
   event_loop.join();
 
+  if (before_close_callback)
+    before_close_callback();
+
   logging(LOG_DEBUG, "Destroying X11 window");
   glXDestroyContext(display, glx_context);
 

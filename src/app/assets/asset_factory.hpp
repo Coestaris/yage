@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 
+#include "graphics/graphics.hpp"
 #include "core/error.hpp"
 #include "core/log.hpp"
 #include "app/assets/asset.hpp"

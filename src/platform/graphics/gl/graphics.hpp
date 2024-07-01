@@ -1,10 +1,10 @@
 /** ========================================================================
-*
-* @file graphics.hpp
-* @date 06-06-2024
-* @author Maxim Kurylko <vk_vm@ukr.net>
-*
-*  ========================================================================= */
+ *
+ * @file graphics.hpp
+ * @date 06-06-2024
+ * @author Maxim Kurylko <vk_vm@ukr.net>
+ *
+ *  ========================================================================= */
 
 #pragma once
 
@@ -12,6 +12,8 @@
 #include <vector>
 #include <string>
 
+#include "GL/gl.h"
+#include "GL/glext.h"
 #include "graphics/graphics.hpp"
 #include "graphics/texture_compiler.hpp"
 
@@ -31,6 +33,33 @@ private:
   bool has_extension(const char * extension);
 
 public:
+  /* function cache. Because we don't know what
+   * version of OpenGL we are using */
+  PFNGLCREATESHADERPROC            glCreateShader {};
+  PFNGLSHADERSOURCEPROC            glShaderSource {};
+  PFNGLCOMPILESHADERPROC           glCompileShader {};
+  PFNGLGETSHADERIVPROC             glGetShaderiv {};
+  PFNGLGETSHADERINFOLOGPROC        glGetShaderInfoLog {};
+  PFNGLDELETESHADERPROC            glDeleteShader {};
+  PFNGLCREATEPROGRAMPROC           glCreateProgram {};
+  PFNGLATTACHSHADERPROC            glAttachShader {};
+  PFNGLLINKPROGRAMPROC             glLinkProgram {};
+  PFNGLGETPROGRAMIVPROC            glGetProgramiv {};
+  PFNGLGETPROGRAMINFOLOGPROC       glGetProgramInfoLog {};
+  PFNGLUSEPROGRAMPROC              glUseProgram {};
+  PFNGLDELETEPROGRAMPROC           glDeleteProgram {};
+  PFNGLGETPROGRAMBINARYPROC        glGetProgramBinary {};
+  PFNGLGENVERTEXARRAYSPROC         glGenVertexArrays {};
+  PFNGLBUFFERDATAPROC              glBufferData {};
+  PFNGLGENBUFFERSPROC              glGenBuffers {};
+  PFNGLBINDVERTEXARRAYPROC         glBindVertexArray {};
+  PFNGLBINDBUFFERPROC              glBindBuffer {};
+  PFNGLVERTEXATTRIBPOINTERPROC     glVertexAttribPointer {};
+  PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray {};
+  PFNGLDRAWARRAYSEXTPROC           glDrawArrays {};
+  PFNGLSHADERBINARYPROC            glShaderBinary {};
+  PFNGLPROGRAMBINARYPROC           glProgramBinary {};
+
   yage::core::error init(int bits_per_pixel, int width, int height);
 
   yage::graphics::shader_compiler * create_shader_compiler() override;
@@ -51,4 +80,3 @@ public:
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
 }
-

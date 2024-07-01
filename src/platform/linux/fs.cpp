@@ -117,8 +117,9 @@ std::string yage::core::get_cache_dir(const std::string & prefix)
     }
     else
     {
-      logging(LOG_WARN,
-          "Using /tmp as cache directory. Cache may be lost on reboot.");
+      logging(
+            LOG_WARN,
+            "Using /tmp as cache directory. Cache may be lost on reboot.");
       dir = yage::core::get_temp_dir(prefix);
     }
   }
@@ -190,6 +191,17 @@ time_t yage::core::file_mtime(const std::string & path)
   }
 
   return statbuf.st_mtime;
+}
+
+std::string yage::core::basedir(std::string path)
+{
+  size_t pos = path.find_last_of('/');
+  if (pos == std::string::npos)
+  {
+    return path;
+  }
+
+  return path.substr(0, pos);
 }
 
 time_t yage::core::file_ctime(const std::string & path)

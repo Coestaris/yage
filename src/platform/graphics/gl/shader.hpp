@@ -13,6 +13,7 @@
 #include <string>
 
 #include "graphics/shader.hpp"
+#include "graphics.hpp"
 
 namespace yage::platform::graphics::gl
 {
@@ -21,15 +22,22 @@ namespace yage::platform::graphics::gl
 /* Types ==================================================================== */
 class shader : public yage::graphics::shader
 {
+protected:
+  GLint                              id;
+  platform::graphics::gl::graphics * ctx;
+
 public:
   explicit shader(yage::graphics::graphics * graphics)
   : yage::graphics::shader(graphics)
+  , ctx(dynamic_cast<platform::graphics::gl::graphics *>(graphics))
   {
   }
   ~shader() override = default;
 
-  yage::core::error        set_binary(std::vector<uint8_t> binary) override;
-  yage::core::error        destroy() override;
+  yage::core::error set_binary(std::vector<uint8_t> binary) override;
+  yage::core::error destroy() override;
+
+  void use();
 };
 
 /* Variables ================================================================ */

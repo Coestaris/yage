@@ -30,6 +30,11 @@ private:
 
   virtual void run() = 0;
 
+  /* C++ does not provide a way to get the name of
+   * the current thread, so we have to set it manually,
+   * for each platform. */
+  void set_port_name();
+
 public:
   static inline std::string
   get_thread_name(std::thread::id id = std::this_thread::get_id())
@@ -60,6 +65,7 @@ public:
   void start()
   {
     thread = new std::thread(&named_thread::start_inplace, this);
+    set_port_name();
   }
 
   void start_inplace()

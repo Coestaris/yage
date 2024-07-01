@@ -11,6 +11,7 @@
 #include <GL/glext.h>
 
 #include "platform/graphics/gl/shader_compiler.hpp"
+#include "platform/graphics/gl/graphics.hpp"
 #include "core/log.hpp"
 #include "core/hash.hpp"
 #include "glplatform.hpp"
@@ -21,28 +22,6 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-yage::platform::graphics::gl::shader_compiler::shader_compiler(
-      yage::graphics::graphics * graphics)
-: yage::graphics::shader_compiler(graphics)
-{
-  // clang-format off
-  glCreateShader      = reinterpret_cast<PFNGLCREATESHADERPROC>(gl_lookup("glCreateShader", true));
-  glShaderSource      = reinterpret_cast<PFNGLSHADERSOURCEPROC>(gl_lookup("glShaderSource", true));
-  glCompileShader     = reinterpret_cast<PFNGLCOMPILESHADERPROC>(gl_lookup("glCompileShader", true));
-  glGetShaderiv       = reinterpret_cast<PFNGLGETSHADERIVPROC>(gl_lookup("glGetShaderiv", true));
-  glGetShaderInfoLog  = reinterpret_cast<PFNGLGETSHADERINFOLOGPROC>(gl_lookup("glGetShaderInfoLog", true));
-  glDeleteShader      = reinterpret_cast<PFNGLDELETESHADERPROC>(gl_lookup("glDeleteShader", true));
-  glCreateProgram     = reinterpret_cast<PFNGLCREATEPROGRAMPROC>(gl_lookup("glCreateProgram", true));
-  glAttachShader      = reinterpret_cast<PFNGLATTACHSHADERPROC>(gl_lookup("glAttachShader", true));
-  glLinkProgram       = reinterpret_cast<PFNGLLINKPROGRAMPROC>(gl_lookup("glLinkProgram", true));
-  glGetProgramiv      = reinterpret_cast<PFNGLGETPROGRAMIVPROC>(gl_lookup("glGetProgramiv", true));
-  glGetProgramInfoLog = reinterpret_cast<PFNGLGETPROGRAMINFOLOGPROC>(gl_lookup("glGetProgramInfoLog", true));
-  glUseProgram        = reinterpret_cast<PFNGLUSEPROGRAMPROC>(gl_lookup("glUseProgram", true));
-  glDeleteProgram     = reinterpret_cast<PFNGLDELETEPROGRAMPROC>(gl_lookup("glDeleteProgram", true));
-  glGetProgramBinary  = reinterpret_cast<PFNGLGETPROGRAMBINARYPROC>(gl_lookup("glGetProgramBinary", true));
-  // clang-format on
-}
-
 void yage::platform::graphics::gl::shader_compiler::clear()
 {
   sources.clear();
@@ -75,7 +54,7 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
     return yage::core::error::EMPTY;
   }
 
-  auto program = glCreateProgram();
+  auto program = ctx->glCreateProgram();
 
   for (auto & [type, source] : sources)
   {
@@ -94,7 +73,7 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
         return {};
     }
 
-    GLuint shader = glCreateShader(gl_type);
+    GLuint shader = ctx->glCreateShader(gl_type);
     if (!shader)
     {
       logging(LOG_ERROR, "Failed to create shader");
@@ -102,17 +81,17 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
     }
 
     const char * c_source = source.c_str();
-    glShaderSource(shader, 1, &c_source, nullptr);
-    glCompileShader(shader);
+    ctx->glShaderSource(shader, 1, &c_source, nullptr);
+    ctx->glCompileShader(shader);
 
     GLint status;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    ctx->glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
     GLint length;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+    ctx->glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
     std::string log;
     log.resize(length);
-    glGetShaderInfoLog(shader, length, nullptr, log.data());
+    ctx->glGetShaderInfoLog(shader, length, nullptr, log.data());
 
     /* Separate messages by new line */
     size_t start = 0;
@@ -146,20 +125,20 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
       return yage::core::error::EXTERNAL_API_ERROR;
     }
 
-    glAttachShader(program, shader);
-    glDeleteShader(shader);
+    ctx->glAttachShader(program, shader);
+    ctx->glDeleteShader(shader);
   }
 
-  glLinkProgram(program);
+  ctx->glLinkProgram(program);
 
   GLint status;
-  glGetProgramiv(program, GL_LINK_STATUS, &status);
+  ctx->glGetProgramiv(program, GL_LINK_STATUS, &status);
 
   GLint length;
-  glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+  ctx->glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
   std::string log;
   log.resize(length);
-  glGetProgramInfoLog(program, length, nullptr, log.data());
+  ctx->glGetProgramInfoLog(program, length, nullptr, log.data());
 
   /* Separate messages by new line */
   size_t start = 0;
@@ -194,12 +173,17 @@ yage::core::error yage::platform::graphics::gl::shader_compiler::compile(
   }
 
   GLint binary_length;
-  glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binary_length);
+  ctx->glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binary_length);
   binary.resize(binary_length);
   GLenum binary_format;
-  glGetProgramBinary(
+  ctx->glGetProgramBinary(
         program, binary_length, nullptr, &binary_format, binary.data());
-  glDeleteProgram(program);
+  ctx->glDeleteProgram(program);
+
+  /* Prepend binary format (4 bytes) */
+  binary.insert(
+        binary.begin(), reinterpret_cast<uint8_t *>(&binary_format),
+        reinterpret_cast<uint8_t *>(&binary_format) + sizeof(binary_format));
 
   logging(LOG_INFO, "Shader compiled successfully: %d bytes", binary_length);
 

@@ -22,7 +22,7 @@ class application;
 
 namespace threads
 {
-  class logic;
+class logic;
 }
 
 class object
@@ -38,10 +38,10 @@ protected:
 public:
   struct renderer_data
   {
-    bool visible;
+    bool                               visible;
     yage::graphics::render_primitive * primitive;
 
-  } data;
+  } data = { false, nullptr };
 
   class logic_data
   {

@@ -39,8 +39,8 @@ private:
 public:
   input_manager(yage::graphics::input_events * input);
 
-  bool               key_pressed(yage::core::key key) const;
-  bool               mouse_pressed(yage::core::mouse button) const;
+  bool      key_pressed(yage::core::key key) const;
+  bool      mouse_pressed(yage::core::mouse button) const;
   glm::vec2 mouse_position() const;
 
   void update();

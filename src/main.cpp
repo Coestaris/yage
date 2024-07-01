@@ -51,12 +51,15 @@ private:
     graphics = window->get_graphics();
     passes   = yage::platform::graphics::trivial_render_chain(
           graphics, asset_factory);
+
+    for (auto & pass : passes)
+    {
+      pass->before_loop();
+    }
   }
 
   void loop() override
   {
-    asset_factory->poll_assets();
-
     for (auto & pass : passes)
     {
       if (pass->get_skip())
@@ -77,6 +80,14 @@ private:
   }
 
 public:
+  ~subrenderer() override
+  {
+    for (auto & pass : passes)
+    {
+      delete pass;
+    }
+  }
+
   subrenderer(
         yage::app::assets::asset_factory * asset_factory,
         yage::graphics::window *           window)
@@ -134,6 +145,7 @@ int main(int argc, char * argv[])
   }
   yage::app::assets::pack::asset_factory asset_factory(
         asset_path, yage::core::get_cache_dir());
+  window->set_before_close([&asset_factory]() { asset_factory.destroy(); });
 
   subrenderer            subrenderer(&asset_factory, window);
   yage::app::application app(&subrenderer, &window->input, &events);
@@ -147,7 +159,6 @@ int main(int argc, char * argv[])
 
   app.destroy_all_objects(true);
 
-  asset_factory.destroy();
   yage::platform::graphics::destroy_window(window);
 
   return 0;

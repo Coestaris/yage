@@ -54,7 +54,7 @@ public:
 #if USE_DEBUG
   /** False is data in asset store different from loaded data into memory.
    * In that case, asset should be reloaded. */
-  virtual void poll() = 0;
+  virtual bool poll() = 0;
 #endif
 
   /** Returns the name of the asset. */

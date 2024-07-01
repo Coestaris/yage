@@ -35,6 +35,7 @@ public:
 
   virtual ~render_pass() = default;
 
+  virtual void before_loop() = 0;
   virtual void end()   = 0;
   virtual void begin() = 0;
   virtual void on_object(yage::graphics::render_primitive * object) = 0;

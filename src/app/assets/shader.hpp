@@ -57,14 +57,28 @@ public:
     return loaded;
   }
 
+  yage::graphics::shader * get_shader()
+  {
+    if (!loaded)
+    {
+      return nullptr;
+    }
+
+    return program;
+  }
+
 #if USE_DEBUG
-  void poll() override
+  bool poll() override
   {
     if (!live)
     {
       unload();
       load();
+
+      return true;
     }
+
+    return false;
   }
 #endif
 

@@ -109,31 +109,37 @@ void APIENTRY GLDebugMessageCallback(
       break;
   }
 
+  yage::core::log_level level;
   switch (severity)
   {
     case GL_DEBUG_SEVERITY_HIGH:
       _severity = "HIGH";
+      level     = LOG_FATAL;
       break;
 
     case GL_DEBUG_SEVERITY_MEDIUM:
       _severity = "MEDIUM";
+      level     = LOG_ERROR;
       break;
 
     case GL_DEBUG_SEVERITY_LOW:
       _severity = "LOW";
+      level     = LOG_WARN;
       break;
 
     case GL_DEBUG_SEVERITY_NOTIFICATION:
       _severity = "NOTIFICATION";
+      level     = LOG_DEBUG;
       break;
 
     default:
       _severity = "UNKNOWN";
+      level     = LOG_WARN;
       break;
   }
 
   logging(
-        LOG_ERROR, "GL Error. ID=%d, Type=%s, Severity=%s, Source=%s. %s", id,
+        level, "GL Message. ID=%d, Type=%s, Severity=%s, Source=%s. %s", id,
         _type, _severity, _source, msg);
 }
 #endif
@@ -267,6 +273,44 @@ yage::core::error yage::platform::graphics::gl::graphics::init(
           LOG_WARN, "GL_KHR_debug not found. Some debug features may not work");
   }
 #endif
+
+  /* get binary format */
+  GLint length;
+  glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, &length);
+  std::vector<GLint> formats(length);
+  glGetIntegerv(GL_PROGRAM_BINARY_FORMATS, formats.data());
+  logging(LOG_INFO, "Detected %d binary formats", length);
+  for (auto & format : formats)
+  {
+    logging(LOG_INFO, "  Binary format: 0x%x", format);
+  }
+
+  // clang-format off
+  glCreateShader            = reinterpret_cast<PFNGLCREATESHADERPROC>(gl_lookup("glCreateShader", true));
+  glShaderSource            = reinterpret_cast<PFNGLSHADERSOURCEPROC>(gl_lookup("glShaderSource", true));
+  glCompileShader           = reinterpret_cast<PFNGLCOMPILESHADERPROC>(gl_lookup("glCompileShader", true));
+  glGetShaderiv             = reinterpret_cast<PFNGLGETSHADERIVPROC>(gl_lookup("glGetShaderiv", true));
+  glGetShaderInfoLog        = reinterpret_cast<PFNGLGETSHADERINFOLOGPROC>(gl_lookup("glGetShaderInfoLog", true));
+  glDeleteShader            = reinterpret_cast<PFNGLDELETESHADERPROC>(gl_lookup("glDeleteShader", true));
+  glCreateProgram           = reinterpret_cast<PFNGLCREATEPROGRAMPROC>(gl_lookup("glCreateProgram", true));
+  glAttachShader            = reinterpret_cast<PFNGLATTACHSHADERPROC>(gl_lookup("glAttachShader", true));
+  glLinkProgram             = reinterpret_cast<PFNGLLINKPROGRAMPROC>(gl_lookup("glLinkProgram", true));
+  glGetProgramiv            = reinterpret_cast<PFNGLGETPROGRAMIVPROC>(gl_lookup("glGetProgramiv", true));
+  glGetProgramInfoLog       = reinterpret_cast<PFNGLGETPROGRAMINFOLOGPROC>(gl_lookup("glGetProgramInfoLog", true));
+  glUseProgram              = reinterpret_cast<PFNGLUSEPROGRAMPROC>(gl_lookup("glUseProgram", true));
+  glDeleteProgram           = reinterpret_cast<PFNGLDELETEPROGRAMPROC>(gl_lookup("glDeleteProgram", true));
+  glGetProgramBinary        = reinterpret_cast<PFNGLGETPROGRAMBINARYPROC>(gl_lookup("glGetProgramBinary", true));
+  glGenVertexArrays         = reinterpret_cast<PFNGLGENVERTEXARRAYSPROC>(gl_lookup("glGenVertexArrays", true));
+  glBufferData              = reinterpret_cast<PFNGLBUFFERDATAPROC>(gl_lookup("glBufferData", true));
+  glGenBuffers              = reinterpret_cast<PFNGLGENBUFFERSPROC>(gl_lookup("glGenBuffers", true));
+  glBindVertexArray         = reinterpret_cast<PFNGLBINDVERTEXARRAYPROC>(gl_lookup("glBindVertexArray", true));
+  glBindBuffer              = reinterpret_cast<PFNGLBINDBUFFERPROC>(gl_lookup("glBindBuffer", true));
+  glVertexAttribPointer     = reinterpret_cast<PFNGLVERTEXATTRIBPOINTERPROC>(gl_lookup("glVertexAttribPointer", true));
+  glEnableVertexAttribArray = reinterpret_cast<PFNGLENABLEVERTEXATTRIBARRAYPROC>(gl_lookup("glEnableVertexAttribArray", true));
+  glDrawArrays              = reinterpret_cast<PFNGLDRAWARRAYSEXTPROC>(gl_lookup("glDrawArrays", true));
+  glShaderBinary            = reinterpret_cast<PFNGLSHADERBINARYPROC>(gl_lookup("glShaderBinary", true));
+  glProgramBinary           = reinterpret_cast<PFNGLPROGRAMBINARYPROC>(gl_lookup("glProgramBinary", true));
+  // clang-format on
 
   glShadeModel(GL_SMOOTH); // Enable Smooth Shading
   glEnable(GL_DEPTH_TEST); // Enables Depth Testing

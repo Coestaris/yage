@@ -57,13 +57,17 @@ public:
   }
 
 #if USE_DEBUG
-  void poll() override
+  bool poll() override
   {
     if (!live)
     {
       unload();
       load();
+
+      return true;
     }
+
+    return false;
   }
 #endif
 
