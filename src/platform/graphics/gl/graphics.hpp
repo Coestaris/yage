@@ -39,7 +39,6 @@ public:
   yage::core::error destroy_shader(yage::graphics::shader * shader) override;
   yage::graphics::texture_compiler * create_texture_compiler() override;
   yage::core::error destroy_texture_compiler(yage::graphics::texture_compiler * compiler) override;
-  yage::graphics::texture * create_texture(const yage::graphics::texture_param & parameters) override;
   yage::core::error destroy_texture(yage::graphics::texture * texture) override;
 
   yage::core::error clear() override;

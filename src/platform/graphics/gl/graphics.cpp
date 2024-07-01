@@ -179,13 +179,6 @@ yage::platform::graphics::gl::graphics::destroy_texture_compiler(
   return yage::core::error::OK;
 }
 
-yage::graphics::texture *
-yage::platform::graphics::gl::graphics::create_texture(
-      const yage::graphics::texture_param & parameters)
-{
-  return new yage::platform::graphics::gl::texture(this, parameters);
-}
-
 yage::core::error yage::platform::graphics::gl::graphics::destroy_texture(
       yage::graphics::texture * texture)
 {

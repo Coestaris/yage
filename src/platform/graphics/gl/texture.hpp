@@ -10,6 +10,7 @@
 
 /* Includes ================================================================= */
 #include "graphics/texture.hpp"
+#include "GL/gl.h"
 
 namespace yage::platform::graphics::gl
 {
@@ -18,18 +19,21 @@ namespace yage::platform::graphics::gl
 /* Types ==================================================================== */
 class texture : public yage::graphics::texture
 {
+private:
+  GLuint id {};
+
 public:
   ~texture() override = default;
   explicit texture(
         yage::graphics::graphics *            graphics,
-        const yage::graphics::texture_param & parameters)
+        const yage::graphics::texture_param & parameters,
+        GLuint                                id)
   : yage::graphics::texture(graphics, parameters)
+  , id(id)
   {
   }
 
-  yage::core::error set_binary(std::vector<uint8_t> binary) override;
   yage::core::error destroy() override;
-  yage::core::error bind(size_t slot) override;
 };
 
 /* Variables ================================================================ */

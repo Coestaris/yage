@@ -56,18 +56,6 @@ public:
     return loaded;
   }
 
-  void bind(size_t slot)
-  {
-#if USE_DEBUG
-    if (is_loaded())
-    {
-      pixmap->bind(slot);
-    }
-#else
-    pixmap->bind(slot);
-#endif
-  }
-
 #if USE_DEBUG
   void poll() override
   {

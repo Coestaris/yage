@@ -22,20 +22,13 @@ class texture_compiler
 protected:
   yage::graphics::graphics * graphics;
 
-  struct rgba8888
-  {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t a;
-  };
-
   /* little helper to load image,
    * so backends do not reinvent the wheel */
-  bool image_to_rgba8888(
-        const std::string &     path,
-        std::vector<rgba8888> & out_data,
-        glm::vec2 &    out_size);
+  bool load_image(
+        const std::string &      path,
+        std::vector<glm::vec4> & out_data,
+        size_t &                 out_w,
+        size_t &                 out_h);
 
 public:
   virtual ~texture_compiler() = default;
@@ -45,12 +38,12 @@ public:
   }
 
   virtual void clear() = 0;
-  virtual yage::core::error
-  set_parameters(const yage::graphics::texture_param & parameters)
-        = 0;
+  virtual yage::core::error set_parameters(const yage::graphics::texture_param & parameters) = 0;
   virtual yage::core::error add_image(const std::string & path)         = 0;
-  virtual yage::core::error compile()                                   = 0;
-  virtual yage::core::error get_binary(std::vector<uint8_t> & out_data) = 0;
+  virtual yage::core::error compile(yage::graphics::texture * & out_texture) = 0;
+
+  virtual yage::core::error add_latent(size_t w, size_t h, const std::vector<glm::vec4> & initial_values) = 0;
+  virtual yage::core::error add_latent(size_t w, size_t h, glm::vec4 initial_value) = 0;
 };
 
 /* Variables ================================================================ */

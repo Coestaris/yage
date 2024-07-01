@@ -17,10 +17,11 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-bool yage::graphics::texture_compiler::image_to_rgba8888(
-      const std::string &                                       path,
-      std::vector<yage::graphics::texture_compiler::rgba8888> & out_data,
-      glm::vec2 &                                      out_size)
+bool yage::graphics::texture_compiler::load_image(
+      const std::string &      path,
+      std::vector<glm::vec4> & out_data,
+      size_t &                 out_w,
+      size_t &                 out_h)
 {
   FreeImage_SetOutputMessage([](FREE_IMAGE_FORMAT, const char * message) {
     logging(LOG_ERROR, "FreeImage: %s", message);
@@ -32,22 +33,22 @@ bool yage::graphics::texture_compiler::image_to_rgba8888(
     return false;
   }
 
-  out_size.x = FreeImage_GetWidth(bitmap);
-  out_size.y = FreeImage_GetHeight(bitmap);
+  out_w = FreeImage_GetWidth(bitmap);
+  out_h = FreeImage_GetHeight(bitmap);
 
-  out_data.resize(out_size.x * out_size.y);
+  out_data.resize(out_w * out_h);
 
-  for (unsigned int y = 0; y < out_size.y; ++y)
+  for (unsigned int y = 0; y < out_h; ++y)
   {
-    for (unsigned int x = 0; x < out_size.x; ++x)
+    for (unsigned int x = 0; x < out_w; ++x)
     {
       RGBQUAD color;
       FreeImage_GetPixelColor(bitmap, x, y, &color);
 
-      out_data[y * out_size.x + x].r = color.rgbRed;
-      out_data[y * out_size.x + x].g = color.rgbGreen;
-      out_data[y * out_size.x + x].b = color.rgbBlue;
-      out_data[y * out_size.x + x].a = color.rgbReserved;
+      out_data[y * out_w + x].r = color.rgbRed;
+      out_data[y * out_w + x].g = color.rgbGreen;
+      out_data[y * out_w + x].b = color.rgbBlue;
+      out_data[y * out_w + x].a = color.rgbReserved;
     }
   }
 

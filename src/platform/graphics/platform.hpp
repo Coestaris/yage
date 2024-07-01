@@ -13,6 +13,7 @@
 #include "graphics/shader_compiler.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/render_pass.hpp"
+#include "app/assets/asset_factory.hpp"
 
 namespace yage::platform::graphics
 {
@@ -25,7 +26,8 @@ namespace yage::platform::graphics
 yage::graphics::window * create_window(yage::graphics::settings & settings);
 void                     destroy_window(yage::graphics::window * window);
 
-std::vector<yage::graphics::render_pass *>
-trivial_render_chain(yage::graphics::graphics * graphics);
+std::vector<yage::graphics::render_pass *> trivial_render_chain(
+      yage::graphics::graphics *         graphics,
+      yage::app::assets::asset_factory * asset_factory);
 
 }

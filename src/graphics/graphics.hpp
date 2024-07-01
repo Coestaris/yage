@@ -42,7 +42,6 @@ public:
   virtual yage::graphics::texture_compiler * create_texture_compiler() = 0;
   virtual yage::core::error destroy_texture_compiler(yage::graphics::texture_compiler * compiler) = 0;
 
-  virtual yage::graphics::texture * create_texture(const yage::graphics::texture_param & parameters) = 0;
   virtual yage::core::error destroy_texture(yage::graphics::texture * texture) = 0;
 
   virtual yage::core::error draw_line(glm::vec2 a, glm::vec2 b) = 0;

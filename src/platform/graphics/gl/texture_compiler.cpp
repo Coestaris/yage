@@ -10,8 +10,10 @@
 #include <cinttypes>
 #include <GL/gl.h>
 #include <GL/glext.h>
+#include <stdexcept>
 #include "texture_compiler.hpp"
 #include "core/log.hpp"
+#include "texture.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -21,7 +23,6 @@
 /* Shared functions ========================================================= */
 void yage::platform::graphics::gl::texture_compiler::clear()
 {
-  binary_data.clear();
   image_paths.clear();
   parameters = yage::graphics::texture_param();
 }
@@ -41,7 +42,8 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::add_image(
   return yage::core::OK;
 }
 
-yage::core::error yage::platform::graphics::gl::texture_compiler::compile()
+yage::core::error yage::platform::graphics::gl::texture_compiler::compile(
+      yage::graphics::texture *& out_texture)
 {
   if (image_paths.empty())
   {
@@ -49,7 +51,6 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile()
     return yage::core::INVALID_STATE;
   }
 
-  binary_data.clear();
   switch (parameters.type)
   {
     case yage::graphics::tex_type::TEXTURE_2D:
@@ -62,125 +63,64 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile()
         return yage::core::INVALID_ARGUMENT;
       }
 
-      std::vector<rgba8888> image_data;
-      glm::vec2             image_size;
-      if (!image_to_rgba8888(image_paths[0], image_data, image_size))
+      std::vector<glm::vec4> image_data;
+      size_t                 image_width, image_height;
+      if (!load_image(image_paths[0], image_data, image_width, image_height))
       {
         logging(LOG_ERROR, "Failed to load image: %s", image_paths[0].c_str());
         return yage::core::INVALID_ARGUMENT;
       }
 
-      GLuint texture;
-      glGenTextures(1, &texture);
-      glBindTexture(GL_TEXTURE_2D, texture);
-
+      GLuint int_format;
+      GLuint level = 0;
       switch (parameters.format)
       {
-
         case yage::graphics::tex_pixel_format::RED:
-        {
-          std::vector<uint8_t> red_data;
-          red_data.reserve(image_data.size());
-          for (const rgba8888 & pixel : image_data)
-          {
-            red_data.push_back(pixel.r);
-          }
-
-          glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RED, image_size.x, image_size.y, 0, GL_RED,
-                GL_UNSIGNED_BYTE, red_data.data());
-        }
-        break;
+          int_format = GL_RED;
+          break;
         case yage::graphics::tex_pixel_format::RG:
-        {
-          std::vector<uint8_t> rg_data;
-          rg_data.reserve(image_data.size() * 2);
-          for (const rgba8888 & pixel : image_data)
-          {
-            rg_data.push_back(pixel.r);
-            rg_data.push_back(pixel.g);
-          }
-
-          glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RG, image_size.x, image_size.y, 0, GL_RG,
-                GL_UNSIGNED_BYTE, rg_data.data());
-        }
-        break;
+          int_format = GL_RG;
+          break;
         case yage::graphics::tex_pixel_format::RGB:
-        {
-          std::vector<uint8_t> rgb_data;
-          rgb_data.reserve(image_data.size() * 3);
-          for (const rgba8888 & pixel : image_data)
-          {
-            rgb_data.push_back(pixel.r);
-            rgb_data.push_back(pixel.g);
-            rgb_data.push_back(pixel.b);
-          }
+          int_format = GL_RGB;
 
-          glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RGB, image_size.x, image_size.y, 0, GL_RGB,
-                GL_UNSIGNED_BYTE, rgb_data.data());
-        }
-        break;
+          break;
         case yage::graphics::tex_pixel_format::RGBA:
-        {
-          glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RGBA, image_size.x, image_size.y, 0,
-                GL_RGBA, GL_UNSIGNED_BYTE, image_data.data());
-        }
-        break;
+          int_format = GL_RGBA;
+          break;
         case yage::graphics::tex_pixel_format::DEPTH:
-        {
-          std::vector<uint8_t> depth_data;
-          depth_data.reserve(image_data.size());
-          for (const rgba8888 & pixel : image_data)
-          {
-            depth_data.push_back(pixel.r);
-          }
-
-          glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, image_size.x,
-                image_size.y, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE,
-                depth_data.data());
-        }
-        break;
+          int_format = GL_DEPTH_COMPONENT;
+          break;
         case yage::graphics::tex_pixel_format::STENCIL:
-        {
-          std::vector<uint8_t> stencil_data;
-          stencil_data.reserve(image_data.size());
-          for (const rgba8888 & pixel : image_data)
-          {
-            stencil_data.push_back(pixel.r);
-          }
-
-          glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_STENCIL_INDEX, image_size.x, image_size.y,
-                0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencil_data.data());
-        }
-        break;
+          int_format = GL_STENCIL_INDEX;
+          break;
         case yage::graphics::tex_pixel_format::DEPTH_STENCIL:
-        {
-          std::vector<uint8_t> depth_stencil_data;
-          depth_stencil_data.reserve(image_data.size() * 2);
-          for (const rgba8888 & pixel : image_data)
-          {
-            depth_stencil_data.push_back(pixel.r);
-            depth_stencil_data.push_back(pixel.g);
-          }
-
-          glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_DEPTH_STENCIL, image_size.x, image_size.y,
-                0, GL_DEPTH_STENCIL, GL_UNSIGNED_BYTE,
-                depth_stencil_data.data());
-        }
-        break;
-
+          int_format = GL_DEPTH_STENCIL;
+          break;
         default:
           logging(
                 LOG_ERROR, "Unsupported texture format: %s",
                 yage::graphics::to_string(parameters.format).c_str());
           return yage::core::INVALID_ARGUMENT;
       }
+
+      glTexImage2D(
+            GL_TEXTURE_2D, level, int_format, image_width, image_height, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, image_data.data());
+
+      GLuint texture;
+      glGenTextures(1, &texture);
+      glBindTexture(GL_TEXTURE_2D, texture);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+      glBindTexture(GL_TEXTURE_2D, 0);
+
+      out_texture = new yage::platform::graphics::gl::texture(
+            graphics, parameters, texture);
     }
     break;
 
@@ -197,9 +137,16 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile()
   return yage::core::OK;
 }
 
-yage::core::error yage::platform::graphics::gl::texture_compiler::get_binary(
-      std::vector<uint8_t> & out_data)
+yage::core::error yage::platform::graphics::gl::texture_compiler::add_latent(
+      size_t w, size_t h, const std::vector<glm::vec4> & initial_values)
 {
-  out_data = binary_data;
-  return yage::core::OK;
+  throw std::runtime_error("Not implemented");
+  return yage::core::NOT_IMPLEMENTED;
+}
+
+yage::core::error yage::platform::graphics::gl::texture_compiler::add_latent(
+      size_t w, size_t h, glm::vec4 initial_value)
+{
+  throw std::runtime_error("Not implemented");
+  return yage::core::NOT_IMPLEMENTED;
 }

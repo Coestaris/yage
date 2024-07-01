@@ -16,18 +16,8 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-yage::core::error yage::platform::graphics::gl::texture::bind(size_t slot)
-{
-  return yage::core::error::OK;
-}
-
 yage::core::error yage::platform::graphics::gl::texture::destroy()
 {
   return yage::core::error::OK;
 }
 
-yage::core::error
-yage::platform::graphics::gl::texture::set_binary(std::vector<uint8_t> binary)
-{
-  return yage::core::error::OK;
-}

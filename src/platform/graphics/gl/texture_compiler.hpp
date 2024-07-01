@@ -19,7 +19,6 @@ namespace yage::platform::graphics::gl
 class texture_compiler : public yage::graphics::texture_compiler
 {
 private:
-  std::vector<uint8_t>     binary_data;
   std::vector<std::string> image_paths;
   yage::graphics::texture_param parameters;
 
@@ -34,8 +33,10 @@ public:
   yage::core::error
   set_parameters(const yage::graphics::texture_param & parameters) override;
   yage::core::error add_image(const std::string & path) override;
-  yage::core::error compile() override;
-  yage::core::error get_binary(std::vector<uint8_t> & out_data) override;
+  yage::core::error compile(yage::graphics::texture * & out_texture) override;
+
+  yage::core::error add_latent(size_t w, size_t h, const std::vector<glm::vec4> & initial_values) override;
+  yage::core::error add_latent(size_t w, size_t h, glm::vec4 initial_value) override;
 };
 
 /* Variables ================================================================ */

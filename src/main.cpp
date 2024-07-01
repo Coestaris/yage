@@ -49,7 +49,8 @@ private:
   void before_loop() override
   {
     graphics = window->get_graphics();
-    passes   = yage::platform::graphics::trivial_render_chain(graphics);
+    passes   = yage::platform::graphics::trivial_render_chain(
+          graphics, asset_factory);
   }
 
   void loop() override

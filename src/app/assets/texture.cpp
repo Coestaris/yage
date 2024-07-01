@@ -37,42 +37,10 @@ yage::core::error yage::app::assets::texture::load()
     compiler->add_image(path);
   }
 
-  std::string          cache_key = get_cache_key();
-  std::vector<uint8_t> data;
-  if (cacher->get_cached_asset(cache_key, data) == yage::core::OK)
+  logging(LOG_DEBUG, "Compiling texture: %s", name.c_str());
+  if (compiler->compile(pixmap) != yage::core::OK)
   {
-    logging(
-          LOG_DEBUG, "Loading texture from cache: %s (%" PRIuPTR " bytes)",
-          cache_key.c_str(), data.size());
-  }
-  else
-  {
-    logging(LOG_DEBUG, "Compiling texture: %s", cache_key.c_str());
-
-    if (compiler->compile() != yage::core::OK)
-    {
-      logging(LOG_ERROR, "Failed to compile texture: %s", cache_key.c_str());
-      return yage::core::INVALID_STATE;
-    }
-
-    if (compiler->get_binary(data) != yage::core::OK)
-    {
-      logging(LOG_ERROR, "Failed to get texture binary: %s", cache_key.c_str());
-      return yage::core::INVALID_STATE;
-    }
-
-    if (cacher->cache_asset(cache_key, data) != yage::core::OK)
-    {
-      logging(LOG_ERROR, "Failed to cache texture: %s", cache_key.c_str());
-      return yage::core::INVALID_STATE;
-    }
-  }
-
-  pixmap = graphics->create_texture(parameters);
-  loaded = true;
-  if (pixmap->set_binary(data) != yage::core::OK)
-  {
-    logging(LOG_ERROR, "Failed to load texture: %s", cache_key.c_str());
+    logging(LOG_ERROR, "Failed to compile texture: %s", name.c_str());
     return yage::core::INVALID_STATE;
   }
 
