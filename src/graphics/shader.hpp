@@ -9,14 +9,12 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include <utility>
 #include <string>
 #include <vector>
 #include <cstdint>
-#include <unordered_map>
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
 
-#include "graphics/graphics.hpp"
+#include "graphics/asset.hpp"
 
 namespace yage::graphics
 {
@@ -25,20 +23,22 @@ namespace yage::graphics
 /* Types ==================================================================== */
 class graphics;
 
-class shader
+class shader : public yage::graphics::asset
 {
 protected:
   yage::graphics::graphics * graphics;
+  std::vector<uint8_t>       binary;
 
 public:
-  shader(yage::graphics::graphics * graphics) : graphics(graphics) {}
-  virtual ~shader() = default;
-
-  /** Uploads binary representation of shader to video memory */
-  virtual yage::core::error set_binary(std::vector<uint8_t> binary) = 0;
-
-  /** Deletes shader from video memory */
-  virtual yage::core::error destroy() = 0;
+  shader(
+        std::string                name,
+        yage::graphics::graphics * graphics,
+        std::vector<uint8_t>       compiled)
+  : asset(std::move(name))
+  , graphics(graphics)
+  , binary(std::move(compiled))
+  {
+  }
 };
 
 /* Variables ================================================================ */

@@ -74,10 +74,7 @@ set(SRC_FILES
         src/core/util/*.cpp
 
         src/app/*.cpp
-        src/app/io/*.cpp
         src/app/threads/*.cpp
-        src/app/assets/*.cpp
-        src/app/assets/pack/*.cpp
 
         src/graphics/*.cpp
 

@@ -16,9 +16,9 @@
 #include "graphics/graphics.hpp"
 #include "core/error.hpp"
 #include "core/log.hpp"
-#include "app/assets/asset.hpp"
+#include "graphics/asset.hpp"
 
-namespace yage::app::assets
+namespace yage::app
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -33,14 +33,14 @@ class shader;
 class asset_factory
 {
 private:
-  std::vector<yage::app::assets::asset *> loaded_assets;
+  std::vector<yage::graphics::asset *> loaded_assets;
 
 protected:
   /** Tries to get an asset by its name.
    * @param name Name of the asset to get.
    * @return Returns a pointer to the asset if it is found, otherwise nullptr.
    */
-  virtual yage::app::assets::asset * get_asset(const std::string & name) = 0;
+  virtual yage::graphics::asset * get_asset(const std::string & name) = 0;
 
 public:
   virtual ~asset_factory() = default;
@@ -76,7 +76,7 @@ public:
    * @param name Name of the asset to load.
    * @return Returns a pointer to the asset if it is found and loaded,
    *         otherwise nullptr. */
-  yage::app::assets::asset *
+  yage::graphics::asset *
   load_asset(const std::string & name, bool required = true)
   {
     auto * asset = get_asset(name);

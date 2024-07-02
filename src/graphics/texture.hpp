@@ -9,7 +9,11 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "graphics/graphics.hpp"
+#include <utility>
+#include <string>
+#include <vector>
+
+#include "graphics/asset.hpp"
 #include "graphics/texture_param.hpp"
 
 namespace yage::graphics
@@ -17,23 +21,24 @@ namespace yage::graphics
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class texture
+class graphics;
+
+class texture : public yage::graphics::asset
 {
 protected:
   yage::graphics::graphics * graphics;
   texture_param              parameters;
 
-  texture(yage::graphics::graphics * graphics, const texture_param & parameters)
-  : graphics(graphics)
+public:
+  texture(
+        std::string                name,
+        yage::graphics::graphics * graphics,
+        const texture_param &      parameters)
+  : asset(std::move(name))
+  , graphics(graphics)
   , parameters(parameters)
   {
   }
-
-public:
-  virtual ~texture() = default;
-
-  /** Deletes texture data from video memory */
-  virtual yage::core::error destroy() = 0;
 };
 
 /* Variables ================================================================ */

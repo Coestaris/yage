@@ -15,13 +15,11 @@
 
 #include "core/error.hpp"
 
-namespace yage::app::assets
+namespace yage::app
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-/* Variables ================================================================ */
-/* Prototypes =============================================================== */
 /** Interface for caching assets.
  * Some assets may be cached to avoid preprocessing them every time they are
  * needed. Depending on the platform, assets may be cached in different ways
@@ -46,5 +44,8 @@ public:
   get_cached_asset(const std::string & key, std::vector<uint8_t> & data)
         = 0;
 };
+
+/* Variables ================================================================ */
+/* Prototypes =============================================================== */
 
 }

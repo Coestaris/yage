@@ -14,11 +14,9 @@
 #include "GL/gl.h"
 
 #include "graphics/render_pass.hpp"
-#include "app/assets/asset_factory.hpp"
-#include "app/assets/shader.hpp"
+#include "app/asset_factory.hpp"
 #include "platform/graphics/platform.hpp"
 #include "platform/graphics/gl/shader.hpp"
-#include "app/assets/texture.hpp"
 #include "platform/graphics/gl/texture.hpp"
 
 #if !defined(YAGE_PLATFORM_X11) && !defined(YAGE_PLATFORM_WIN_GL)              \

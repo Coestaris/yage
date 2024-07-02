@@ -1,5 +1,5 @@
-/** ========================================================================
 *
+/** ========================================================================
 * @file graphics.hpp
 * @date 06-06-2024
 * @author Maxim Kurylko <vk_vm@ukr.net>
@@ -13,6 +13,7 @@
 #include "core/error.hpp"
 
 #include "graphics/shader.hpp"
+#include "graphics/texture.hpp"
 #include "graphics/shader_compiler.hpp"
 #include "graphics/texture_param.hpp"
 #include "glm/vec2.hpp"

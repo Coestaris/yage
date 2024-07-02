@@ -13,10 +13,10 @@
 #include "core/os_events.hpp"
 #include "core/fs.hpp"
 
+#include "asset_factory.hpp"
 #include "platform/graphics/platform.hpp"
 #include "app/object.hpp"
 #include "app/application.hpp"
-#include "app/assets/pack/asset_factory.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -91,7 +91,7 @@ public:
   }
 
   subrenderer(
-        yage::app::assets::asset_factory * asset_factory,
+        yage::app::asset_factory * asset_factory,
         yage::graphics::window *           window)
   : subrenderer_(asset_factory, window) {};
 };

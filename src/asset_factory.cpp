@@ -11,12 +11,12 @@
 #include <utility>
 #include "elzip/elzip.hpp"
 
-#include "app/assets/pack/asset_factory.hpp"
-#include "app/assets/asset_factory.hpp"
-#include "app/assets/shader.hpp"
-#include "graphics/shader_type.hpp"
 #include "core/fs.hpp"
 #include "core/log.hpp"
+#include "core/error.hpp"
+#include "app/asset_factory.hpp"
+#include "asset_factory.hpp"
+#include "graphics/shader_type.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */

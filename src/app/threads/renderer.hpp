@@ -31,9 +31,7 @@ private:
   yage::app::frequency_keeper  keeper;
 
   size_t                     instances_count = 0;
-  yage::graphics::graphics * graphics; /* cache */
-
-  bool compile_shader();
+  yage::graphics::graphics * graphics {}; /* cache */
 
 public:
   yage::core::signal_event_listener stop_signal_listener;

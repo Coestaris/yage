@@ -13,19 +13,19 @@
 #include <queue>
 #include <mutex>
 #include <map>
-
-#include "graphics/texture.hpp"
-#include "graphics/graphics.hpp"
+#include <functional>
 
 #include "core/error.hpp"
 #include "graphics/input_events.hpp"
 
 namespace yage::graphics
 {
-
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
+class graphics;
+class texture;
+
 struct settings
 {
   std::string title;

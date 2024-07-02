@@ -14,7 +14,6 @@
 #include "graphics/shader_compiler.hpp"
 #include "platform/graphics/platform.hpp"
 #include "app/application.hpp"
-#include "app/assets/shader.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */

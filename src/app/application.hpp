@@ -18,7 +18,7 @@
 #include "graphics/window.hpp"
 #include "app/object.hpp"
 #include "app/input_manager.hpp"
-#include "app/assets/asset_factory.hpp"
+#include "app/asset_factory.hpp"
 
 namespace yage::app
 {
@@ -85,7 +85,7 @@ public:
   {
   protected:
     application *                                   app;
-    yage::app::assets::asset_factory *              asset_factory;
+    yage::app::asset_factory *                      asset_factory;
     yage::graphics::window *                        window;
     std::vector<yage::graphics::render_primitive *> objects;
 
@@ -95,8 +95,8 @@ public:
     virtual ~subrenderer_() = default;
 
     subrenderer_(
-          yage::app::assets::asset_factory * asset_factory,
-          yage::graphics::window *           window)
+          yage::app::asset_factory * asset_factory,
+          yage::graphics::window *   window)
     : asset_factory(asset_factory)
     , window(window) {};
 

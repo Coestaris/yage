@@ -13,7 +13,6 @@
 #include <vector>
 #include <cstdint>
 
-#include "graphics/graphics.hpp"
 #include "shader_type.hpp"
 
 namespace yage::graphics
@@ -29,6 +28,8 @@ protected:
   yage::graphics::graphics * graphics;
 
 public:
+  using sources
+        = std::vector<std::pair<yage::graphics::shader_type, std::string>>;
 
   class compile_message
   {
