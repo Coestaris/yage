@@ -37,7 +37,24 @@ public:
   yage::core::error set_binary(std::vector<uint8_t> binary) override;
   yage::core::error destroy() override;
 
-  void use();
+  /* GL specific sfuff */
+  GLint get_uniform_location(const std::string & name, bool required = true);
+  GLint get_attribute_location(const std::string & name, bool required = true);
+
+  inline void use()
+  {
+    ctx->glUseProgram(id);
+  }
+
+  inline void set_uniform(GLint location, int value)
+  {
+    ctx->glUniform1i(location, value);
+  }
+
+  inline void set_uniform(GLint location, float value)
+  {
+    ctx->glUniform1f(location, value);
+  }
 };
 
 /* Variables ================================================================ */

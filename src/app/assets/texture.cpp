@@ -46,6 +46,8 @@ yage::core::error yage::app::assets::texture::load()
 
   graphics->destroy_texture_compiler(compiler);
 
+  loaded = true;
+
   return yage::core::OK;
 }
 

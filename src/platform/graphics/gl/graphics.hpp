@@ -59,15 +59,24 @@ public:
   PFNGLDRAWARRAYSEXTPROC           glDrawArrays {};
   PFNGLSHADERBINARYPROC            glShaderBinary {};
   PFNGLPROGRAMBINARYPROC           glProgramBinary {};
+  PFNGLACTIVETEXTUREPROC           glActiveTexture {};
+  PFNGLBINDTEXTUREEXTPROC          glBindTexture {};
+  PFNGLGENERATEMIPMAPPROC          glGenerateMipmap {};
+  PFNGLGETUNIFORMLOCATIONPROC      glGetUniformLocation {};
+  PFNGLGETATTRIBLOCATIONPROC       glGetAttribLocation {};
+  PFNGLUNIFORM1IPROC               glUniform1i {};
+  PFNGLUNIFORM1FPROC               glUniform1f {};
 
   yage::core::error init(int bits_per_pixel, int width, int height);
 
   yage::graphics::shader_compiler * create_shader_compiler() override;
-  yage::core::error destroy_shader_compiler(yage::graphics::shader_compiler * compiler) override;
+  yage::core::error
+  destroy_shader_compiler(yage::graphics::shader_compiler * compiler) override;
   yage::graphics::shader * create_shader() override;
   yage::core::error destroy_shader(yage::graphics::shader * shader) override;
   yage::graphics::texture_compiler * create_texture_compiler() override;
-  yage::core::error destroy_texture_compiler(yage::graphics::texture_compiler * compiler) override;
+  yage::core::error                  destroy_texture_compiler(
+                         yage::graphics::texture_compiler * compiler) override;
   yage::core::error destroy_texture(yage::graphics::texture * texture) override;
 
   yage::core::error clear() override;

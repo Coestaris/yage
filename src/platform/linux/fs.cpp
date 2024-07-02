@@ -204,6 +204,31 @@ std::string yage::core::basedir(std::string path)
   return path.substr(0, pos);
 }
 
+std::string yage::core::join_path(std::string path1, std::string path2)
+{
+  if (path1.empty())
+  {
+    return path2;
+  }
+
+  if (path2.empty())
+  {
+    return path1;
+  }
+
+  if (path1.back() == '/' && path2.front() == '/')
+  {
+    return path1 + path2.substr(1);
+  }
+
+  if (path1.back() != '/' && path2.front() != '/')
+  {
+    return path1 + "/" + path2;
+  }
+
+  return path1 + path2;
+}
+
 time_t yage::core::file_ctime(const std::string & path)
 {
   struct stat statbuf;

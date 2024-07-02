@@ -69,14 +69,17 @@ class PackHandler:
     # Image files are processed differently: we need to create a
     #   .meta file for each image (if it doesn't exist) and write
     #   default values there
-    IMAGE_EXTENSIONS = [".png", ".jpeg"]
+    IMAGE_EXTENSIONS = [".png", ".jpeg", ".jpg"]
 
     def pack(self):
         logging.debug(f"[0] Start packing {self.dir} to {self.output}")
 
         # Collect all files into a temporary directory,
         # to not call zipf.write() for each file
-        out_temp_dir = tempfile.mkdtemp()
+        out_temp_dir = os.path.join(tempfile.gettempdir(), "assets")
+        if os.path.exists(out_temp_dir):
+            shutil.rmtree(out_temp_dir)
+        os.makedirs(out_temp_dir)
 
         logging.debug(f"[1] Processing direct extensions: {self.DIRECT_EXTENSIONS}")
         for ext in self.DIRECT_EXTENSIONS:
@@ -118,7 +121,7 @@ class PackHandler:
 
         # Create a zip archive in a temporary directory
         #   so application can read it while it's being written
-        out_zip = os.path.join(out_temp_dir, os.path.basename(self.output))
+        out_zip = os.path.join(tempfile.gettempdir(), "assets.zip")
         with zipfile.ZipFile(out_zip, "w", zipfile.ZIP_DEFLATED if not self.no_compress else zipfile.ZIP_STORED) as zipf:
             for root, _, files in os.walk(out_temp_dir):
                 for file in files:

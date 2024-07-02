@@ -310,6 +310,13 @@ yage::core::error yage::platform::graphics::gl::graphics::init(
   glDrawArrays              = reinterpret_cast<PFNGLDRAWARRAYSEXTPROC>(gl_lookup("glDrawArrays", true));
   glShaderBinary            = reinterpret_cast<PFNGLSHADERBINARYPROC>(gl_lookup("glShaderBinary", true));
   glProgramBinary           = reinterpret_cast<PFNGLPROGRAMBINARYPROC>(gl_lookup("glProgramBinary", true));
+  glActiveTexture           = reinterpret_cast<PFNGLACTIVETEXTUREPROC>(gl_lookup("glActiveTexture", true));
+  glBindTexture             = reinterpret_cast<PFNGLBINDTEXTUREEXTPROC>(gl_lookup("glBindTexture", true));
+  glGenerateMipmap = reinterpret_cast<PFNGLGENERATEMIPMAPPROC>(gl_lookup("glGenerateMipmap", true));
+glGetUniformLocation = reinterpret_cast<PFNGLGETUNIFORMLOCATIONPROC>(gl_lookup("glGetUniformLocation", true));
+glGetAttribLocation = reinterpret_cast<PFNGLGETATTRIBLOCATIONPROC>(gl_lookup("glGetAttribLocation", true));
+ glUniform1i = reinterpret_cast<PFNGLUNIFORM1IPROC>(gl_lookup("glUniform1i", true));
+glUniform1f = reinterpret_cast<PFNGLUNIFORM1FPROC>(gl_lookup("glUniform1f", true));
   // clang-format on
 
   glShadeModel(GL_SMOOTH); // Enable Smooth Shading

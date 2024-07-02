@@ -56,6 +56,16 @@ public:
     return loaded;
   }
 
+  yage::graphics::texture * get_texture()
+  {
+    if (!loaded)
+    {
+      return nullptr;
+    }
+
+    return pixmap;
+  }
+
 #if USE_DEBUG
   bool poll() override
   {

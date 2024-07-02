@@ -18,6 +18,6 @@
 /* Shared functions ========================================================= */
 yage::core::error yage::platform::graphics::gl::texture::destroy()
 {
+  glDeleteTextures(1, &id);
   return yage::core::error::OK;
 }
-

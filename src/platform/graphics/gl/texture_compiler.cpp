@@ -14,6 +14,7 @@
 #include "texture_compiler.hpp"
 #include "core/log.hpp"
 #include "texture.hpp"
+#include "graphics.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -45,6 +46,8 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::add_image(
 yage::core::error yage::platform::graphics::gl::texture_compiler::compile(
       yage::graphics::texture *& out_texture)
 {
+  auto * ctx = dynamic_cast<yage::platform::graphics::gl::graphics *>(graphics);
+
   if (image_paths.empty())
   {
     logging(LOG_ERROR, "No images to compile");
@@ -63,7 +66,7 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile(
         return yage::core::INVALID_ARGUMENT;
       }
 
-      std::vector<glm::vec4> image_data;
+      std::vector<uint8_t> image_data;
       size_t                 image_width, image_height;
       if (!load_image(image_paths[0], image_data, image_width, image_height))
       {
@@ -83,7 +86,6 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile(
           break;
         case yage::graphics::tex_pixel_format::RGB:
           int_format = GL_RGB;
-
           break;
         case yage::graphics::tex_pixel_format::RGBA:
           int_format = GL_RGBA;
@@ -104,10 +106,6 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile(
           return yage::core::INVALID_ARGUMENT;
       }
 
-      glTexImage2D(
-            GL_TEXTURE_2D, level, int_format, image_width, image_height, 0,
-            GL_RGBA, GL_UNSIGNED_BYTE, image_data.data());
-
       GLuint texture;
       glGenTextures(1, &texture);
       glBindTexture(GL_TEXTURE_2D, texture);
@@ -117,7 +115,10 @@ yage::core::error yage::platform::graphics::gl::texture_compiler::compile(
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-      glBindTexture(GL_TEXTURE_2D, 0);
+      glTexImage2D(
+            GL_TEXTURE_2D, level, int_format, image_width, image_height, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, image_data.data());
+      ctx->glGenerateMipmap(GL_TEXTURE_2D);
 
       out_texture = new yage::platform::graphics::gl::texture(
             graphics, parameters, texture);

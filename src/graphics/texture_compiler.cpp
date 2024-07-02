@@ -16,12 +16,17 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
+__attribute__((constructor(101))) static void init()
+{
+  FreeImage_Initialise();
+}
+
 /* Shared functions ========================================================= */
 bool yage::graphics::texture_compiler::load_image(
-      const std::string &      path,
-      std::vector<glm::vec4> & out_data,
-      size_t &                 out_w,
-      size_t &                 out_h)
+      const std::string &    path,
+      std::vector<uint8_t> & out_data,
+      size_t &               out_w,
+      size_t &               out_h)
 {
   FreeImage_SetOutputMessage([](FREE_IMAGE_FORMAT, const char * message) {
     logging(LOG_ERROR, "FreeImage: %s", message);
@@ -36,7 +41,7 @@ bool yage::graphics::texture_compiler::load_image(
   out_w = FreeImage_GetWidth(bitmap);
   out_h = FreeImage_GetHeight(bitmap);
 
-  out_data.resize(out_w * out_h);
+  out_data.resize(out_w * out_h * 4);
 
   for (unsigned int y = 0; y < out_h; ++y)
   {
@@ -45,10 +50,10 @@ bool yage::graphics::texture_compiler::load_image(
       RGBQUAD color;
       FreeImage_GetPixelColor(bitmap, x, y, &color);
 
-      out_data[y * out_w + x].r = color.rgbRed;
-      out_data[y * out_w + x].g = color.rgbGreen;
-      out_data[y * out_w + x].b = color.rgbBlue;
-      out_data[y * out_w + x].a = color.rgbReserved;
+      out_data[4 * (y * out_w + x) + 0]     = color.rgbRed;
+      out_data[4 * (y * out_w + x) + 1] = color.rgbGreen;
+      out_data[4 * (y * out_w + x) + 2] = color.rgbBlue;
+      out_data[4 * (y * out_w + x) + 3] = color.rgbReserved;
     }
   }
 

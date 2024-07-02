@@ -1,19 +1,20 @@
 {
   "type": "texture",
   "tex_type": "TEXTURE_2D",
-  "format": "RGBA",
+  "format": "RGB",
   "border_color": [
     500,
     10,
     30,
     300
   ],
+
   "min_filter": "LINEAR",
   "mag_filter": "LINEAR",
   "wrap_s": "CLAMP_TO_EDGE",
   "wrap_t": "CLAMP_TO_EDGE",
   "wrap_r": "CLAMP_TO_EDGE",
   "textures": [
-    "image.png"
+    "tex2.jpg"
   ]
 }

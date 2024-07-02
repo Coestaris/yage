@@ -18,6 +18,8 @@
 #include "app/assets/shader.hpp"
 #include "platform/graphics/platform.hpp"
 #include "platform/graphics/gl/shader.hpp"
+#include "app/assets/texture.hpp"
+#include "platform/graphics/gl/texture.hpp"
 
 #if !defined(YAGE_PLATFORM_X11) && !defined(YAGE_PLATFORM_WIN_GL)              \
       && !defined(YAGE_PLATFORM_WAYLAND)
@@ -32,10 +34,10 @@
 class trivial_render_pass : public yage::graphics::render_pass
 {
 private:
-  yage::platform::graphics::gl::shader * shader {};
-  yage::app::assets::shader *            shader_asset {};
+  yage::app::assets::shader * shader_asset {};
 
 protected:
+  yage::platform::graphics::gl::shader *   shader {};
   yage::platform::graphics::gl::graphics * ctx;
 
 public:
@@ -81,6 +83,24 @@ public:
 
     if (shader)
       shader->use();
+  }
+
+  void use_texture(yage::app::assets::texture * texture, GLuint unit)
+  {
+    /* Todo get rid of dynamic_cast */
+    auto * tex = dynamic_cast<yage::platform::graphics::gl::texture *>(
+          texture->get_texture());
+
+    if (texture->poll())
+    {
+      tex = dynamic_cast<yage::platform::graphics::gl::texture *>(
+            texture->get_texture());
+    }
+
+    if (tex)
+    {
+      tex->use(unit);
+    }
   }
 };
 
@@ -147,52 +167,80 @@ class triangle_pass : public final_pass
 private:
   // clang-format off
   static constexpr const float vertices[] = {
-    // positions         // colors
-    0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-    0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top
+      // positions          // colors           // texture coords
+      0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+      0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+      -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+      -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
+  };
+  static constexpr const int indices[] = {
+      0, 1, 3, // first triangle
+      1, 2, 3  // second triangle
   };
   // clang-format on
 
-  GLuint VAO, VBO, EBO;
+  GLuint                       VAO, VBO, EBO;
+  yage::app::assets::texture * tex1;
+  yage::app::assets::texture * tex2;
 
 public:
   triangle_pass(
-        yage::app::assets::shader * shader_asset,
-        yage::graphics::graphics *  graphics)
-  : final_pass("triangle_pass", shader_asset, graphics) {};
+        yage::app::assets::shader *  shader_asset,
+        yage::app::assets::texture * tex1,
+        yage::app::assets::texture * tex2,
+        yage::graphics::graphics *   graphics)
+  : final_pass("triangle_pass", shader_asset, graphics)
+  , tex1(tex1)
+  , tex2(tex2)
+  {
+    if (!tex1 || !tex2)
+    {
+      throw std::runtime_error("Textures are not set");
+    }
+  };
 
   void before_loop() override
   {
     final_pass::before_loop();
 
+    tex1->load();
+    tex2->load();
+
     ctx->glGenVertexArrays(1, &VAO);
     ctx->glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s),
-    // and then configure vertex attributes(s).
+    ctx->glGenBuffers(1, &EBO);
+
     ctx->glBindVertexArray(VAO);
 
     ctx->glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    ctx->glBufferData(
-          GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    ctx->glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    ctx->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    ctx->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // position attribute
-    ctx->glVertexAttribPointer(
-          0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
-          reinterpret_cast<void *>(0));
+    ctx->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
     ctx->glEnableVertexAttribArray(0);
     // color attribute
-    ctx->glVertexAttribPointer(
-          1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
-          reinterpret_cast<void *>(3 * sizeof(float)));
+    ctx->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
     ctx->glEnableVertexAttribArray(1);
+    // texture coord attribute
+    ctx->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
+    ctx->glEnableVertexAttribArray(2);
+
+    shader->use();
+    shader->set_uniform(shader->get_uniform_location("texture1"), 0);
+    shader->set_uniform(shader->get_uniform_location("texture2"), 1);
   }
 
   void begin() override
   {
+    use_texture(tex2, GL_TEXTURE0);
+    use_texture(tex1, GL_TEXTURE1);
+
     ctx->glBindVertexArray(VAO);
     use_shader();
-    ctx->glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
   }
 
   void end() override
@@ -211,6 +259,8 @@ yage::platform::graphics::trivial_render_chain(
   std::vector<yage::graphics::render_pass *> passes = {
     new triangle_pass(
           asset_factory->load_asset<yage::app::assets::shader>("triangle"),
+          asset_factory->load_asset<yage::app::assets::texture>("tex1"),
+          asset_factory->load_asset<yage::app::assets::texture>("tex2"),
           graphics),
   };
 

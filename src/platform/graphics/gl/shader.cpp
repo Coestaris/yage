@@ -9,6 +9,7 @@
 /* Includes ================================================================= */
 #include <GL/gl.h>
 #include <GL/glext.h>
+#include <stdexcept>
 
 #include "platform/graphics/gl/shader.hpp"
 #include "core/log.hpp"
@@ -57,7 +58,26 @@ yage::core::error yage::platform::graphics::gl::shader::destroy()
   return yage::core::error::OK;
 }
 
-void yage::platform::graphics::gl::shader::use()
+GLint yage::platform::graphics::gl::shader::get_uniform_location(
+      const std::string & name, bool required)
 {
-  ctx->glUseProgram(id);
+  GLint location = ctx->glGetUniformLocation(id, name.c_str());
+  if (location == -1 && required)
+  {
+    throw std::runtime_error("Failed to get uniform location: " + name);
+  }
+
+  return location;
+}
+
+GLint yage::platform::graphics::gl::shader::get_attribute_location(
+      const std::string & name, bool required)
+{
+  GLint location = ctx->glGetAttribLocation(id, name.c_str());
+  if (location == -1 && required)
+  {
+    throw std::runtime_error("Failed to get attribute location: " + name);
+  }
+
+  return location;
 }

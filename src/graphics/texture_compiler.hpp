@@ -25,10 +25,10 @@ protected:
   /* little helper to load image,
    * so backends do not reinvent the wheel */
   bool load_image(
-        const std::string &      path,
-        std::vector<glm::vec4> & out_data,
-        size_t &                 out_w,
-        size_t &                 out_h);
+        const std::string &    path,
+        std::vector<uint8_t> & out_data,
+        size_t &               out_w,
+        size_t &               out_h);
 
 public:
   virtual ~texture_compiler() = default;

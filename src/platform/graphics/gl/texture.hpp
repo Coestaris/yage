@@ -34,6 +34,12 @@ public:
   }
 
   yage::core::error destroy() override;
+
+  inline void use(GLenum texture_unit)
+  {
+    glActiveTexture(texture_unit);
+    glBindTexture(GL_TEXTURE_2D, id);
+  }
 };
 
 /* Variables ================================================================ */
