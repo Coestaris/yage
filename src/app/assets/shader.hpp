@@ -30,9 +30,6 @@ private:
   yage::graphics::shader *   program  = nullptr;
   yage::graphics::graphics * graphics = nullptr;
 
-  bool live {};
-  bool loaded {};
-
   std::string get_cache_key();
 
 public:
@@ -52,11 +49,6 @@ public:
   yage::core::error load() override;
   void              unload() override;
 
-  bool is_loaded() const override
-  {
-    return loaded;
-  }
-
   yage::graphics::shader * get_shader()
   {
     if (!loaded)
@@ -64,23 +56,9 @@ public:
       return nullptr;
     }
 
+    updated = false;
     return program;
   }
-
-#if USE_DEBUG
-  bool poll() override
-  {
-    if (!live)
-    {
-      unload();
-      load();
-
-      return true;
-    }
-
-    return false;
-  }
-#endif
 
   void update(sources new_src)
   {

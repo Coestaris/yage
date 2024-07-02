@@ -33,7 +33,11 @@ protected:
 
   /** Programmer-readable name of the asset.
    * It is used to identify the asset in the asset storage. */
-  std::string                       name;
+  std::string name;
+
+  bool live {};
+  bool updated {};
+  bool loaded {};
 
 public:
   asset(std::string name, yage::app::assets::asset_cacher * cacher)
@@ -48,13 +52,31 @@ public:
   virtual yage::core::error load() = 0;
   /** Unloads asset data from memory freeing allocated resources. */
   virtual void unload() = 0;
+
   /** True if asset data is loaded into memory. */
-  virtual bool is_loaded() const = 0;
+  bool is_loaded() const
+  {
+    return loaded;
+  }
 
 #if USE_DEBUG
   /** False is data in asset store different from loaded data into memory.
    * In that case, asset should be reloaded. */
-  virtual bool poll() = 0;
+  void poll()
+  {
+    if (!live)
+    {
+      unload();
+      load();
+
+      updated = true;
+    }
+  }
+
+  bool should_update() const
+  {
+    return updated;
+  }
 #endif
 
   /** Returns the name of the asset. */

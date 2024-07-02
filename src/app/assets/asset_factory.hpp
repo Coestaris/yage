@@ -11,6 +11,7 @@
 /* Includes ================================================================= */
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 #include "graphics/graphics.hpp"
 #include "core/error.hpp"
@@ -75,7 +76,8 @@ public:
    * @param name Name of the asset to load.
    * @return Returns a pointer to the asset if it is found and loaded,
    *         otherwise nullptr. */
-  yage::app::assets::asset * load_asset(const std::string & name)
+  yage::app::assets::asset *
+  load_asset(const std::string & name, bool required = true)
   {
     auto * asset = get_asset(name);
     if (asset)
@@ -83,7 +85,11 @@ public:
       if (asset->load() != yage::core::error::OK)
       {
         logging(LOG_ERROR, "Failed to load asset %s", name.c_str());
-        return nullptr;
+
+        if (required)
+        {
+          throw std::runtime_error("Failed to load asset " + name);
+        }
       }
       loaded_assets.push_back(asset);
     }
@@ -93,9 +99,16 @@ public:
   /** Same as get_asset, but casts the result to the specified type.
    * @note This will return nullptr if the asset is not of the specified type.
    */
-  template <typename T> T * load_asset(const std::string & name)
+  template <typename T>
+  T * load_asset(const std::string & name, bool required = true)
   {
-    return dynamic_cast<T *>(load_asset(name));
+    auto * ptr = dynamic_cast<T *>(load_asset(name));
+    if (!ptr && required)
+    {
+      throw std::runtime_error("Failed to load asset " + name);
+    }
+
+    return ptr;
   }
 
   /** Unloads an asset by its name.

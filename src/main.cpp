@@ -60,6 +60,8 @@ private:
 
   void loop() override
   {
+    asset_factory->poll_assets();
+
     for (auto & pass : passes)
     {
       if (pass->get_skip())

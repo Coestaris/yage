@@ -28,9 +28,6 @@ private:
   yage::graphics::texture *  pixmap {};
   yage::graphics::graphics * graphics {};
 
-  bool live {};
-  bool loaded {};
-
 public:
   yage::graphics::texture_param parameters;
   std::vector<std::string>      image_paths;
@@ -51,10 +48,6 @@ public:
   yage::core::error load() override;
   void              unload() override;
 
-  bool is_loaded() const override
-  {
-    return loaded;
-  }
 
   yage::graphics::texture * get_texture()
   {
@@ -63,23 +56,9 @@ public:
       return nullptr;
     }
 
+    updated = false;
     return pixmap;
   }
-
-#if USE_DEBUG
-  bool poll() override
-  {
-    if (!live)
-    {
-      unload();
-      load();
-
-      return true;
-    }
-
-    return false;
-  }
-#endif
 
   void update(
         const yage::graphics::texture_param & _parameters,

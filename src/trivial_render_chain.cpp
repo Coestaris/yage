@@ -53,54 +53,19 @@ public:
 
   void before_loop() override
   {
-    if (!shader_asset)
-    {
-      throw std::runtime_error("Shader asset is not set");
-    }
-
-    if (shader_asset->load() != yage::core::error::OK)
-    {
-      throw std::runtime_error(
-            "Failed to load shader asset " + shader_asset->get_name());
-    }
-
-    set_shader(dynamic_cast<yage::platform::graphics::gl::shader *>(
-          shader_asset->get_shader()));
+    set_shader(shader_asset->get_shader());
   }
 
-  virtual void set_shader(yage::platform::graphics::gl::shader * _shader)
+  virtual void set_shader(yage::graphics::shader * _shader)
   {
-    this->shader = _shader;
+    this->shader
+          = dynamic_cast<yage::platform::graphics::gl::shader *>(_shader);
   }
 
-  void use_shader()
+  void begin() override
   {
-    if (shader_asset->poll())
-    {
-      set_shader(dynamic_cast<yage::platform::graphics::gl::shader *>(
-            shader_asset->get_shader()));
-    }
-
-    if (shader)
-      shader->use();
-  }
-
-  void use_texture(yage::app::assets::texture * texture, GLuint unit)
-  {
-    /* Todo get rid of dynamic_cast */
-    auto * tex = dynamic_cast<yage::platform::graphics::gl::texture *>(
-          texture->get_texture());
-
-    if (texture->poll())
-    {
-      tex = dynamic_cast<yage::platform::graphics::gl::texture *>(
-            texture->get_texture());
-    }
-
-    if (tex)
-    {
-      tex->use(unit);
-    }
+    if (shader_asset->should_update())
+      set_shader(shader_asset->get_shader());
   }
 };
 
@@ -179,32 +144,26 @@ private:
   };
   // clang-format on
 
-  GLuint                       VAO, VBO, EBO;
-  yage::app::assets::texture * tex1;
-  yage::app::assets::texture * tex2;
+  GLuint VAO, VBO, EBO;
+
+  yage::platform::graphics::gl::texture * tex1;
+  yage::platform::graphics::gl::texture * tex2;
 
 public:
   triangle_pass(
         yage::app::assets::shader *  shader_asset,
-        yage::app::assets::texture * tex1,
-        yage::app::assets::texture * tex2,
+        yage::app::assets::texture * tex1_asset,
+        yage::app::assets::texture * tex2_asset,
         yage::graphics::graphics *   graphics)
   : final_pass("triangle_pass", shader_asset, graphics)
-  , tex1(tex1)
-  , tex2(tex2)
-  {
-    if (!tex1 || !tex2)
-    {
-      throw std::runtime_error("Textures are not set");
-    }
-  };
+  , tex1(dynamic_cast<yage::platform::graphics::gl::texture *>(
+          tex1_asset->get_texture()))
+  , tex2(dynamic_cast<yage::platform::graphics::gl::texture *>(
+          tex2_asset->get_texture())) {};
 
   void before_loop() override
   {
     final_pass::before_loop();
-
-    tex1->load();
-    tex2->load();
 
     ctx->glGenVertexArrays(1, &VAO);
     ctx->glGenBuffers(1, &VBO);
@@ -213,19 +172,27 @@ public:
     ctx->glBindVertexArray(VAO);
 
     ctx->glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    ctx->glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    ctx->glBufferData(
+          GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     ctx->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    ctx->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    ctx->glBufferData(
+          GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // position attribute
-    ctx->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
+    ctx->glVertexAttribPointer(
+          0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+          reinterpret_cast<void *>(0));
     ctx->glEnableVertexAttribArray(0);
     // color attribute
-    ctx->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+    ctx->glVertexAttribPointer(
+          1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+          reinterpret_cast<void *>(3 * sizeof(float)));
     ctx->glEnableVertexAttribArray(1);
     // texture coord attribute
-    ctx->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
+    ctx->glVertexAttribPointer(
+          2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+          reinterpret_cast<void *>(6 * sizeof(float)));
     ctx->glEnableVertexAttribArray(2);
 
     shader->use();
@@ -235,11 +202,13 @@ public:
 
   void begin() override
   {
-    use_texture(tex2, GL_TEXTURE0);
-    use_texture(tex1, GL_TEXTURE1);
+    final_pass::begin();
+
+    tex2->use(GL_TEXTURE0);
+    tex1->use(GL_TEXTURE1);
 
     ctx->glBindVertexArray(VAO);
-    use_shader();
+    shader->use();
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
   }
 
