@@ -19,9 +19,7 @@
 #include "core/log.hpp"
 #include "platform/graphics/gl/graphics.hpp"
 #include "platform/graphics/gl/glplatform.hpp"
-#include "platform/graphics/gl/shader_compiler.hpp"
 #include "platform/graphics/gl/shader.hpp"
-#include "texture_compiler.hpp"
 #include "texture.hpp"
 
 /* Defines ================================================================== */
@@ -145,44 +143,29 @@ void APIENTRY GLDebugMessageCallback(
 #endif
 
 /* Shared functions ========================================================= */
-yage::graphics::shader_compiler *
-yage::platform::graphics::gl::graphics::create_shader_compiler()
+yage::graphics::shader * yage::platform::graphics::gl::graphics::create_shader(
+      std::string                    name,
+      yage::graphics::asset_cacher * cacher,
+      yage::graphics::graphics *     graphics)
 {
-  return new yage::platform::graphics::gl::shader_compiler(this);
-}
-
-yage::core::error
-yage::platform::graphics::gl::graphics::destroy_shader_compiler(
-      yage::graphics::shader_compiler * compiler)
-{
-  delete compiler;
-  return yage::core::error::OK;
-}
-
-yage::graphics::shader * yage::platform::graphics::gl::graphics::create_shader()
-{
-  return new yage::platform::graphics::gl::shader(this);
+  return new yage::platform::graphics::gl::shader(
+        std::move(name), cacher, graphics);
 }
 
 yage::core::error yage::platform::graphics::gl::graphics::destroy_shader(
       yage::graphics::shader * shader)
 {
   delete shader;
-  return yage::core::OK;
-}
-
-yage::graphics::texture_compiler *
-yage::platform::graphics::gl::graphics::create_texture_compiler()
-{
-  return new yage::platform::graphics::gl::texture_compiler(this);
-}
-
-yage::core::error
-yage::platform::graphics::gl::graphics::destroy_texture_compiler(
-      yage::graphics::texture_compiler * compiler)
-{
-  delete compiler;
   return yage::core::error::OK;
+}
+
+yage::graphics::texture *
+yage::platform::graphics::gl::graphics::create_texture(
+      std::string                    name,
+      yage::graphics::asset_cacher * cacher,
+      yage::graphics::graphics *     graphics)
+{
+  return new yage::platform::graphics::gl::texture(name, cacher, graphics);
 }
 
 yage::core::error yage::platform::graphics::gl::graphics::destroy_texture(
@@ -313,10 +296,10 @@ yage::core::error yage::platform::graphics::gl::graphics::init(
   glActiveTexture           = reinterpret_cast<PFNGLACTIVETEXTUREPROC>(gl_lookup("glActiveTexture", true));
   glBindTexture             = reinterpret_cast<PFNGLBINDTEXTUREEXTPROC>(gl_lookup("glBindTexture", true));
   glGenerateMipmap = reinterpret_cast<PFNGLGENERATEMIPMAPPROC>(gl_lookup("glGenerateMipmap", true));
-glGetUniformLocation = reinterpret_cast<PFNGLGETUNIFORMLOCATIONPROC>(gl_lookup("glGetUniformLocation", true));
-glGetAttribLocation = reinterpret_cast<PFNGLGETATTRIBLOCATIONPROC>(gl_lookup("glGetAttribLocation", true));
- glUniform1i = reinterpret_cast<PFNGLUNIFORM1IPROC>(gl_lookup("glUniform1i", true));
-glUniform1f = reinterpret_cast<PFNGLUNIFORM1FPROC>(gl_lookup("glUniform1f", true));
+  glGetUniformLocation = reinterpret_cast<PFNGLGETUNIFORMLOCATIONPROC>(gl_lookup("glGetUniformLocation", true));
+  glGetAttribLocation = reinterpret_cast<PFNGLGETATTRIBLOCATIONPROC>(gl_lookup("glGetAttribLocation", true));
+  glUniform1i = reinterpret_cast<PFNGLUNIFORM1IPROC>(gl_lookup("glUniform1i", true));
+  glUniform1f = reinterpret_cast<PFNGLUNIFORM1FPROC>(gl_lookup("glUniform1f", true));
   // clang-format on
 
   glShadeModel(GL_SMOOTH); // Enable Smooth Shading
@@ -343,28 +326,5 @@ yage::core::error yage::platform::graphics::gl::graphics::flush()
 {
   glFinish();
 
-  return yage::core::error::OK;
-}
-
-yage::core::error
-yage::platform::graphics::gl::graphics::draw_line(glm::vec2 a, glm::vec2 b)
-{
-  return yage::core::error::OK;
-}
-
-yage::core::error yage::platform::graphics::gl::graphics::draw_rect(
-      glm::vec2 position, glm::vec2 dim)
-{
-  /* Draw a rectangle */
-  glBegin(GL_QUADS);                                  // Start Drawing A Quad
-  glColor3f(1.0f, 0.0f, 0.0f);                        // Set The Color To Red
-  glVertex2f(position.x, position.y);                 // Top Left
-  glColor3f(0.0f, 1.0f, 0.0f);                        // Set The Color To Green
-  glVertex2f(position.x + dim.x, position.y);         // Top Right
-  glColor3f(0.0f, 0.0f, 1.0f);                        // Set The Color To Blue
-  glVertex2f(position.x + dim.x, position.y + dim.y); // Bottom Right
-  glColor3f(1.0f, 1.0f, 0.0f);                        // Set The Color To Yellow
-  glVertex2f(position.x, position.y + dim.y);         // Bottom Left
-  glEnd(); // Finished Drawing The Quad
   return yage::core::error::OK;
 }

@@ -11,6 +11,7 @@
 /* Includes ================================================================= */
 #include "graphics/texture.hpp"
 #include "GL/gl.h"
+#include "graphics.hpp"
 
 namespace yage::platform::graphics::gl
 {
@@ -20,25 +21,27 @@ namespace yage::platform::graphics::gl
 class texture : public yage::graphics::texture
 {
 private:
-  GLuint id {};
+  GLuint                                   id = 0;
+  yage::platform::graphics::gl::graphics * ctx;
 
 public:
   ~texture() override = default;
   explicit texture(
-        yage::graphics::graphics *            graphics,
-        const yage::graphics::texture_param & parameters,
-        GLuint                                id)
-  : yage::graphics::texture(graphics, parameters)
-  , id(id)
+        std::string                    name,
+        yage::graphics::asset_cacher * cacher,
+        yage::graphics::graphics *     graphics)
+  : yage::graphics::texture(name, cacher, graphics)
+  , ctx(dynamic_cast<yage::platform::graphics::gl::graphics *>(graphics))
   {
   }
 
-  yage::core::error destroy() override;
+  yage::core::error load() override;
+  void              unload() override;
 
   inline void use(GLenum texture_unit)
   {
-    glActiveTexture(texture_unit);
-    glBindTexture(GL_TEXTURE_2D, id);
+    ctx->glActiveTexture(texture_unit);
+    ctx->glBindTexture(GL_TEXTURE_2D, id);
   }
 };
 

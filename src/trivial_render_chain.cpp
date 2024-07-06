@@ -28,43 +28,27 @@
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
+/* Make it easier to use the classes. */
+using texture = yage::platform::graphics::gl::texture;
+using shader  = yage::platform::graphics::gl::shader;
+
 /* Base class for all render passes. */
 class trivial_render_pass : public yage::graphics::render_pass
 {
-private:
-  yage::app::assets::shader * shader_asset {};
-
 protected:
-  yage::platform::graphics::gl::shader *   shader {};
+  yage::platform::graphics::gl::shader *   program {};
   yage::platform::graphics::gl::graphics * ctx;
 
 public:
   virtual ~trivial_render_pass() override = default;
   trivial_render_pass(
-        std::string                 name,
-        yage::graphics::pass_type   type,
-        yage::app::assets::shader * _shader_asset,
-        yage::graphics::graphics *  graphics)
+        std::string                name,
+        yage::graphics::pass_type  type,
+        shader *                   shader,
+        yage::graphics::graphics * graphics)
   : render_pass(std::move(name), type)
-  , shader_asset(_shader_asset)
+  , program(shader)
   , ctx(dynamic_cast<yage::platform::graphics::gl::graphics *>(graphics)) {};
-
-  void before_loop() override
-  {
-    set_shader(shader_asset->get_shader());
-  }
-
-  virtual void set_shader(yage::graphics::shader * _shader)
-  {
-    this->shader
-          = dynamic_cast<yage::platform::graphics::gl::shader *>(_shader);
-  }
-
-  void begin() override
-  {
-    if (shader_asset->should_update())
-      set_shader(shader_asset->get_shader());
-  }
 };
 
 /* Performs rendering to the framebuffer. */
@@ -72,13 +56,11 @@ class framebuffers_pass : public trivial_render_pass
 {
 protected:
   framebuffers_pass(
-        std::string                 name,
-        yage::app::assets::shader * shader_asset,
-        yage::graphics::graphics *  graphics)
+        std::string name, shader * shader, yage::graphics::graphics * graphics)
   : trivial_render_pass(
           std::move(name),
           yage::graphics::pass_type::VIRTUAL_PASS,
-          shader_asset,
+          shader,
           graphics) {};
 
   void on_object(yage::graphics::render_primitive * object) override {
@@ -94,13 +76,11 @@ class primitive_pass : public trivial_render_pass
 {
 protected:
   primitive_pass(
-        std::string                 name,
-        yage::app::assets::shader * shader_asset,
-        yage::graphics::graphics *  graphics)
+        std::string name, shader * program, yage::graphics::graphics * graphics)
   : trivial_render_pass(
           std::move(name),
           yage::graphics::pass_type::OBJECT_PASS,
-          shader_asset,
+          program,
           graphics) {};
 };
 
@@ -110,13 +90,11 @@ class final_pass : public trivial_render_pass
 {
 public:
   final_pass(
-        std::string                 name,
-        yage::app::assets::shader * shader_asset,
-        yage::graphics::graphics *  graphics)
+        std::string name, shader * program, yage::graphics::graphics * graphics)
   : trivial_render_pass(
           std::move(name),
           yage::graphics::pass_type::VIRTUAL_PASS,
-          shader_asset,
+          program,
           graphics) {};
 
   void on_object(yage::graphics::render_primitive * object) override {
@@ -149,20 +127,16 @@ private:
 
 public:
   triangle_pass(
-        yage::app::assets::shader *  shader_asset,
-        yage::app::assets::texture * tex1_asset,
-        yage::app::assets::texture * tex2_asset,
-        yage::graphics::graphics *   graphics)
-  : final_pass("triangle_pass", shader_asset, graphics)
-  , tex1(dynamic_cast<yage::platform::graphics::gl::texture *>(
-          tex1_asset->get_texture()))
-  , tex2(dynamic_cast<yage::platform::graphics::gl::texture *>(
-          tex2_asset->get_texture())) {};
+        yage::platform::graphics::gl::shader *  shader,
+        yage::platform::graphics::gl::texture * tex1,
+        yage::platform::graphics::gl::texture * tex2,
+        yage::graphics::graphics *              graphics)
+  : final_pass("triangle_pass", shader, graphics)
+  , tex1(dynamic_cast<yage::platform::graphics::gl::texture *>(tex1))
+  , tex2(dynamic_cast<yage::platform::graphics::gl::texture *>(tex2)) {};
 
   void before_loop() override
   {
-    final_pass::before_loop();
-
     ctx->glGenVertexArrays(1, &VAO);
     ctx->glGenBuffers(1, &VBO);
     ctx->glGenBuffers(1, &EBO);
@@ -193,20 +167,18 @@ public:
           reinterpret_cast<void *>(6 * sizeof(float)));
     ctx->glEnableVertexAttribArray(2);
 
-    shader->use();
-    shader->set_uniform(shader->get_uniform_location("texture1"), 0);
-    shader->set_uniform(shader->get_uniform_location("texture2"), 1);
+    program->use();
+    program->set_uniform(program->get_uniform_location("texture1"), 0);
+    program->set_uniform(program->get_uniform_location("texture2"), 1);
   }
 
   void begin() override
   {
-    final_pass::begin();
-
     tex2->use(GL_TEXTURE0);
     tex1->use(GL_TEXTURE1);
 
     ctx->glBindVertexArray(VAO);
-    shader->use();
+    program->use();
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
   }
 
@@ -220,15 +192,14 @@ public:
 /* Shared functions ========================================================= */
 std::vector<yage::graphics::render_pass *>
 yage::platform::graphics::trivial_render_chain(
-      yage::graphics::graphics *         graphics,
-      yage::app::assets::asset_factory * asset_factory)
+      yage::graphics::graphics * graphics,
+      yage::app::asset_factory * asset_factory)
 {
   std::vector<yage::graphics::render_pass *> passes = {
     new triangle_pass(
-          asset_factory->load_asset<yage::app::assets::shader>("triangle"),
-          asset_factory->load_asset<yage::app::assets::texture>("tex1"),
-          asset_factory->load_asset<yage::app::assets::texture>("tex2"),
-          graphics),
+          asset_factory->load_asset<shader>("triangle"),
+          asset_factory->load_asset<texture>("tex1"),
+          asset_factory->load_asset<texture>("tex2"), graphics),
   };
 
   return passes;

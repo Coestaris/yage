@@ -23,19 +23,25 @@ namespace yage::platform::graphics::gl
 class shader : public yage::graphics::shader
 {
 protected:
-  GLint                              id;
-  platform::graphics::gl::graphics * ctx;
+  GLint                                    id;
+  yage::platform::graphics::gl::graphics * ctx;
+
+  yage::core::error load_from_binary(const std::vector<uint8_t> & binary);
+  yage::core::error compile_binary(std::vector<uint8_t> & binary);
 
 public:
-  explicit shader(yage::graphics::graphics * graphics)
-  : yage::graphics::shader(graphics)
+  ~shader() override = default;
+  shader(
+        std::string                    name,
+        yage::graphics::asset_cacher * cacher,
+        yage::graphics::graphics *     graphics)
+  : yage::graphics::shader(name, cacher, graphics)
   , ctx(dynamic_cast<platform::graphics::gl::graphics *>(graphics))
   {
   }
-  ~shader() override = default;
 
-  yage::core::error set_binary(std::vector<uint8_t> binary) override;
-  yage::core::error destroy() override;
+  yage::core::error load() override;
+  void              unload() override;
 
   /* GL specific sfuff */
   GLint get_uniform_location(const std::string & name, bool required = true);

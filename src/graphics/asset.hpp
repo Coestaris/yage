@@ -10,8 +10,9 @@
 
 /* Includes ================================================================= */
 #include <string>
-#include <utility>
+#include <fstream>
 #include "core/error.hpp"
+#include "asset_cacher.hpp"
 
 namespace yage::graphics
 {
@@ -25,12 +26,15 @@ protected:
    * It is used to identify the asset in the asset storage. */
   std::string name;
 
+  yage::graphics::asset_cacher * cacher;
+
   bool live {};
   bool loaded {};
 
 public:
-  asset(std::string name)
+  asset(std::string name, yage::graphics::asset_cacher * cacher)
   : name(std::move(name))
+  , cacher(cacher)
   {
   }
 

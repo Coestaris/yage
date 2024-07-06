@@ -92,7 +92,7 @@ public:
 
   subrenderer(
         yage::app::asset_factory * asset_factory,
-        yage::graphics::window *           window)
+        yage::graphics::window *   window)
   : subrenderer_(asset_factory, window) {};
 };
 
@@ -145,8 +145,7 @@ int main(int argc, char * argv[])
     logging(LOG_ERROR, "Failed to find assets.pack file");
     return 1;
   }
-  yage::app::assets::pack::asset_factory asset_factory(
-        asset_path, yage::core::get_cache_dir());
+  yageapp::asset_factory asset_factory(asset_path, yage::core::get_cache_dir());
   window->set_before_close([&asset_factory]() { asset_factory.destroy(); });
 
   subrenderer            subrenderer(&asset_factory, window);

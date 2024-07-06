@@ -13,13 +13,19 @@
 #include <unordered_map>
 #include <utility>
 #include <functional>
-#include "app/asset_factory.hpp"
-#include "app/asset_cacher.hpp"
+
 #include "json/json.h"
 #include "core/util/named_thread.hpp"
 #include "core/fs.hpp"
 
-namespace yage::app::assets::pack
+#include "graphics/texture_param.hpp"
+#include "graphics/shader.hpp"
+#include "graphics/texture.hpp"
+
+#include "app/asset_factory.hpp"
+#include "graphics/asset_cacher.hpp"
+
+namespace yageapp
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -37,19 +43,16 @@ private:
   {
   private:
     using on_shader_callback  = std::function<void(
-          const std::string &,
-          const yage::graphics::shader_compiler::sources &)>;
+          const std::string &, const yage::graphics::shader::data &)>;
     using on_texture_callback = std::function<void(
-          const std::string &,
-          const yage::graphics::texture_param &,
-          const std::vector<std::string> &)>;
+          const std::string &, const yage::graphics::texture::data &)>;
 
     on_shader_callback  on_shader_cb;
     on_texture_callback on_texture_cb;
 
-    yage::graphics::shader_compiler::sources
+    yage::graphics::shader::data
     parse_shader_sources(const std::string & dir, const Json::Value & root);
-    std::pair<yage::graphics::texture_param, std::vector<std::string>>
+    yage::graphics::texture::data
     parse_texture_sources(const std::string & dir, const Json::Value & root);
 
   public:
@@ -71,7 +74,7 @@ private:
           bool                     fail_on_error = true);
   };
 
-  class asset_cacher : public yage::app::asset_cacher
+  class asset_cacher : public yage::graphics::asset_cacher
   {
   private:
     std::string cache_path {};

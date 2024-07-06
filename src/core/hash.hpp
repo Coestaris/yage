@@ -59,6 +59,11 @@ public:
     this->add(data.c_str());
   }
 
+  void add(int data)
+  {
+    this->add(&data, sizeof(data));
+  }
+
   std::string as_string() const override
   {
     std::hash<std::string> hasher;

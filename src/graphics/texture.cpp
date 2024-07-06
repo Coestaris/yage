@@ -7,7 +7,7 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "texture_compiler.hpp"
+#include "texture.hpp"
 #include "FreeImage.h"
 #include "core/log.hpp"
 
@@ -22,7 +22,7 @@ __attribute__((constructor(101))) static void init()
 }
 
 /* Shared functions ========================================================= */
-bool yage::graphics::texture_compiler::load_image(
+bool yage::graphics::texture::load_image(
       const std::string &    path,
       std::vector<uint8_t> & out_data,
       size_t &               out_w,

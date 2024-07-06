@@ -10,7 +10,6 @@
 
 /* Includes ================================================================= */
 #include "graphics/window.hpp"
-#include "graphics/shader_compiler.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/render_pass.hpp"
 #include "app/asset_factory.hpp"

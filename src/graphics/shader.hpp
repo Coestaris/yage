@@ -9,12 +9,14 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include <utility>
 #include <string>
-#include <vector>
+#include <unordered_map>
 #include <cstdint>
 
 #include "graphics/asset.hpp"
+#include "core/hash.hpp"
+#include "shader_type.hpp"
+#include "asset_cacher.hpp"
 
 namespace yage::graphics
 {
@@ -25,19 +27,73 @@ class graphics;
 
 class shader : public yage::graphics::asset
 {
+public:
+  class data
+  {
+  private:
+    /* type -> source url */
+    std::unordered_map<yage::graphics::shader_type, std::string> sources;
+
+  public:
+    std::string get_hash(const std::string& name) const
+    {
+      yage::core::fast_hasher hasher;
+      for (const auto & [type, url] : sources)
+      {
+        hasher.add(static_cast<int>(type));
+        hasher.add(url);
+      }
+
+      return "_shader" + name + "_" + hasher.as_string();
+    }
+
+    void add_source(yage::graphics::shader_type type, std::string url)
+    {
+      sources[type] = url;
+    }
+
+    bool operator==(const data & other) const
+    {
+      return sources == other.sources;
+    }
+
+    /* Implement iterator */
+    auto begin()
+    {
+      return sources.begin();
+    }
+    auto end()
+    {
+      return sources.end();
+    }
+
+    bool empty() const
+    {
+      return sources.empty();
+    }
+  };
+
 protected:
   yage::graphics::graphics * graphics;
-  std::vector<uint8_t>       binary;
+  data                       sources;
+
+  shader(
+        std::string                    name,
+        yage::graphics::asset_cacher * cacher,
+        yage::graphics::graphics *     graphics)
+  : yage::graphics::asset(std::move(name), cacher)
+  , graphics(graphics)
+  {
+  }
 
 public:
-  shader(
-        std::string                name,
-        yage::graphics::graphics * graphics,
-        std::vector<uint8_t>       compiled)
-  : asset(std::move(name))
-  , graphics(graphics)
-  , binary(std::move(compiled))
+  void set_sources(const data & _sources)
   {
+    if (!(sources == _sources))
+    {
+      sources = _sources;
+      live    = false;
+    }
   }
 };
 

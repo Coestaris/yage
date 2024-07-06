@@ -11,7 +11,6 @@
 
 #include "renderer.hpp"
 #include "core/time.hpp"
-#include "graphics/shader_compiler.hpp"
 #include "platform/graphics/platform.hpp"
 #include "app/application.hpp"
 
