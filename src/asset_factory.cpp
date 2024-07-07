@@ -16,7 +16,6 @@
 #include "core/error.hpp"
 #include "app/asset_factory.hpp"
 #include "asset_factory.hpp"
-#include "graphics/shader_type.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/texture.hpp"
 
@@ -104,6 +103,24 @@ yage::core::error yageapp::asset_factory::pack_parser::parse(
       if (on_texture_cb)
         on_texture_cb(basename, sources);
     }
+    else if (t.asString() == "model")
+    {
+      auto sources = parse_gltf_sources(dir, root);
+      if (sources.empty())
+      {
+        logging(
+              LOG_ERROR, "Failed to parse glTF sources from meta file: %s",
+              file.c_str());
+        if (fail_on_error)
+        {
+          return yage::core::INVALID_STATE;
+        }
+        continue;
+      }
+
+      if (on_gltf_cb)
+        on_gltf_cb(basename, sources);
+    }
     else
     {
       logging(
@@ -118,6 +135,22 @@ yage::core::error yageapp::asset_factory::pack_parser::parse(
   }
 
   return yage::core::error::OK;
+}
+
+yage::core::util::uri
+resolve_uri(const std::string & dir, const std::string & uri)
+{
+  if (uri.empty())
+  {
+    return "";
+  }
+
+  if (uri[0] == '/')
+  {
+    return uri;
+  }
+
+  return yage::core::join_path(dir, uri);
 }
 
 yage::graphics::texture::data
@@ -146,9 +179,9 @@ yageapp::asset_factory::pack_parser::parse_texture_sources(
         root["border_color"][2].asFloat(), root["border_color"][3].asFloat());
   sources.set_parameters(param);
 
-  for (const auto & texture : root["textures"])
+  for (const auto & uri : root["uris"])
   {
-    sources.add_source(yage::core::join_path(dir, texture.asString()));
+    sources.add_uri(resolve_uri(dir, uri.asString()));
   }
 
   return sources;
@@ -158,29 +191,72 @@ yage::graphics::shader::data
 yageapp::asset_factory::pack_parser::parse_shader_sources(
       const std::string & dir, const Json::Value & root)
 {
-  yage::graphics::shader::data sources;
-
-  const std::map<std::string, yage::graphics::shader_type> types
-        = { { "fragment", yage::graphics::shader_type::FRAGMENT_SHADER },
-            { "vertex", yage::graphics::shader_type::VERTEX_SHADER } };
-
-  for (const auto & [key, type] : types)
+  auto lang = root["language"];
+  if (lang.isNull())
   {
-    Json::Value source = root[key];
-    if (!source.isNull())
-    {
-      std::string s = yage::core::join_path(dir, source.asString());
-      /* Check if file exists */
-      if (!yage::core::file_exists(s))
-      {
-        logging(LOG_ERROR, "Shader source file not found: %s", s.c_str());
-        continue;
-      }
-
-      sources.add_source(type, s);
-    }
+    logging(LOG_ERROR, "Language is not specified in meta file");
+    return { {} };
   }
 
+  yage::graphics::shader::data sources(lang.asString());
+
+  auto shaders = root["shaders"];
+  if (shaders.isNull())
+  {
+    logging(LOG_ERROR, "Shaders are not specified in meta file");
+    return { {} };
+  }
+
+  for (const auto & shader : shaders)
+  {
+    auto type = shader["type"];
+    if (type.isNull())
+    {
+      logging(LOG_ERROR, "Type is not specified in shader");
+      continue;
+    }
+
+    auto uri = shader["uri"];
+    if (uri.isNull())
+    {
+      logging(LOG_ERROR, "Source is not specified in shader");
+      continue;
+    }
+
+    sources.add_source(type.asString(), resolve_uri(dir, uri.asString()));
+  }
+
+  return sources;
+}
+
+yage::graphics::node::data
+yageapp::asset_factory::pack_parser::parse_gltf_sources(
+      const std::string & dir, const Json::Value & root)
+{
+  auto model_type = root["model_type"];
+  if (model_type.isNull())
+  {
+    logging(LOG_ERROR, "Model type is not specified in meta file");
+    return {};
+  }
+
+  if (model_type.asString() != "GLTF")
+  {
+    logging(
+          LOG_ERROR, "Unsupported model type: %s",
+          model_type.asString().c_str());
+    return {};
+  }
+
+  yage::graphics::node::data sources;
+  auto                       uri = root["uri"];
+  if (uri.isNull())
+  {
+    logging(LOG_ERROR, "URI is not specified in meta file");
+    return {};
+  }
+
+  sources.set_uri(resolve_uri(dir, uri.asString()));
   return sources;
 }
 
@@ -207,6 +283,14 @@ yageapp::asset_factory::read_assets(yage::graphics::graphics * graphics)
   parser.on_shader([this, graphics](
                          const std::string &                  basename,
                          const yage::graphics::shader::data & sources) {
+    if (!graphics->supports_shader_language(sources.get_language()))
+    {
+      logging(
+            LOG_DEBUG, "Skipping shader: %s, unsupported language: %s",
+            basename.c_str(), sources.get_language().c_str());
+      return;
+    }
+
     auto * shader = graphics->create_shader(basename, &cacher, graphics);
     shader->set_sources(sources);
     assets[basename] = shader;
@@ -217,6 +301,13 @@ yageapp::asset_factory::read_assets(yage::graphics::graphics * graphics)
     auto * texture = graphics->create_texture(basename, &cacher, graphics);
     texture->set_sources(sources);
     assets[basename] = texture;
+  });
+  parser.on_gltf([this, graphics](
+                       const std::string &                basename,
+                       const yage::graphics::node::data & sources) {
+    auto * node = graphics->create_node(basename, &cacher, graphics);
+    node->set_sources(sources);
+    assets[basename] = node;
   });
 
   if (parser.parse(extract_path, meta_files) != yage::core::error::OK)
@@ -319,6 +410,16 @@ void yageapp::asset_factory::pack_watchdog::run()
     parser.on_shader([this,
                       p](const std::string &                  basename,
                          const yage::graphics::shader::data & sources) {
+      /* TODO: Skip unsupported languages */
+      //      if
+      //      (!factory->graphics->supports_shader_language(sources.get_language()))
+      //      {
+      //        logging(
+      //              LOG_DEBUG, "Skipping shader: %s, unsupported language:
+      //              %s", basename.c_str(), sources.get_language().c_str());
+      //        return;
+      //      }
+
       if (factory->assets.find(basename) == factory->assets.end())
       {
         logging(

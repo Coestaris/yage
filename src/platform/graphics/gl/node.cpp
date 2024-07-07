@@ -1,13 +1,16 @@
 /** ========================================================================
  *
- * @file shader_type.cpp
- * @date 06-07-2024
+ * @file node.hpp
+ * @date 07-07-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "graphics/shader_type.hpp"
+#include <cinttypes>
+#include "node.hpp"
+#include "graphics/node.hpp"
+#include "core/log.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -15,15 +18,22 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-std::string yage::graphics::to_string(yage::graphics::shader_type type)
+yage::core::error yage::platform::graphics::gl::node::load()
 {
-  switch (type)
+  logging(LOG_DEBUG, "Loading GLTF node: %s", get_name().c_str());
+
+  if (!load_gltf(sources.get_uri()))
   {
-    case yage::graphics::VERTEX_SHADER:
-      return "VERTEX_SHADER";
-    case yage::graphics::FRAGMENT_SHADER:
-      return "FRAGMENT_SHADER";
-    default:
-      return "UNKNOWN_SHADER_TYPE";
+    logging(LOG_ERROR, "Failed to load GLTF node: %s", get_name().c_str());
+    return yage::core::error::EXTERNAL_API_ERROR;
   }
+
+  live   = true;
+  loaded = true;
+
+  return yage::core::error::OK;
+}
+
+void yage::platform::graphics::gl::node::unload()
+{
 }

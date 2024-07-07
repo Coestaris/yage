@@ -81,7 +81,7 @@ yage::core::error yage::platform::graphics::gl::shader::load_from_binary(
     return yage::core::error::EXTERNAL_API_ERROR;
   }
 
-  live = true;
+  live   = true;
   loaded = true;
 
   return yage::core::error::OK;
@@ -129,37 +129,32 @@ yage::core::error yage::platform::graphics::gl::shader::compile_binary(
 
   auto program = ctx->glCreateProgram();
 
-  for (auto & [type, url] : sources)
+  for (auto & [type, uri] : sources)
   {
     /* Load source */
-    std::string source;
-    std::ifstream file(url);
-        if (!file.is_open())
-        {
-          logging(LOG_ERROR, "Failed to open file: %s", url.c_str());
-          return yage::core::error::FILE_NOT_FOUND;
-        }
-
-    file.seekg(0, std::ios::end);
-    source.resize(file.tellg());
-    file.seekg(0, std::ios::beg);
-
-    file.read(reinterpret_cast<char *>(source.data()), source.size());
-    file.close();
-
-    //    logging(LOG_DEBUG, "Compiling shader of type %d", type);
-    GLuint gl_type;
-    switch (type)
+    std::vector<uint8_t> source;
+    uri.read(source);
+    if (source.empty())
     {
-      case yage::graphics::shader_type::VERTEX_SHADER:
-        gl_type = GL_VERTEX_SHADER;
-        break;
-      case yage::graphics::shader_type::FRAGMENT_SHADER:
-        gl_type = GL_FRAGMENT_SHADER;
-        break;
-      default:
-        logging(LOG_ERROR, "Unknown shader type %d", type);
-        return {};
+      logging(
+            LOG_ERROR, "Failed to read shader source: %s",
+            uri.get_uri().c_str());
+      return yage::core::error::EXTERNAL_API_ERROR;
+    }
+
+    GLuint gl_type;
+    if (type == "VERTEX")
+    {
+      gl_type = GL_VERTEX_SHADER;
+    }
+    else if (type == "FRAGMENT")
+    {
+      gl_type = GL_FRAGMENT_SHADER;
+    }
+    else
+    {
+      logging(LOG_ERROR, "Unknown shader type %s", type.c_str());
+      return yage::core::error::INVALID_ARGUMENT;
     }
 
     GLuint shader = ctx->glCreateShader(gl_type);
@@ -169,14 +164,13 @@ yage::core::error yage::platform::graphics::gl::shader::compile_binary(
       return yage::core::error::EXTERNAL_API_ERROR;
     }
 
-    const char * c_source = source.c_str();
-    ctx->glShaderSource(shader, 1, &c_source, nullptr);
+    const char * c_source = reinterpret_cast<const char *>(source.data());
+    GLint        length   = source.size();
+    ctx->glShaderSource(shader, 1, &c_source, &length);
     ctx->glCompileShader(shader);
 
     GLint status;
     ctx->glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-
-    GLint length;
     ctx->glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
     std::string log;
     log.resize(length);
@@ -207,9 +201,7 @@ yage::core::error yage::platform::graphics::gl::shader::compile_binary(
 
     if (status == GL_FALSE)
     {
-      logging(
-            LOG_ERROR, "Failed to compile shader of type %s",
-            yage::graphics::to_string(type).c_str());
+      logging(LOG_ERROR, "Failed to compile shader of type %s", type.c_str());
       return yage::core::error::EXTERNAL_API_ERROR;
     }
 

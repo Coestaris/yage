@@ -20,6 +20,7 @@ namespace yage::graphics
 /* Types ==================================================================== */
 class shader;
 class texture;
+class node;
 class asset_cacher;
 
 class graphics
@@ -35,6 +36,13 @@ public:
         = 0;
   virtual yage::core::error destroy_shader(yage::graphics::shader * shader) = 0;
 
+  virtual yage::graphics::node * create_node(
+        std::string                    name,
+        yage::graphics::asset_cacher * cacher,
+        yage::graphics::graphics *     graphics)
+        = 0;
+  virtual yage::core::error destroy_node(yage::graphics::node * node) = 0;
+
   virtual yage::graphics::texture * create_texture(
         std::string                    name,
         yage::graphics::asset_cacher * cacher,
@@ -42,6 +50,8 @@ public:
         = 0;
   virtual yage::core::error destroy_texture(yage::graphics::texture * texture)
         = 0;
+
+  virtual bool supports_shader_language(std::string language) = 0;
 };
 
 /* Variables ================================================================ */

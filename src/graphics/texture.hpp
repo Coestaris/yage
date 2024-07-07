@@ -15,6 +15,7 @@
 
 #include "graphics/asset.hpp"
 #include "graphics/texture_param.hpp"
+#include "core/util/uri.hpp"
 
 namespace yage::graphics
 {
@@ -29,13 +30,13 @@ public:
   class data
   {
   private:
-    std::vector<std::string> urls;
-    texture_param            parameters {};
+    std::vector<yage::core::util::uri> uris {};
+    texture_param                      parameters {};
 
   public:
-    void add_source(std::string _url)
+    void add_uri(yage::core::util::uri uri)
     {
-      urls.push_back(_url);
+      uris.push_back(uri);
     }
 
     void set_parameters(const texture_param & _parameters)
@@ -45,17 +46,17 @@ public:
 
     bool operator==(const data & other) const
     {
-      return urls == other.urls && parameters == other.parameters;
+      return uris == other.uris && parameters == other.parameters;
     }
 
     bool empty() const
     {
-      return urls.empty();
+      return uris.empty();
     }
 
-    std::vector<std::string> get_urls() const
+    std::vector<yage::core::util::uri> get_uris() const
     {
-      return urls;
+      return uris;
     }
 
     texture_param get_parameters() const
@@ -68,10 +69,10 @@ protected:
   /* little helper to load image,
    * so backends do not reinvent the wheel */
   static bool load_image(
-        const std::string &    path,
-        std::vector<uint8_t> & out_data,
-        size_t &               out_w,
-        size_t &               out_h);
+        const yage::core::util::uri & uri,
+        std::vector<uint8_t> &        out_data,
+        size_t &                      out_w,
+        size_t &                      out_h);
 
   yage::graphics::graphics * graphics;
   data                       sources;

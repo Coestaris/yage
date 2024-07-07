@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file texture_compiler.cpp
+ * @file texture.cpp
  * @date 26-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
@@ -23,18 +23,35 @@ __attribute__((constructor(101))) static void init()
 
 /* Shared functions ========================================================= */
 bool yage::graphics::texture::load_image(
-      const std::string &    path,
-      std::vector<uint8_t> & out_data,
-      size_t &               out_w,
-      size_t &               out_h)
+      const yage::core::util::uri & uri,
+      std::vector<uint8_t> &        out_data,
+      size_t &                      out_w,
+      size_t &                      out_h)
 {
   FreeImage_SetOutputMessage([](FREE_IMAGE_FORMAT, const char * message) {
     logging(LOG_ERROR, "FreeImage: %s", message);
   });
-  FIBITMAP * bitmap = FreeImage_Load(
-        FreeImage_GetFIFFromFilename(path.c_str()), path.c_str());
+
+  FreeImage_GetFIFFromMime(uri.get_mime().c_str());
+
+  std::vector<uint8_t> image_data;
+  uri.read(image_data);
+  if (image_data.empty())
+  {
+    logging(
+          LOG_ERROR, "Failed to read image data from URI: %s",
+          uri.get_uri().c_str());
+    return false;
+  }
+
+  FIMEMORY * data = FreeImage_OpenMemory(image_data.data(), image_data.size());
+  FIBITMAP * bitmap = FreeImage_LoadFromMemory(
+        FreeImage_GetFIFFromMime(uri.get_mime().c_str()), data);
+  FreeImage_CloseMemory(data);
+
   if (!bitmap)
   {
+    logging(LOG_ERROR, "Failed to parse image data: %s", uri.get_uri().c_str());
     return false;
   }
 
@@ -50,7 +67,7 @@ bool yage::graphics::texture::load_image(
       RGBQUAD color;
       FreeImage_GetPixelColor(bitmap, x, y, &color);
 
-      out_data[4 * (y * out_w + x) + 0]     = color.rgbRed;
+      out_data[4 * (y * out_w + x) + 0] = color.rgbRed;
       out_data[4 * (y * out_w + x) + 1] = color.rgbGreen;
       out_data[4 * (y * out_w + x) + 2] = color.rgbBlue;
       out_data[4 * (y * out_w + x) + 3] = color.rgbReserved;

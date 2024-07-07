@@ -15,6 +15,9 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+from abc import abstractmethod
+from typing import Dict, List
+
 from watchdog.observers import Observer
 import argparse
 
@@ -64,12 +67,184 @@ class PackHandler:
         self.output = output
         self.no_compress = no_compress
 
-    # Files to copy to assets.pack, without any processing
-    DIRECT_EXTENSIONS = [".fsh", ".vsh", ".meta"]
-    # Image files are processed differently: we need to create a
-    #   .meta file for each image (if it doesn't exist) and write
-    #   default values there
-    IMAGE_EXTENSIONS = [".png", ".jpeg", ".jpg"]
+    class ExtensionProcessor:
+        def __init__(self, extensions: list):
+            self.extensions = extensions
+
+        def select_files(self, dir: str) -> list:
+            files = []
+            for ext in self.extensions:
+                files.extend(glob.glob(os.path.join(dir, f"*{ext}")))
+
+            return files
+
+        @abstractmethod
+        def process(self, dst_dir: str, work_dir: str, selected: any) -> bool:
+            raise NotImplementedError
+
+    class GroupExtensionProcessor(ExtensionProcessor):
+        def select_files(self, dir: str) -> List[List[str]]:
+            # Group shader files by basename
+            files = {}
+            for ext in self.extensions:
+                for file in glob.glob(os.path.join(dir, f"*{ext}")):
+                    basename = os.path.splitext(os.path.basename(file))[0]
+                    if basename not in files:
+                        files[basename] = []
+                    files[basename].append(file)
+
+            # Remove groups, that don't have .gltf or .glb file
+            exts_to_remove = self.extensions.copy()
+            exts_to_remove.remove(".meta")
+
+            files = {k: v for k, v in files.items() if
+                     any([f.endswith(ext) for f in v for ext in
+                          exts_to_remove])}
+
+            # Convert to a nested list
+            files = [v for v in files.values()]
+
+            return files
+
+    class JustCopyProcessor(ExtensionProcessor):
+        def __init__(self, extensions: list):
+            super().__init__(extensions)
+
+        def process(self, dst_dir: str, work_dir: str, file: str) -> bool:
+            fast_copy(file, dst_dir)
+            return True
+
+    class ShaderProcessor(GroupExtensionProcessor):
+        def __init__(self):
+            super().__init__([".fsh", ".vsh", ".meta"])
+
+        def process(self, dst_dir: str, work_dir: str, group: List[str]) -> bool:
+            # Has meta file ?
+            meta = None
+            fsh = None
+            vsh = None
+            for file in group:
+                if file.endswith(".meta"):
+                    meta = file
+                elif file.endswith(".fsh"):
+                    fsh = file
+                elif file.endswith(".vsh"):
+                    vsh = file
+
+            basename = os.path.basename(file)
+            basename = os.path.splitext(basename)[0]
+            if not meta:
+                with open(os.path.join(dst_dir, f"{basename}.meta"), "w") as meta:
+                    meta_content = {
+                        "type": "shader",
+                        "language": "GLSL",
+                        "shaders": []
+                    }
+                    shaders = []
+                    if fsh:
+                        shaders.append({"type": "FRAGMENT", "uri": os.path.basename(fsh)})
+                    if vsh:
+                        shaders.append({"type": "VERTEX", "uri": os.path.basename(vsh)})
+                    meta_content["shaders"] = shaders
+
+                    meta.write(json.dumps(meta_content))
+            else:
+                fast_copy(meta, dst_dir)
+
+            if fsh:
+                fast_copy(fsh, dst_dir)
+            if vsh:
+                fast_copy(vsh, dst_dir)
+
+            return True
+
+    class ImageProcessor(GroupExtensionProcessor):
+        def __init__(self):
+            super().__init__([".png", ".jpeg", ".jpg", ".bmp", ".meta"])
+
+        def process(self, dst_dir: str, work_dir: str, file: List[str]) -> bool:
+            meta = None
+            image = None
+            for f in file:
+                if f.endswith(".meta"):
+                    meta = f
+                else:
+                    if image:
+                        logging.warning(f"File {f} has the same basename as {image}")
+                    image = f
+
+            basename = os.path.basename(file[0])
+            basename = os.path.splitext(basename)[0]
+            if not meta:
+                with open(os.path.join(dst_dir, f"{basename}.meta"), "w") as meta:
+                    meta_content = {
+                        "type": "texture",
+                        "tex_type": "TEXTURE_2D",
+                        "format": "RGBA",
+                        "border_color": [0, 0, 0, 0],
+                        "min_filter": "LINEAR",
+                        "mag_filter": "LINEAR",
+                        "wrap_s": "CLAMP_TO_EDGE",
+                        "wrap_t": "CLAMP_TO_EDGE",
+                        "wrap_r": "CLAMP_TO_EDGE",
+                        "uris": [os.path.basename(image)]
+                    }
+                    meta.write(json.dumps(meta_content))
+            else:
+                fast_copy(meta, dst_dir)
+
+            fast_copy(image, dst_dir)
+            return True
+
+    class GLTFProcessor(GroupExtensionProcessor):
+        def __init__(self):
+            super().__init__([".gltf", ".glb", ".meta"])
+
+        def process(self, dst_dir: str, work_dir: str, group: List[str]) -> bool:
+            meta = None
+            gltf = None
+            glb = None
+            for file in group:
+                if file.endswith(".meta"):
+                    meta = file
+                elif file.endswith(".gltf"):
+                    gltf = file
+                elif file.endswith(".glb"):
+                    glb = file
+
+            basename = os.path.basename(file)
+            basename = os.path.splitext(basename)[0]
+            if not meta:
+                with open(os.path.join(dst_dir, f"{basename}.meta"), "w") as meta:
+                    meta_content = {
+                        "type": "model",
+                    }
+                    if gltf:
+                        meta_content["model_type"] = "GLTF"
+                        meta_content["uri"] = os.path.basename(gltf)
+                    if glb:
+                        meta_content["model_type"] = "GLB"
+                        meta_content["uri"] = os.path.basename(glb)
+
+                    meta.write(json.dumps(meta_content))
+            else:
+                fast_copy(meta, dst_dir)
+
+            if gltf:
+                fast_copy(gltf, dst_dir)
+            if glb:
+                fast_copy(glb, dst_dir)
+
+            return True
+
+    PROCESSORS = [
+        # We don't know what these binary files are, so copy them
+        JustCopyProcessor([".bin"]),
+
+        ShaderProcessor(),
+        ImageProcessor(),
+        GLTFProcessor()
+    ]
 
     def pack(self):
         logging.debug(f"[0] Start packing {self.dir} to {self.output}")
@@ -81,41 +256,13 @@ class PackHandler:
             shutil.rmtree(out_temp_dir)
         os.makedirs(out_temp_dir)
 
-        logging.debug(f"[1] Processing direct extensions: {self.DIRECT_EXTENSIONS}")
-        for ext in self.DIRECT_EXTENSIONS:
-            for file in glob.glob(os.path.join(self.dir, "*" + ext)):
-                logging.info(f"Adding %s to assets.pack", file)
-                fast_copy(file, out_temp_dir)
-
-        logging.debug(f"[2] Processing image extensions: {self.IMAGE_EXTENSIONS}")
-        for ext in self.IMAGE_EXTENSIONS:
-            for file in glob.glob(os.path.join(self.dir, "*" + ext)):
-                basename = os.path.basename(file)
-                # Get rid of the extension
-                basename = os.path.splitext(basename)[0]
-
-                # If .meta file not exists, create it
-                metafile = os.path.join(self.dir, f"{basename}.meta")
-                if not os.path.exists(metafile):
-                    with open(os.path.join(out_temp_dir, f"{basename}.meta"), "w") as meta:
-                        meta_content = {
-                            "type": "texture",
-                            "tex_type": "TEXTURE_2D",
-                            "format": "RGBA",
-                            "border_color": [0, 0, 0, 0],
-                            "min_filter": "LINEAR",
-                            "mag_filter": "LINEAR",
-                            "wrap_s": "CLAMP_TO_EDGE",
-                            "wrap_t": "CLAMP_TO_EDGE",
-                            "wrap_r": "CLAMP_TO_EDGE",
-                            "textures": [os.path.basename(file)]
-                        }
-                        meta.write(json.dumps(meta_content))
-                else:
-                    fast_copy(metafile, out_temp_dir)
-
-                logging.debug(f"Adding %s to assets.pack", file)
-                fast_copy(file, out_temp_dir)
+        for processor in self.PROCESSORS:
+            selected = processor.select_files(self.dir)
+            for something in selected:
+                logging.debug(f"Processing {something}")
+                if not processor.process(out_temp_dir, self.dir, something):
+                    logging.error(f"Failed to process {something}")
+                    return
 
         logging.info(f"Packing {out_temp_dir} to {self.output}")
 

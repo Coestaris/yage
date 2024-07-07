@@ -10,7 +10,7 @@
 
 /* Includes ================================================================= */
 #include <string>
-#include "graphics/render_primitive.hpp"
+#include "graphics/node.hpp"
 
 namespace yage::graphics
 {
@@ -38,7 +38,7 @@ public:
   virtual void before_loop() = 0;
   virtual void end()   = 0;
   virtual void begin() = 0;
-  virtual void on_object(yage::graphics::render_primitive * object) = 0;
+  virtual void on_object(yage::graphics::node * object) = 0;
 
   virtual void set_name(std::string _name) { this->name = _name; }
   virtual std::string get_name() { return this->name; }

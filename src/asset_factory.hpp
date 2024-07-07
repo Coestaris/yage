@@ -24,6 +24,7 @@
 
 #include "app/asset_factory.hpp"
 #include "graphics/asset_cacher.hpp"
+#include "graphics/node.hpp"
 
 namespace yageapp
 {
@@ -46,14 +47,19 @@ private:
           const std::string &, const yage::graphics::shader::data &)>;
     using on_texture_callback = std::function<void(
           const std::string &, const yage::graphics::texture::data &)>;
+    using on_gltf_callback    = std::function<void(
+          const std::string &, const yage::graphics::node::data &)>;
 
     on_shader_callback  on_shader_cb;
     on_texture_callback on_texture_cb;
+    on_gltf_callback    on_gltf_cb;
 
     yage::graphics::shader::data
     parse_shader_sources(const std::string & dir, const Json::Value & root);
     yage::graphics::texture::data
     parse_texture_sources(const std::string & dir, const Json::Value & root);
+    yage::graphics::node::data
+    parse_gltf_sources(const std::string & dir, const Json::Value & root);
 
   public:
     pack_parser * on_shader(on_shader_callback cb)
@@ -65,6 +71,12 @@ private:
     pack_parser * on_texture(on_texture_callback cb)
     {
       on_texture_cb = std::move(cb);
+      return this;
+    }
+
+    pack_parser * on_gltf(on_gltf_callback cb)
+    {
+      on_gltf_cb = std::move(cb);
       return this;
     }
 

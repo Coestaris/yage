@@ -12,11 +12,12 @@
 #include <string>
 #include <unordered_map>
 #include <cstdint>
+#include <utility>
 
 #include "graphics/asset.hpp"
 #include "core/hash.hpp"
-#include "shader_type.hpp"
 #include "asset_cacher.hpp"
+#include "core/util/uri.hpp"
 
 namespace yage::graphics
 {
@@ -31,23 +32,31 @@ public:
   class data
   {
   private:
+    std::string language;
+
     /* type -> source url */
-    std::unordered_map<yage::graphics::shader_type, std::string> sources;
+    std::unordered_map<std::string, yage::core::util::uri> sources;
 
   public:
-    std::string get_hash(const std::string& name) const
+    data() = default;
+    data(std::string language)
+    : language(std::move(language))
+    {
+    }
+
+    std::string get_hash(const std::string & name) const
     {
       yage::core::fast_hasher hasher;
-      for (const auto & [type, url] : sources)
+      for (const auto & [type, uri] : sources)
       {
-        hasher.add(static_cast<int>(type));
-        hasher.add(url);
+        hasher.add(type);
+        hasher.add(uri.get_uri());
       }
 
       return "_shader" + name + "_" + hasher.as_string();
     }
 
-    void add_source(yage::graphics::shader_type type, std::string url)
+    void add_source(std::string type, const yage::core::util::uri & url)
     {
       sources[type] = url;
     }
@@ -70,6 +79,11 @@ public:
     bool empty() const
     {
       return sources.empty();
+    }
+
+    std::string get_language() const
+    {
+      return language;
     }
   };
 

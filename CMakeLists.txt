@@ -50,6 +50,7 @@ include(cmake/thirdparty/elzip.cmake)
 include(cmake/thirdparty/free_image.cmake)
 include(cmake/thirdparty/glm.cmake)
 include(cmake/thirdparty/jsoncpp.cmake)
+include(cmake/thirdparty/fastgltf.cmake)
 
 # Setup compiler
 set(CMAKE_CXX_STANDARD 17)

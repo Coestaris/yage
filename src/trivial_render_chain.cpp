@@ -18,6 +18,7 @@
 #include "platform/graphics/platform.hpp"
 #include "platform/graphics/gl/shader.hpp"
 #include "platform/graphics/gl/texture.hpp"
+#include "platform/graphics/gl/node.hpp"
 
 #if !defined(YAGE_PLATFORM_X11) && !defined(YAGE_PLATFORM_WIN_GL)              \
       && !defined(YAGE_PLATFORM_WAYLAND)
@@ -29,15 +30,17 @@
 /* Macros =================================================================== */
 /* Types ==================================================================== */
 /* Make it easier to use the classes. */
-using texture = yage::platform::graphics::gl::texture;
-using shader  = yage::platform::graphics::gl::shader;
+using graphics = yage::platform::graphics::gl::graphics;
+using texture  = yage::platform::graphics::gl::texture;
+using shader   = yage::platform::graphics::gl::shader;
+using node     = yage::platform::graphics::gl::node;
 
 /* Base class for all render passes. */
 class trivial_render_pass : public yage::graphics::render_pass
 {
 protected:
-  yage::platform::graphics::gl::shader *   program {};
-  yage::platform::graphics::gl::graphics * ctx;
+  shader *   program {};
+  graphics * ctx;
 
 public:
   virtual ~trivial_render_pass() override = default;
@@ -48,7 +51,7 @@ public:
         yage::graphics::graphics * graphics)
   : render_pass(std::move(name), type)
   , program(shader)
-  , ctx(dynamic_cast<yage::platform::graphics::gl::graphics *>(graphics)) {};
+  , ctx(dynamic_cast<::graphics *>(graphics)) {};
 };
 
 /* Performs rendering to the framebuffer. */
@@ -63,7 +66,7 @@ protected:
           shader,
           graphics) {};
 
-  void on_object(yage::graphics::render_primitive * object) override {
+  void on_object(yage::graphics::node * object) override {
     /* Has no sense for current pass. */
   };
 };
@@ -97,7 +100,7 @@ public:
           program,
           graphics) {};
 
-  void on_object(yage::graphics::render_primitive * object) override {
+  void on_object(yage::graphics::node * object) override {
     /* Has no sense for current pass. */
   };
 };
@@ -122,18 +125,22 @@ private:
 
   GLuint VAO, VBO, EBO;
 
-  yage::platform::graphics::gl::texture * tex1;
-  yage::platform::graphics::gl::texture * tex2;
+  texture * tex1;
+  texture * tex2;
+
+  yage::platform::graphics::gl::node * box;
 
 public:
   triangle_pass(
-        yage::platform::graphics::gl::shader *  shader,
-        yage::platform::graphics::gl::texture * tex1,
-        yage::platform::graphics::gl::texture * tex2,
-        yage::graphics::graphics *              graphics)
+        shader *                             shader,
+        texture *                            tex1,
+        texture *                            tex2,
+        yage::platform::graphics::gl::node * box,
+        yage::graphics::graphics *           graphics)
   : final_pass("triangle_pass", shader, graphics)
-  , tex1(dynamic_cast<yage::platform::graphics::gl::texture *>(tex1))
-  , tex2(dynamic_cast<yage::platform::graphics::gl::texture *>(tex2)) {};
+  , tex1(tex1)
+  , tex2(tex2)
+  , box(box) {};
 
   void before_loop() override
   {
@@ -195,12 +202,11 @@ yage::platform::graphics::trivial_render_chain(
       yage::graphics::graphics * graphics,
       yage::app::asset_factory * asset_factory)
 {
-  std::vector<yage::graphics::render_pass *> passes = {
-    new triangle_pass(
-          asset_factory->load_asset<shader>("triangle"),
-          asset_factory->load_asset<texture>("tex1"),
-          asset_factory->load_asset<texture>("tex2"), graphics),
-  };
+  std::vector<yage::graphics::render_pass *> passes = { new triangle_pass(
+        asset_factory->load_asset<shader>("triangle"),
+        asset_factory->load_asset<texture>("tex1"),
+        asset_factory->load_asset<texture>("tex2"),
+        asset_factory->load_asset<node>("box"), graphics) };
 
   return passes;
 }

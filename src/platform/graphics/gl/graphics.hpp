@@ -74,14 +74,22 @@ public:
         yage::graphics::graphics *     graphics) override;
   yage::core::error destroy_shader(yage::graphics::shader * shader) override;
 
+  yage::graphics::node * create_node(
+        std::string                    name,
+        yage::graphics::asset_cacher * cacher,
+        yage::graphics::graphics *     graphics) override;
+  yage::core::error destroy_node(yage::graphics::node * node) override;
+
   yage::graphics::texture * create_texture(
         std::string                    name,
         yage::graphics::asset_cacher * cacher,
-        yage::graphics::graphics *     graphics)
-        override;
-  yage::core::error destroy_texture(yage::graphics::texture * texture)
-        override;
+        yage::graphics::graphics *     graphics) override;
+  yage::core::error destroy_texture(yage::graphics::texture * texture) override;
 
+  bool supports_shader_language(std::string language) override
+  {
+    return language == "GLSL";
+  }
 
   yage::core::error clear() override;
   yage::core::error flush() override;

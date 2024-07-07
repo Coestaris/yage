@@ -1,7 +1,7 @@
 /** ========================================================================
  *
- * @file shader_type.hpp
- * @date 16-06-2024
+ * @file node.hpp
+ * @date 07-07-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
  *  ========================================================================= */
@@ -9,22 +9,35 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include <string>
+#include "graphics/node.hpp"
+#include "GL/gl.h"
+#include "graphics.hpp"
 
-namespace yage::graphics
+namespace yage::platform::graphics::gl
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-enum shader_type
+class node : public yage::graphics::node
 {
-  VERTEX_SHADER,
-  FRAGMENT_SHADER,
+private:
+  yage::platform::graphics::gl::graphics * ctx;
 
-  SHADER_TYPE_COUNT
+public:
+  ~node() override = default;
+  explicit node(
+        std::string                    name,
+        yage::graphics::asset_cacher * cacher,
+        yage::graphics::graphics *     graphics)
+  : yage::graphics::node(std::move(name), cacher, graphics)
+  , ctx(dynamic_cast<yage::platform::graphics::gl::graphics *>(graphics))
+  {
+  }
+
+  yage::core::error load() override;
+  void              unload() override;
 };
+
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-std::string to_string(shader_type type);
-
 }

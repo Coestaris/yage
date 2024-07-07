@@ -87,7 +87,7 @@ public:
     application *                                   app;
     yage::app::asset_factory *                      asset_factory;
     yage::graphics::window *                        window;
-    std::vector<yage::graphics::render_primitive *> objects;
+    std::vector<yage::graphics::node *> objects;
 
     friend class yage::app::threads::renderer;
     friend class application;

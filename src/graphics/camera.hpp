@@ -1,7 +1,7 @@
 /** ========================================================================
  *
- * @file render_primitive.hpp
- * @date 28-06-2024
+ * @file camera.hpp
+ * @date 07-07-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
  *  ========================================================================= */
@@ -9,28 +9,23 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include "glm/mat4x4.hpp"
 
 namespace yage::graphics
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class material
+class Camera
 {
 public:
-  material()          = default;
-  virtual ~material() = default;
-};
+  glm::vec3 position;
+  float     pitch { 0.f };
+  float     yaw { 0.f };
 
-class render_primitive
-{
-public:
-  render_primitive()          = default;
-  virtual ~render_primitive() = default;
+  glm::mat4 getViewMatrix();
+  glm::mat4 getRotationMatrix();
 
-  glm::mat4  transform;
-  material * mat;
+  void update();
 };
 
 /* Variables ================================================================ */

@@ -3,7 +3,6 @@
  * @file texture.cpp
  * @date 25-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
- * @copyright Ajax Systems
  *
  *  ========================================================================= */
 
@@ -30,25 +29,26 @@ yage::core::error yage::platform::graphics::gl::texture::load()
   logging(LOG_DEBUG, "Loading texture: %s", name.c_str());
 
   auto parameters = sources.get_parameters();
-  auto urls       = sources.get_urls();
+  auto uris       = sources.get_uris();
 
   switch (parameters.type)
   {
     case yage::graphics::tex_type::TEXTURE_2D:
     {
-      if (urls.size() != 1)
+      if (uris.size() != 1)
       {
         logging(
               LOG_ERROR, "Invalid number of images for 2D texture: %" PRIuPTR,
-              urls.size());
+              uris.size());
         return yage::core::INVALID_ARGUMENT;
       }
 
       std::vector<uint8_t> image_data;
       size_t               image_width, image_height;
-      if (!load_image(urls[0], image_data, image_width, image_height))
+      if (!load_image(uris[0], image_data, image_width, image_height))
       {
-        logging(LOG_ERROR, "Failed to load image: %s", urls[0].c_str());
+        logging(
+              LOG_ERROR, "Cannot load pixels of image %s", name.c_str());
         return yage::core::INVALID_ARGUMENT;
       }
 
@@ -98,8 +98,8 @@ yage::core::error yage::platform::graphics::gl::texture::load()
             GL_RGBA, GL_UNSIGNED_BYTE, image_data.data());
       ctx->glGenerateMipmap(GL_TEXTURE_2D);
 
-      id = texture;
-      live = true;
+      id     = texture;
+      live   = true;
       loaded = true;
     }
     break;

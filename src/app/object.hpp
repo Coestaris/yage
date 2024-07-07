@@ -11,7 +11,7 @@
 /* Includes ================================================================= */
 #include "core/time.hpp"
 #include "glm/vec2.hpp"
-#include "graphics/render_primitive.hpp"
+#include "graphics/node.hpp"
 
 namespace yage::app
 {
@@ -39,7 +39,7 @@ public:
   struct renderer_data
   {
     bool                               visible;
-    yage::graphics::render_primitive * primitive;
+    yage::graphics::node * primitive;
 
   } data = { false, nullptr };
 

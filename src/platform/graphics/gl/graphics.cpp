@@ -20,7 +20,8 @@
 #include "platform/graphics/gl/graphics.hpp"
 #include "platform/graphics/gl/glplatform.hpp"
 #include "platform/graphics/gl/shader.hpp"
-#include "texture.hpp"
+#include "platform/graphics/gl/texture.hpp"
+#include "platform/graphics/gl/node.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -326,5 +327,20 @@ yage::core::error yage::platform::graphics::gl::graphics::flush()
 {
   glFinish();
 
+  return yage::core::error::OK;
+}
+yage::graphics::node * yage::platform::graphics::gl::graphics::create_node(
+      std::string                    name,
+      yage::graphics::asset_cacher * cacher,
+      yage::graphics::graphics *     graphics)
+{
+  return new yage::platform::graphics::gl::node(
+        std::move(name), cacher, graphics);
+}
+
+yage::core::error yage::platform::graphics::gl::graphics::destroy_node(
+      yage::graphics::node * node)
+{
+  delete node;
   return yage::core::error::OK;
 }

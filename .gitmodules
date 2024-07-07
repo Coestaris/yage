@@ -14,3 +14,6 @@
 	path = thirdparty/glm
 	url = https://github.com/g-truc/glm.git
 	commit = 33b4a621a697a305bc3a7610d290677b96beb181
+[submodule "thirdparty/fastgltf"]
+	path = thirdparty/fastgltf
+	url = https://github.com/spnda/fastgltf.git
