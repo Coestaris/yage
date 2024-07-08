@@ -92,7 +92,7 @@ public:
         yc::graphics::graphics * graphics) override;
   yc::error destroy_texture(yc::graphics::texture * texture) override;
 
-  bool supports_shader_language(std::string language) override
+  bool supports_shader_language(const std::string & language) override
   {
     return language == "GLSL";
   }

@@ -50,7 +50,7 @@ public:
   virtual yc::error destroy_node(yc::graphics::node * node)          = 0;
   virtual yc::error destroy_texture(yc::graphics::texture * texture) = 0;
 
-  virtual bool supports_shader_language(std::string language) = 0;
+  virtual bool supports_shader_language(const std::string & language) = 0;
 };
 
 /* Variables ================================================================ */

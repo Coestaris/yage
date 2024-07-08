@@ -57,7 +57,7 @@ public:
     delete thread;
   }
 
-  const std::string & get_name() const
+  std::string get_name() const
   {
     return name;
   }

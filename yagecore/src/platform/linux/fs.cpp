@@ -51,7 +51,7 @@ bool yc::is_file(const std::string & path)
   return S_ISREG(statbuf.st_mode);
 }
 
-std::string yc::absolute_path(std::string path)
+std::string yc::absolute_path(const std::string & path)
 {
   char * resolved_path = realpath(path.c_str(), nullptr);
   if (resolved_path == nullptr)
@@ -160,7 +160,7 @@ yc::list_files(const std::string & path, const std::string & pattern)
   return files;
 }
 
-std::string yc::basename(std::string path, bool with_extension)
+std::string yc::basename(const std::string & path, bool with_extension)
 {
   size_t pos = path.find_last_of('/');
   if (pos == std::string::npos)
@@ -193,7 +193,7 @@ time_t yc::file_mtime(const std::string & path)
   return statbuf.st_mtime;
 }
 
-std::string yc::basedir(std::string path)
+std::string yc::basedir(const std::string & path)
 {
   size_t pos = path.find_last_of('/');
   if (pos == std::string::npos)
@@ -204,7 +204,7 @@ std::string yc::basedir(std::string path)
   return path.substr(0, pos);
 }
 
-std::string yc::join_path(std::string path1, std::string path2)
+std::string yc::join_path(const std::string & path1, const std::string & path2)
 {
   if (path1.empty())
   {

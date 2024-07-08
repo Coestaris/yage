@@ -137,7 +137,7 @@ private:
   }
 
 public:
-  explicit file_profiler(size_t max_records, std::string filename)
+  explicit file_profiler(size_t max_records, const std::string& filename)
   {
     this->max_records = max_records;
     records           = new record[max_records];

@@ -11,6 +11,7 @@
 /* Includes ================================================================= */
 #include <string>
 #include <fstream>
+#include <utility>
 #include <vector>
 #include <cstdint>
 
@@ -27,8 +28,8 @@ private:
 
 public:
   uri() = default;
-  uri(const std::string & uri)
-  : uri_(uri) {};
+  uri(std::string  uri)
+  : uri_(std::move(uri)) {};
   uri(const char * uri)
   : uri_(uri) {};
   uri(const uri & other)

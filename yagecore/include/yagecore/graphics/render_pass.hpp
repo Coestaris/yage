@@ -10,6 +10,7 @@
 
 /* Includes ================================================================= */
 #include <string>
+#include <utility>
 #include "yagecore/graphics/node.hpp"
 
 namespace yc::graphics
@@ -32,7 +33,7 @@ private:
 
 public:
   render_pass(std::string name, pass_type type)
-  : name(name)
+  : name(std::move(name))
   , type(type)
   {
   }
@@ -46,7 +47,7 @@ public:
 
   virtual void set_name(std::string _name)
   {
-    this->name = _name;
+    this->name = std::move(_name);
   }
   virtual std::string get_name()
   {

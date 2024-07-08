@@ -55,7 +55,7 @@ time_t yc::file_ctime(const std::string & path)
   return {};
 }
 
-std::string yc::join_path(std::string path1, std::string path2)
+std::string yc::join_path(const std::string & path1, const std::string & path2)
 {
   if (path1.empty())
   {
@@ -80,14 +80,14 @@ std::string yc::join_path(std::string path1, std::string path2)
   return path1 + "\\" + path2;
 }
 
-std::string yc::absolute_path(std::string path)
+std::string yc::absolute_path(const std::string & path)
 {
   char fullpath[MAX_PATH];
   GetFullPathName(path.c_str(), MAX_PATH, fullpath, nullptr);
   return { fullpath };
 }
 
-std::string yc::basedir(std::string path)
+std::string yc::basedir(const std::string & path)
 {
   /* Find the last slash */
   size_t last_slash = path.find_last_of("\\/");
@@ -99,7 +99,7 @@ std::string yc::basedir(std::string path)
   return path.substr(0, last_slash);
 }
 
-std::string yc::basename(std::string path, bool with_extension)
+std::string yc::basename(const std::string & path, bool with_extension)
 {
   /* Find the last slash */
   size_t last_slash = path.find_last_of("\\/");

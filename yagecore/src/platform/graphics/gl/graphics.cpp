@@ -157,7 +157,7 @@ yc::graphics::texture * yc::gl::graphics::create_texture(
       yc::app::asset_cacher *  cacher,
       yc::graphics::graphics * graphics)
 {
-  return new yc::gl::texture(name, cacher, graphics);
+  return new yc::gl::texture(std::move(name), cacher, graphics);
 }
 
 yc::graphics::node * yc::gl::graphics::create_node(

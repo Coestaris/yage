@@ -9,6 +9,8 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include <utility>
+
 #include "GL/gl.h"
 #include "yagecore/graphics/texture.hpp"
 #include "yagecore/gl/graphics.hpp"
@@ -30,7 +32,7 @@ public:
         std::string              name,
         yc::app::asset_cacher *  cacher,
         yc::graphics::graphics * graphics)
-  : yc::graphics::texture(name, cacher, graphics)
+  : yc::graphics::texture(std::move(name), cacher, graphics)
   , ctx(dynamic_cast<yc::gl::graphics *>(graphics))
   {
   }

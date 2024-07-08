@@ -26,9 +26,9 @@ private:
 public:
   ~node() override = default;
   explicit node(
-        std::string                  name,
-        yc::app::asset_cacher * cacher,
-        yc::graphics::graphics *     graphics)
+        std::string              name,
+        yc::app::asset_cacher *  cacher,
+        yc::graphics::graphics * graphics)
   : yc::graphics::node(std::move(name), cacher, graphics)
   , ctx(dynamic_cast<yc::gl::graphics *>(graphics))
   {

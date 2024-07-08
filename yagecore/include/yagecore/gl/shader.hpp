@@ -163,7 +163,7 @@ public:
   template <typename T>
   std::shared_ptr<uniform<T>> get_uniform(std::string name)
   {
-    auto u = std::make_shared<uniform<T>>(name, this, ctx);
+    auto u = std::make_shared<uniform<T>>(std::move(name), this, ctx);
     uniforms.push_back(u);
     return u;
   }

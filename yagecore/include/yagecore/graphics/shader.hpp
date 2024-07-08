@@ -59,7 +59,7 @@ public:
       return "_shader" + name + "_" + hasher.as_string();
     }
 
-    void add_source(std::string type, const yc::util::uri & url)
+    void add_source(const std::string & type, const yc::util::uri & url)
     {
       uris[type] = url;
     }
