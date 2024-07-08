@@ -28,7 +28,7 @@ private:
 
 public:
   uri() = default;
-  uri(std::string  uri)
+  uri(std::string uri)
   : uri_(std::move(uri)) {};
   uri(const char * uri)
   : uri_(uri) {};

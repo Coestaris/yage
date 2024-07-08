@@ -31,7 +31,7 @@ class movable_obj : public yc::app::object
 public:
   ~movable_obj() override = default;
 
-  explicit movable_obj(yc::app::application * app)
+  explicit movable_obj(std::shared_ptr<yc::app::application> app)
   : yc::app::object(app)
   {
   }
@@ -142,21 +142,21 @@ int main(int argc, char * argv[])
   auto asset_factory = std::make_shared<yagepack::asset_factory>(
         asset_path, yc::get_cache_dir());
 
-  window->set_before_close([&asset_factory]() {
+  window->set_before_close([asset_factory]() {
     asset_factory->unload_assets();
     asset_factory->destroy();
   });
 
   auto renderer = std::make_shared<subrenderer>(asset_factory, window);
-  yc::app::application app(renderer, window, events);
+  auto app = std::make_shared<yc::app::application>(renderer, window, events);
 
   for (int i = 0; i < 10; i++)
   {
-    app.add_object(std::make_shared<movable_obj>(&app));
+    app->add_object(std::make_shared<movable_obj>(app));
   }
 
-  app.start();
-  app.destroy_all_objects(true);
+  app->start();
+  app->destroy_all_objects(true);
 
   return 0;
 }

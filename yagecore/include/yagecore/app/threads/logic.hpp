@@ -9,6 +9,8 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include <utility>
+
 #include "yagecore/time.hpp"
 #include "yagecore/util/sync_point.hpp"
 #include "yagecore/util/profiler.hpp"
@@ -24,19 +26,20 @@ namespace yc::app::threads
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-class logic : public yc::util::named_thread
+class logic final : public yc::util::named_thread
 {
 private:
-  yc::app::application * app;
-  yc::util::profiler *   profiler;
-  size_t                 instances_count = 0;
-  bool                   should_close    = false;
+  std::shared_ptr<yc::app::application> app;
+  std::shared_ptr<yc::util::profiler>   profiler;
+  size_t                                instances_count = 0;
+  bool                                  should_close    = false;
 
 public:
-  logic(yc::app::application * app, yc::util::profiler * profiler)
+  logic(std::shared_ptr<yc::app::application> app,
+        std::shared_ptr<yc::util::profiler>   profiler)
   : yc::util::named_thread("logic")
-  , app(app)
-  , profiler(profiler)
+  , app(std::move(app))
+  , profiler(std::move(profiler))
   {
   }
 

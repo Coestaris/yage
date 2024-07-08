@@ -63,7 +63,7 @@ protected:
           std::move(shader),
           std::move(graphics)) {};
 
-  void on_object(yc::graphics::node * object) override {
+  void on_object(std::shared_ptr<yc::graphics::node> object) override {
     /* Has no sense for current pass. */
   };
 };
@@ -101,7 +101,7 @@ public:
           std::move(shader),
           std::move(graphics)) {};
 
-  void on_object(yc::graphics::node * object) override {
+  void on_object(std::shared_ptr<yc::graphics::node> object) override {
     /* Has no sense for current pass. */
   };
 };

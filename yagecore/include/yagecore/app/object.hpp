@@ -9,6 +9,8 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include <utility>
+
 #include "glm/vec2.hpp"
 
 #include "yagecore/time.hpp"
@@ -32,15 +34,15 @@ private:
   yc::milliseconds last_update = 0;
 
 protected:
-  class yc::app::application * app;
+  std::shared_ptr<yc::app::application> app;
 
   virtual void update(yc::milliseconds delta) = 0;
 
 public:
   struct renderer_data
   {
-    bool                 visible;
-    yc::graphics::node * primitive;
+    bool                                visible;
+    std::shared_ptr<yc::graphics::node> primitive;
 
   } data = { false, nullptr };
 
@@ -56,8 +58,8 @@ public:
   } logic_data;
 
   virtual ~object() = default;
-  explicit object(yc::app::application * app)
-  : app(app) {};
+  explicit object(std::shared_ptr<yc::app::application> app)
+  : app(std::move(app)) {};
 
   void update()
   {

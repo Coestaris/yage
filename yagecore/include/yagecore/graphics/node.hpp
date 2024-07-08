@@ -97,7 +97,7 @@ protected:
   //  AllocatedBuffer materialDataBuffer;
 
   glm::mat4  transform;
-  material * mat;
+  // material * mat;
 
 protected:
   node(std::string              name,

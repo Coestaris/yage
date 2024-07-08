@@ -29,7 +29,7 @@ private:
 
   void cache_extensions();
   void print_extensions();
-  bool has_extension(const char * extension);
+  bool has_extension(const std::string & extension);
 
 public:
   ~graphics() override = default;

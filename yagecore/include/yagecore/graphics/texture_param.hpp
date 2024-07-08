@@ -90,11 +90,6 @@ struct texture_param
            && wrap_s == other.wrap_s && wrap_t == other.wrap_t
            && wrap_r == other.wrap_r;
   }
-
-  bool operator!=(const texture_param & other) const
-  {
-    return !(*this == other);
-  }
 };
 
 /* Variables ================================================================ */

@@ -40,10 +40,10 @@ public:
 
   virtual ~render_pass() = default;
 
-  virtual void before_loop()                          = 0;
-  virtual void end()                                  = 0;
-  virtual void begin()                                = 0;
-  virtual void on_object(yc::graphics::node * object) = 0;
+  virtual void before_loop()                                         = 0;
+  virtual void end()                                                 = 0;
+  virtual void begin()                                               = 0;
+  virtual void on_object(std::shared_ptr<yc::graphics::node> object) = 0;
 
   virtual void set_name(std::string _name)
   {

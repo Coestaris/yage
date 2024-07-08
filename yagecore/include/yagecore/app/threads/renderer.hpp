@@ -9,6 +9,8 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include <utility>
+
 #include "yagecore/util/named_thread.hpp"
 #include "yagecore/os_events.hpp"
 #include "yagecore/util/sync_point.hpp"
@@ -24,14 +26,14 @@ namespace yc::app::threads
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class renderer : public yc::util::named_thread
+class renderer final : public yc::util::named_thread
 {
 private:
-  yc::app::application *    app;
-  yc::util::profiler *      profiler;
-  yc::app::frequency_keeper keeper;
+  std::shared_ptr<yc::app::application> app;
+  std::shared_ptr<yc::util::profiler>   profiler;
+  yc::app::frequency_keeper             keeper;
 
-  size_t                   instances_count = 0;
+  size_t                                  instances_count = 0;
   std::shared_ptr<yc::graphics::graphics> graphics {}; /* cache */
 
 public:
@@ -64,10 +66,12 @@ public:
   }
 
 public:
-  renderer(yc::app::application * app, yc::util::profiler * profiler)
+  renderer(
+        std::shared_ptr<yc::app::application> app,
+        std::shared_ptr<yc::util::profiler>   profiler)
   : yc::util::named_thread("renderer")
   , app(app)
-  , profiler(profiler)
+  , profiler(std::move(profiler))
   {
     int max_fps = 0;
     app->renderer->window->get_max_fps(max_fps);

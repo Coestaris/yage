@@ -29,21 +29,21 @@ yc::error yc::app::application::start()
    * Renderer:   ||  Start drawing scene   |              || Copy objects data
    * Logic:      ||  Process input | Update objects | etc ||
    */
-  yc::util::simple_profiler  renderer_profiler;
-  yc::app::threads::renderer renderer(this, &renderer_profiler);
+  auto  renderer_profiler = std::make_shared<yc::util::simple_profiler>();
+  auto renderer_thread = std::make_shared<yc::app::threads::renderer>(shared_from_this(), renderer_profiler);
 
-  yc::util::simple_profiler logic_profiler;
-  yc::app::threads::logic   logic(this, &logic_profiler);
+  auto logic_profiler = std::make_shared<yc::util::simple_profiler>();
+  auto logic_thread = std::make_shared<yc::app::threads::logic>(shared_from_this(), logic_profiler);
 
-  yc::app::threads::statistics statistics(&logic, &renderer);
+  auto statistics_thread = std::make_shared<yc::app::threads::statistics>(logic_thread, renderer_thread);
 
-  os_events->on_stop_signal.add_listener(&renderer.stop_signal_listener);
+  os_events->on_stop_signal.add_listener(&renderer_thread->stop_signal_listener);
 
-  logic.start();
-  renderer.start();
-  statistics.start();
+  logic_thread->start();
+  renderer_thread->start();
+  statistics_thread->start();
 
-  renderer.join();
+  renderer_thread->join();
   logging(LOG_INFO, "Renderer thread has finished");
 
   /* Sync points are no longer needed.
@@ -52,16 +52,16 @@ yc::error yc::app::application::start()
   common_data.post_frame_sync.shutdown();
 
   /* Ask logic/statistics thread to politely close */
-  logic.close();
-  statistics.close();
+  logic_thread->close();
+  statistics_thread->close();
 
-  logic.join();
-  statistics.join();
+  logic_thread->join();
+  statistics_thread->join();
 
   logging(LOG_INFO, "Logic thread has finished");
 
-  renderer_profiler.flush();
-  logic_profiler.flush();
+  renderer_profiler->flush();
+  logic_profiler->flush();
 
   return yc::error::OK;
 }

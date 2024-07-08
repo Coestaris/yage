@@ -48,7 +48,7 @@ class logic;
 class renderer;
 }
 
-class application
+class application : public std::enable_shared_from_this<application>
 {
 private:
   std::shared_ptr<yc::os_events>        os_events;
@@ -86,10 +86,9 @@ public:
   class subrenderer
   {
   protected:
-    application *                           app;
-    std::shared_ptr<yc::app::asset_factory> asset_factory;
-    std::shared_ptr<yc::graphics::window>   window;
-    std::vector<yc::graphics::node *>       objects;
+    std::shared_ptr<yc::app::asset_factory>          asset_factory;
+    std::shared_ptr<yc::graphics::window>            window;
+    std::vector<std::shared_ptr<yc::graphics::node>> objects;
 
     friend class yc::app::threads::renderer;
     friend class application;
@@ -116,8 +115,7 @@ public:
   , window(std::move(window))
   , renderer(std::move(subrenderer))
   {
-    renderer->app = this;
-    input_mgr     = std::make_shared<input_manager>(this->window);
+    input_mgr = std::make_shared<input_manager>(this->window);
   }
 
   yc::error start();

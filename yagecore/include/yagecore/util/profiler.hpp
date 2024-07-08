@@ -36,7 +36,7 @@ public:
   virtual yc::milliseconds get_diff(point a, point b) = 0;
 };
 
-class simple_profiler : public profiler
+class simple_profiler final : public profiler
 {
 private:
   std::mutex                    mutex;
@@ -46,7 +46,7 @@ private:
   point                         first_point = 0;
 
 public:
-  simple_profiler(size_t max_points = 100)
+  explicit simple_profiler(size_t max_points = 100)
   {
     prev_points.resize(max_points);
     points.resize(max_points);

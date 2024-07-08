@@ -10,6 +10,7 @@
 
 /* Includes ================================================================= */
 #include <cinttypes>
+#include <utility>
 
 #include "glm/common.hpp"
 
@@ -24,15 +25,15 @@ namespace yc::app::threads
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-class statistics : public yc::util::named_thread
+class statistics final : public yc::util::named_thread
 {
 private:
   constexpr static const float lerp_alpha     = 0.4;
   constexpr static const int   log_period_ms  = 1000;
   constexpr static const int   poll_period_ms = 200;
 
-  yc::app::threads::logic *    logic;
-  yc::app::threads::renderer * renderer;
+  std::shared_ptr<yc::app::threads::logic>    logic;
+  std::shared_ptr<yc::app::threads::renderer> renderer;
 
   size_t counter      = 0;
   bool   should_close = false;
@@ -47,10 +48,11 @@ private:
 
 public:
   statistics(
-        yc::app::threads::logic * logic, yc::app::threads::renderer * renderer)
+        std::shared_ptr<yc::app::threads::logic>    logic,
+        std::shared_ptr<yc::app::threads::renderer> renderer)
   : yc::util::named_thread("statistics")
-  , logic(logic)
-  , renderer(renderer)
+  , logic(std::move(logic))
+  , renderer(std::move(renderer))
   {
   }
 

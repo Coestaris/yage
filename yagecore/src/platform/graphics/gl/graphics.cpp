@@ -210,7 +210,7 @@ void yc::gl::graphics::print_extensions()
   }
 }
 
-bool yc::gl::graphics::has_extension(const char * extension)
+bool yc::gl::graphics::has_extension(const std::string & extension)
 {
   return std::find(extensions.begin(), extensions.end(), extension)
          != extensions.end();
