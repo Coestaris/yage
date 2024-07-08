@@ -31,8 +31,9 @@
 
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-struct file_watcher_impl
+class linux_impl : public yc::file_watcher::impl
 {
+public:
   int         inotify_fd = -1;
   int         watch_fd   = -1;
   std::string watched_file;
@@ -49,8 +50,13 @@ void yc::file_watcher::start_watching()
     return;
   }
 
-  impl              = new file_watcher_impl();
-  auto * ctx        = static_cast<file_watcher_impl *>(impl);
+  if (!pimpl)
+  {
+    pimpl = std::make_shared<linux_impl>();
+  }
+
+  auto ctx = std::static_pointer_cast<linux_impl>(pimpl);
+
   ctx->watched_file = watched_files[0];
 
   std::string path = watched_files[0];
@@ -75,7 +81,7 @@ void yc::file_watcher::start_watching()
 
 bool yc::file_watcher::wait_for_changes(uint32_t timeout_ms)
 {
-  auto * ctx = static_cast<file_watcher_impl *>(impl);
+  auto ctx = std::static_pointer_cast<linux_impl>(pimpl);
 
   if (ctx->inotify_fd == -1)
   {
@@ -148,7 +154,7 @@ bool yc::file_watcher::wait_for_changes(uint32_t timeout_ms)
 
 void yc::file_watcher::stop_watching()
 {
-  auto * ctx = static_cast<file_watcher_impl *>(impl);
+  auto ctx = std::static_pointer_cast<linux_impl>(pimpl);
 
   if (ctx->watch_fd != -1)
   {
@@ -160,6 +166,4 @@ void yc::file_watcher::stop_watching()
     close(ctx->inotify_fd);
     ctx->inotify_fd = -1;
   }
-
-  delete ctx;
 }

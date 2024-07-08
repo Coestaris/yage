@@ -34,7 +34,7 @@ void yc::app::threads::logic::run()
     /* Stage 2: Process input */
     profiler->start_cycle();
     profiler->passed(PROF_POINT_LOGIC_INPUT);
-    app->get_input().update();
+    app->get_input()->update();
 
     /* Stage 3: Update objects */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_OBJECTS);
@@ -51,10 +51,9 @@ void yc::app::threads::logic::run()
     }
     for (auto obj_index : to_remove)
     {
-      auto * obj = app->common_data.objects[obj_index];
+      auto obj = app->common_data.objects[obj_index];
       app->common_data.objects.erase(
             app->common_data.objects.begin() + obj_index);
-      delete obj;
     }
     {
       std::lock_guard<std::mutex> lock(app->logic_data.object_to_add_mutex);

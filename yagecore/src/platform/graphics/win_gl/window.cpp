@@ -305,7 +305,7 @@ yc::error yage::platform::graphics::win_gl::window::close()
   return yc::error::OK;
 }
 
-yc::graphics::graphics *
+std::shared_ptr<yc::graphics::graphics>
 yage::platform::graphics::win_gl::window::get_graphics()
 {
   return &context;

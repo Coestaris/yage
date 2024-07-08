@@ -47,7 +47,7 @@ public:
   bool                       is_open() override;
   yc::error          update() override;
   yc::error          close() override;
-  yc::graphics::graphics * get_graphics() override;
+  std::shared_ptr<yc::graphics::graphics> get_graphics() override;
 
   yc::error
   set_mode(yc::graphics::settings::window_mode mode) override

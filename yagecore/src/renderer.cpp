@@ -23,13 +23,13 @@
 /* Shared functions ========================================================= */
 void yc::app::threads::renderer::run()
 {
-  if (app->subrenderer->window->open() != yc::OK)
+  if (app->renderer->window->open() != yc::OK)
   {
     logging(LOG_ERROR, "Failed to open window");
     return;
   }
 
-  graphics = app->subrenderer->window->get_graphics();
+  graphics = app->renderer->window->get_graphics();
   if (!graphics)
   {
     logging(LOG_ERROR, "Unable to get graphics from window");
@@ -37,15 +37,15 @@ void yc::app::threads::renderer::run()
   }
 
   yc::error error;
-  if ((error = app->subrenderer->asset_factory->read_assets(graphics))
+  if ((error = app->renderer->asset_factory->read_assets(graphics))
       != yc::OK)
   {
     logging(LOG_ERROR, "Failed to read assets: %d", error);
-    app->subrenderer->window->close();
+    app->renderer->window->close();
     return;
   }
 
-  app->subrenderer->before_loop();
+  app->renderer->before_loop();
 
   while (true)
   {
@@ -60,17 +60,17 @@ void yc::app::threads::renderer::run()
     if (stop_signal_listener.get_next(signal))
     {
       logging(LOG_DEBUG, "Received signal: %d", signal);
-      app->subrenderer->window->close();
+      app->renderer->window->close();
     }
-    if (!app->subrenderer->window->is_open())
+    if (!app->renderer->window->is_open())
     {
       logging(LOG_DEBUG, "Window is closed. Exiting renderer worker");
       break;
     }
 
     graphics->clear();
-    app->subrenderer->loop();
-    instances_count = app->subrenderer->objects.size();
+    app->renderer->loop();
+    instances_count = app->renderer->objects.size();
     graphics->flush();
 
     /* Stage 3: Sync with updater after frame */
@@ -78,18 +78,18 @@ void yc::app::threads::renderer::run()
     app->common_data.post_frame_sync.wait();
 
     /* Stage 4: Copy data from updater to renderer (for next frame) */
-    app->subrenderer->objects.clear();
+    app->renderer->objects.clear();
     for (auto & object : app->common_data.objects)
     {
       if (object->data.visible)
       {
-        app->subrenderer->objects.push_back(object->data.primitive);
+        app->renderer->objects.push_back(object->data.primitive);
       }
     }
 
     /* Stage 5: Wait for vsync */
     profiler->passed(PROF_POINT_RENDERER_UPDATE_START);
-    if (app->subrenderer->window->update() != yc::OK)
+    if (app->renderer->window->update() != yc::OK)
     {
       logging(LOG_ERROR, "Failed to update window");
       break;

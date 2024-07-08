@@ -39,25 +39,22 @@ public:
 class simple_profiler : public profiler
 {
 private:
-  std::mutex         mutex;
-  yc::nano_seconds * prev_points;
-  yc::nano_seconds * points;
-  size_t             max_points;
-  point              first_point = 0;
+  std::mutex                    mutex;
+  std::vector<yc::nano_seconds> prev_points;
+  std::vector<yc::nano_seconds> points;
+  size_t                        max_points;
+  point                         first_point = 0;
 
 public:
-  ~simple_profiler()
-  {
-    delete[] prev_points;
-    delete[] points;
-  }
-
   simple_profiler(size_t max_points = 100)
   {
-    prev_points = new yc::nano_seconds[max_points];
-    std::fill(prev_points, prev_points + max_points, 0);
-    points = new yc::nano_seconds[max_points];
-    std::fill(points, points + max_points, 0);
+    prev_points.resize(max_points);
+    points.resize(max_points);
+
+    /* Fill with zeros */
+    std::fill(prev_points.begin(), prev_points.end(), 0);
+    std::fill(points.begin(), points.end(), 0);
+
     this->max_points = max_points;
   }
 
@@ -68,8 +65,12 @@ public:
   void start_cycle() override
   {
     std::lock_guard<std::mutex> lock(mutex);
-    std::copy(points, points + max_points, prev_points);
-    std::fill(points, points + max_points, 0);
+
+    /* Copy current points to previous */
+    prev_points = points;
+
+    /* Reset current points */
+    std::fill(points.begin(), points.end(), 0);
   }
 
   void passed(point point) override
@@ -113,7 +114,9 @@ private:
   {
     yc::util::profiler::point point;
     yc::nano_seconds          time;
-  } * records; /* ring buffer */
+  };
+
+  std::vector<record> records;
 
   size_t find_point(size_t start, point point)
   {
@@ -137,23 +140,20 @@ private:
   }
 
 public:
-  explicit file_profiler(size_t max_records, const std::string& filename)
+  explicit file_profiler(size_t max_records, const std::string & filename)
   {
     this->max_records = max_records;
-    records           = new record[max_records];
+    records.resize(max_records);
 
     file = fopen(filename.c_str(), "w");
     if (file == nullptr)
     {
       throw std::runtime_error("Cannot open file");
     }
-
-    records = new record[max_records];
   }
 
   ~file_profiler()
   {
-    delete[] records;
     fclose(file);
   }
 

@@ -11,6 +11,7 @@
 /* Includes ================================================================= */
 #include <string>
 #include <vector>
+#include <memory>
 #include <cstdint>
 
 namespace yc
@@ -20,14 +21,20 @@ namespace yc
 /* Types ==================================================================== */
 class file_watcher
 {
+public:
   static constexpr uint32_t WAIT_FOREVER = 0xFFFFFFFF;
   static constexpr uint32_t WAIT_NOWAIT  = 0;
 
+  /* Platform specific implementation */
+  class impl
+  {
+  public:
+    virtual ~impl() = default;
+  };
+
 private:
   std::vector<std::string> watched_files;
-
-  /* Platform specific implementation */
-  void * impl;
+  std::shared_ptr<impl>    pimpl;
 
   void start_watching();
   void stop_watching();
@@ -64,6 +71,7 @@ std::string basedir(const std::string & path);
 std::string get_temp_dir(const std::string & prefix = {});
 std::string get_cache_dir(const std::string & prefix = {});
 
-std::vector<std::string> list_files(const std::string & path, const std::string & pattern = "*");
+std::vector<std::string>
+list_files(const std::string & path, const std::string & pattern = "*");
 
 }

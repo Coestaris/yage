@@ -258,8 +258,8 @@ yagepack::asset_factory::pack_parser::parse_gltf_sources(
   return sources;
 }
 
-yc::error
-yagepack::asset_factory::read_assets(yc::graphics::graphics * graphics)
+yc::error yagepack::asset_factory::read_assets(
+      std::shared_ptr<yc::graphics::graphics> graphics)
 {
   /* 1. Unzip the archive */
   extract_path = yc::get_temp_dir();
@@ -273,11 +273,13 @@ yagepack::asset_factory::read_assets(yc::graphics::graphics * graphics)
   logging(LOG_INFO, "Extracting assets to: %s", extract_path.c_str());
   elz::extractZip(path, extract_path);
 
+  auto cacher = std::make_shared<asset_cacher>(cache_path);
+
   /* 2. Read .meta files */
   std::vector<std::string> meta_files = yc::list_files(extract_path, "*.meta");
 
   pack_parser parser;
-  parser.on_shader([this, graphics](
+  parser.on_shader([this, graphics, cacher](
                          const std::string &                basename,
                          const yc::graphics::shader::data & sources) {
     if (!graphics->supports_shader_language(sources.get_language()))
@@ -288,21 +290,21 @@ yagepack::asset_factory::read_assets(yc::graphics::graphics * graphics)
       return;
     }
 
-    auto * shader = graphics->create_shader(basename, &cacher, graphics);
+    auto shader = graphics->create_shader(basename, cacher, graphics);
     shader->set_sources(const_cast<yc::graphics::shader::data &>(sources));
     assets[basename] = shader;
   });
-  parser.on_texture([this, graphics](
+  parser.on_texture([this, graphics, cacher](
                           const std::string &                 basename,
                           const yc::graphics::texture::data & sources) {
-    auto * texture = graphics->create_texture(basename, &cacher, graphics);
+    auto texture = graphics->create_texture(basename, cacher, graphics);
     texture->set_sources(sources);
     assets[basename] = texture;
   });
-  parser.on_gltf([this, graphics](
+  parser.on_gltf([this, graphics, cacher](
                        const std::string &              basename,
                        const yc::graphics::node::data & sources) {
-    auto * node = graphics->create_node(basename, &cacher, graphics);
+    auto node = graphics->create_node(basename, cacher, graphics);
     node->set_sources(sources);
     assets[basename] = node;
   });
@@ -320,7 +322,8 @@ yagepack::asset_factory::read_assets(yc::graphics::graphics * graphics)
   return yc::error::OK;
 }
 
-yc::app::asset * yagepack::asset_factory::get_asset(const std::string & name)
+std::shared_ptr<yc::app::asset>
+yagepack::asset_factory::get_asset(const std::string & name)
 {
   return assets[name];
 }
@@ -335,7 +338,6 @@ yc::error yagepack::asset_factory::destroy()
   for (auto & asset : assets)
   {
     asset.second->unload();
-    delete asset.second;
   }
   assets.clear();
 
@@ -423,8 +425,8 @@ void yagepack::asset_factory::pack_watchdog::run()
               basename.c_str());
       }
 
-      auto * shader
-            = dynamic_cast<yc::graphics::shader *>(factory->assets[basename]);
+      auto shader = std::dynamic_pointer_cast<yc::graphics::shader>(
+            factory->assets[basename]);
       if (!shader)
       {
         logging(
@@ -445,8 +447,8 @@ void yagepack::asset_factory::pack_watchdog::run()
               basename.c_str());
       }
 
-      auto * texture
-            = dynamic_cast<yc::graphics::texture *>(factory->assets[basename]);
+      auto texture = std::dynamic_pointer_cast<yc::graphics::texture>(
+            factory->assets[basename]);
       if (!texture)
       {
         logging(

@@ -11,6 +11,8 @@
 /* Includes ================================================================= */
 #include <string>
 #include <fstream>
+#include <utility>
+#include <memory>
 
 #include "yagecore/error.hpp"
 #include "yagecore/app/asset_cacher.hpp"
@@ -27,15 +29,15 @@ protected:
    * It is used to identify the asset in the asset storage. */
   std::string name;
 
-  yc::app::asset_cacher * cacher;
+  std::shared_ptr<yc::app::asset_cacher> cacher;
 
   bool live {};
   bool loaded {};
 
 public:
-  asset(std::string name, yc::app::asset_cacher * cacher)
+  asset(std::string name, std::shared_ptr<yc::app::asset_cacher> cacher)
   : name(std::move(name))
-  , cacher(cacher)
+  , cacher(std::move(cacher))
   {
   }
 

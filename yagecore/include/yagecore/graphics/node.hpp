@@ -78,7 +78,7 @@ protected:
   static bool load_gltf(const yc::util::uri & uri);
 
 protected:
-  yc::graphics::graphics * graphics;
+  std::shared_ptr<yc::graphics::graphics> graphics;
   data                     sources;
 
   // storage for all the data on a given glTF file
@@ -101,10 +101,10 @@ protected:
 
 protected:
   node(std::string              name,
-       yc::app::asset_cacher *  cacher,
-       yc::graphics::graphics * graphics)
-  : asset(std::move(name), cacher)
-  , graphics(graphics)
+       std::shared_ptr<yc::app::asset_cacher>  cacher,
+       std::shared_ptr<yc::graphics::graphics> graphics)
+  : asset(std::move(name), std::move(cacher))
+  , graphics(std::move(graphics))
   {
   }
 

@@ -23,17 +23,19 @@ namespace yc::gl
 class texture : public yc::graphics::texture
 {
 private:
-  GLuint             id = 0;
-  yc::gl::graphics * ctx;
+  /* Shortcut for GL specific graphics */
+  std::shared_ptr<yc::gl::graphics> ctx;
+
+  GLuint id {};
 
 public:
   ~texture() override = default;
   explicit texture(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics)
-  : yc::graphics::texture(std::move(name), cacher, graphics)
-  , ctx(dynamic_cast<yc::gl::graphics *>(graphics))
+        std::string                                     name,
+        std::shared_ptr<yc::app::asset_cacher>          cacher,
+        const std::shared_ptr<yc::graphics::graphics> & graphics)
+  : yc::graphics::texture(std::move(name), std::move(cacher), graphics)
+  , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics))
   {
   }
 

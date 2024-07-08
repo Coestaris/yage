@@ -9,6 +9,7 @@
 /* Includes ================================================================= */
 #include <fstream>
 #include <csignal>
+#include <utility>
 #include "yagecore/log.hpp"
 #include "yagecore/util/named_thread.hpp"
 #include "yagecore/os_events.hpp"
@@ -40,11 +41,11 @@ public:
   }
 };
 
-class subrenderer : public yc::app::application::subrenderer_
+class subrenderer : public yc::app::application::subrenderer
 {
 private:
-  std::vector<yc::graphics::render_pass *> passes;
-  yc::graphics::graphics *                 graphics {};
+  std::vector<std::shared_ptr<yc::graphics::render_pass>> passes;
+  std::shared_ptr<yc::graphics::graphics>                 graphics {};
 
 private:
   void before_loop() override
@@ -82,17 +83,11 @@ private:
   }
 
 public:
-  ~subrenderer() override
-  {
-    for (auto & pass : passes)
-    {
-      delete pass;
-    }
-  }
-
   subrenderer(
-        yc::app::asset_factory * asset_factory, yc::graphics::window * window)
-  : subrenderer_(asset_factory, window) {};
+        std::shared_ptr<yc::app::asset_factory> asset_factory,
+        std::shared_ptr<yc::graphics::window>   window)
+  : yc::app::application::subrenderer(
+          std::move(asset_factory), std::move(window)) {};
 };
 
 std::string lookup_asset_path()
@@ -121,7 +116,7 @@ std::string lookup_asset_path()
 
 int main(int argc, char * argv[])
 {
-  yc::os_events events;
+  auto events = std::make_shared<yc::os_events>();
 
   yc::stdout_logger logger;
   logger.set_level(LOG_DEBUG);
@@ -136,7 +131,7 @@ int main(int argc, char * argv[])
     .vsync           = true,
     .custom_settings = {},
   };
-  yc::graphics::window * window = yc::create_window(settings);
+  auto window = yc::create_window(settings);
 
   std::string asset_path = lookup_asset_path();
   if (asset_path.empty())
@@ -144,22 +139,24 @@ int main(int argc, char * argv[])
     logging(LOG_ERROR, "Failed to find assets.pack file");
     return 1;
   }
-  yagepack::asset_factory asset_factory(asset_path, yc::get_cache_dir());
-  window->set_before_close([&asset_factory]() { asset_factory.destroy(); });
+  auto asset_factory = std::make_shared<yagepack::asset_factory>(
+        asset_path, yc::get_cache_dir());
 
-  subrenderer          subrenderer(&asset_factory, window);
-  yc::app::application app(&subrenderer, &window->input, &events);
+  window->set_before_close([&asset_factory]() {
+    asset_factory->unload_assets();
+    asset_factory->destroy();
+  });
+
+  auto renderer = std::make_shared<subrenderer>(asset_factory, window);
+  yc::app::application app(renderer, window, events);
 
   for (int i = 0; i < 10; i++)
   {
-    app.add_object(new movable_obj(&app));
+    app.add_object(std::make_shared<movable_obj>(&app));
   }
 
   app.start();
-
   app.destroy_all_objects(true);
-
-  yc::destroy_window(window);
 
   return 0;
 }

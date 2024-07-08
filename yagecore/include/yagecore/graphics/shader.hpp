@@ -131,15 +131,15 @@ public:
   };
 
 protected:
-  yc::graphics::graphics * graphics;
-  data                     sources;
+  std::shared_ptr<yc::graphics::graphics> graphics;
+  data                                    sources;
 
   shader(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics)
-  : yc::app::asset(std::move(name), cacher)
-  , graphics(graphics)
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics)
+  : yc::app::asset(std::move(name), std::move(cacher))
+  , graphics(std::move(graphics))
   {
   }
 

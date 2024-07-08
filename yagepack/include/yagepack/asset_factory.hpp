@@ -36,9 +36,9 @@ class asset_factory : public yc::app::asset_factory
 private:
   std::string extract_path {};
   std::string path;
-  bool        destroyed = false;
+  std::string cache_path;
 
-  std::unordered_map<std::string, yc::app::asset *> assets;
+  std::unordered_map<std::string, std::shared_ptr<yc::app::asset>> assets;
 
   class pack_parser
   {
@@ -92,6 +92,8 @@ private:
     std::string cache_path {};
 
   public:
+    ~asset_cacher() override = default;
+
     explicit asset_cacher(std::string cache_path)
     : cache_path(std::move(cache_path))
     {
@@ -101,7 +103,7 @@ private:
           const std::string & key, const std::vector<uint8_t> & data) override;
     yc::error get_cached_asset(
           const std::string & key, std::vector<uint8_t> & data) override;
-  } cacher;
+  };
 
 #if USE_DEBUG
   class pack_watchdog : public yc::util::named_thread
@@ -131,7 +133,7 @@ private:
 public:
   asset_factory(std::string path, std::string cache_path)
   : path(std::move(path))
-  , cacher(std::move(cache_path))
+  , cache_path(std::move(cache_path))
 #if USE_DEBUG
   , watchdog(this)
 #endif
@@ -142,9 +144,10 @@ public:
     destroy();
   }
 
-  yc::error        read_assets(yc::graphics::graphics * graphics) override;
-  yc::error        destroy() override;
-  yc::app::asset * get_asset(const std::string & name) override;
+  yc::error
+  read_assets(std::shared_ptr<yc::graphics::graphics> graphics) override;
+  yc::error                       destroy() override;
+  std::shared_ptr<yc::app::asset> get_asset(const std::string & name) override;
 };
 
 /* Variables ================================================================ */

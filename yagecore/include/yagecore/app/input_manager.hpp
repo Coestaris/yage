@@ -14,6 +14,7 @@
 #include "yagecore/graphics/input_events.hpp"
 #include "yagecore/keyboard.hpp"
 #include "yagecore/mouse.hpp"
+#include "yagecore/graphics/window.hpp"
 
 namespace yc::app
 {
@@ -24,11 +25,11 @@ namespace yc::app
 class input_manager
 {
 private:
-  yc::graphics::input_events * input;
+  std::shared_ptr<yc::graphics::window> window;
 
   bool key_states[static_cast<size_t>(yc::key::MAX_KEYS)]        = { false };
   bool mouse_states[static_cast<size_t>(yc::mouse::MAX_BUTTONS)] = { false };
-  glm::vec2 mouse_pos;
+  glm::vec2 mouse_pos {};
 
   yc::graphics::key_pressed_listener    key_pressed_listener;
   yc::graphics::key_released_listener   key_released_listener;
@@ -37,18 +38,13 @@ private:
   yc::graphics::mouse_released_listener mouse_released_listener;
 
 public:
-  input_manager(yc::graphics::input_events * input);
+  explicit input_manager(const std::shared_ptr<yc::graphics::window> & window);
 
-  bool      key_pressed(yc::key key) const;
-  bool      mouse_pressed(yc::mouse button) const;
-  glm::vec2 mouse_position() const;
+  [[nodiscard]] bool      key_pressed(yc::key key) const;
+  [[nodiscard]] bool      mouse_pressed(yc::mouse button) const;
+  [[nodiscard]] glm::vec2 mouse_position() const;
 
   void update();
-
-  yc::graphics::input_events * raw_input()
-  {
-    return input;
-  }
 };
 
 /* Variables ================================================================ */

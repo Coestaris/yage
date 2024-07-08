@@ -21,16 +21,17 @@ namespace yc::gl
 class node : public yc::graphics::node
 {
 private:
-  yc::gl::graphics * ctx;
+  /* Shortcut for GL specific graphics */
+  std::shared_ptr<yc::gl::graphics> ctx;
 
 public:
   ~node() override = default;
   explicit node(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics)
-  : yc::graphics::node(std::move(name), cacher, graphics)
-  , ctx(dynamic_cast<yc::gl::graphics *>(graphics))
+        std::string                                     name,
+        std::shared_ptr<yc::app::asset_cacher>          cacher,
+        const std::shared_ptr<yc::graphics::graphics> & graphics)
+  : yc::graphics::node(std::move(name), std::move(cacher), graphics)
+  , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics))
   {
   }
 

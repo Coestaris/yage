@@ -144,46 +144,28 @@ void APIENTRY GLDebugMessageCallback(
 #endif
 
 /* Shared functions ========================================================= */
-yc::graphics::shader * yc::gl::graphics::create_shader(
-      std::string              name,
-      yc::app::asset_cacher *  cacher,
-      yc::graphics::graphics * graphics)
+std::shared_ptr<yc::graphics::shader> yc::gl::graphics::create_shader(
+      std::string                             name,
+      std::shared_ptr<yc::app::asset_cacher>  cacher,
+      std::shared_ptr<yc::graphics::graphics> graphics)
 {
-  return new yc::gl::shader(std::move(name), cacher, graphics);
+  return std::make_shared<yc::gl::shader>(std::move(name), cacher, graphics);
 }
 
-yc::graphics::texture * yc::gl::graphics::create_texture(
-      std::string              name,
-      yc::app::asset_cacher *  cacher,
-      yc::graphics::graphics * graphics)
+std::shared_ptr<yc::graphics::texture> yc::gl::graphics::create_texture(
+      std::string                             name,
+      std::shared_ptr<yc::app::asset_cacher>  cacher,
+      std::shared_ptr<yc::graphics::graphics> graphics)
 {
-  return new yc::gl::texture(std::move(name), cacher, graphics);
+  return std::make_shared<yc::gl::texture>(std::move(name), cacher, graphics);
 }
 
-yc::graphics::node * yc::gl::graphics::create_node(
-      std::string              name,
-      yc::app::asset_cacher *  cacher,
-      yc::graphics::graphics * graphics)
+std::shared_ptr<yc::graphics::node> yc::gl::graphics::create_node(
+      std::string                             name,
+      std::shared_ptr<yc::app::asset_cacher>  cacher,
+      std::shared_ptr<yc::graphics::graphics> graphics)
 {
-  return new yc::gl::node(std::move(name), cacher, graphics);
-}
-
-yc::error yc::gl::graphics::destroy_shader(yc::graphics::shader * shader)
-{
-  delete shader;
-  return yc::error::OK;
-}
-
-yc::error yc::gl::graphics::destroy_texture(yc::graphics::texture * texture)
-{
-  delete texture;
-  return yc::error::OK;
-}
-
-yc::error yc::gl::graphics::destroy_node(yc::graphics::node * node)
-{
-  delete node;
-  return yc::error::OK;
+  return std::make_shared<yc::gl::node>(std::move(name), cacher, graphics);
 }
 
 void yc::gl::graphics::cache_extensions()
@@ -196,18 +178,17 @@ void yc::gl::graphics::cache_extensions()
     return;
   }
 
-  size_t len  = strlen(ext);
-  char * copy = new char[len + 1];
-  strcpy(copy, ext);
+  std::string copy(ext);
 
-  char * token = strtok(copy, " ");
-  while (token)
+  std::istringstream iss(copy);
+  std::string        token;
+
+  while (std::getline(iss, token, ' '))
   {
-    extensions.emplace_back(token);
-    token = strtok(nullptr, " ");
+    extensions.push_back(token);
   }
 
-  delete[] copy;
+  std::sort(extensions.begin(), extensions.end());
 }
 
 void yc::gl::graphics::print_extensions()

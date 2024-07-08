@@ -33,14 +33,15 @@ class shader;
 class asset_factory
 {
 private:
-  std::vector<yc::app::asset *> loaded_assets;
+  std::vector<std::shared_ptr<yc::app::asset>> loaded_assets;
 
 protected:
   /** Tries to get an asset by its name.
    * @param name Name of the asset to get.
    * @return Returns a pointer to the asset if it is found, otherwise nullptr.
    */
-  virtual yc::app::asset * get_asset(const std::string & name) = 0;
+  virtual std::shared_ptr<yc::app::asset> get_asset(const std::string & name)
+        = 0;
 
 public:
   virtual ~asset_factory() = default;
@@ -49,7 +50,9 @@ public:
    * None of assets are loaded into memory at this point.
    * @param graphics Graphics context to load assets into.
    * @return Returns non-zero error code if the assets could not be read. */
-  virtual yc::error read_assets(yc::graphics::graphics * graphics) = 0;
+  virtual yc::error
+  read_assets(std::shared_ptr<yc::graphics::graphics> graphics)
+        = 0;
 
   /** Destroys the asset factory and all its assets
    * also unloads all loaded assets and frees all found assets. */
@@ -64,7 +67,7 @@ public:
   void poll_assets()
   {
 #if USE_DEBUG
-    for (auto * asset : loaded_assets)
+    for (const auto & asset : loaded_assets)
     {
       asset->poll();
     }
@@ -75,9 +78,10 @@ public:
    * @param name Name of the asset to load.
    * @return Returns a pointer to the asset if it is found and loaded,
    *         otherwise nullptr. */
-  yc::app::asset * load_asset(const std::string & name, bool required = true)
+  std::shared_ptr<yc::app::asset>
+  load_asset(const std::string & name, bool required = true)
   {
-    auto * asset = get_asset(name);
+    auto asset = get_asset(name);
     if (asset)
     {
       if (asset->load() != yc::OK)
@@ -98,9 +102,9 @@ public:
    * @note This will return nullptr if the asset is not of the specified type.
    */
   template <typename T>
-  T * load_asset(const std::string & name, bool required = true)
+  std::shared_ptr<T> load_asset(const std::string & name, bool required = true)
   {
-    auto * ptr = dynamic_cast<T *>(load_asset(name));
+    auto ptr = std::dynamic_pointer_cast<T>(load_asset(name, required));
     if (!ptr && required)
     {
       throw std::runtime_error("Failed to load asset " + name);
@@ -113,7 +117,7 @@ public:
    * @param name Name of the asset to unload. */
   void unload_asset(const std::string & name)
   {
-    for (auto * asset : loaded_assets)
+    for (const auto & asset : loaded_assets)
     {
       if (asset->get_name() == name)
       {
@@ -126,7 +130,7 @@ public:
   /** Unloads all loaded assets. */
   void unload_assets()
   {
-    for (auto * asset : loaded_assets)
+    for (const auto & asset : loaded_assets)
     {
       asset->unload();
     }

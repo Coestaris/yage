@@ -27,28 +27,26 @@ class asset_cacher;
 class graphics
 {
 public:
+  virtual ~graphics() = default;
+
   virtual yc::error clear() = 0;
   virtual yc::error flush() = 0;
 
-  virtual yc::graphics::shader * create_shader(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics)
+  virtual std::shared_ptr<yc::graphics::shader> create_shader(
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics)
         = 0;
-  virtual yc::graphics::node * create_node(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics)
+  virtual std::shared_ptr<yc::graphics::node> create_node(
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics)
         = 0;
-  virtual yc::graphics::texture * create_texture(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics)
+  virtual std::shared_ptr<yc::graphics::texture> create_texture(
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics)
         = 0;
-
-  virtual yc::error destroy_shader(yc::graphics::shader * shader)    = 0;
-  virtual yc::error destroy_node(yc::graphics::node * node)          = 0;
-  virtual yc::error destroy_texture(yc::graphics::texture * texture) = 0;
 
   virtual bool supports_shader_language(const std::string & language) = 0;
 };

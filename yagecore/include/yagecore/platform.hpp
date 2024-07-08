@@ -21,11 +21,11 @@ namespace yc
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-yc::graphics::window * create_window(yc::graphics::settings & settings);
-void                   destroy_window(yc::graphics::window * window);
+std::shared_ptr<yc::graphics::window>
+create_window(yc::graphics::settings & settings);
 
-std::vector<yc::graphics::render_pass *> trivial_render_chain(
-      yc::graphics::graphics * graphics,
-      yc::app::asset_factory * asset_factory);
+std::vector<std::shared_ptr<yc::graphics::render_pass>> trivial_render_chain(
+      const std::shared_ptr<yc::graphics::graphics>& graphics,
+      const std::shared_ptr<yc::app::asset_factory>& asset_factory);
 
 }

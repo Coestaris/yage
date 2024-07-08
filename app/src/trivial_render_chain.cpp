@@ -34,19 +34,19 @@ using node     = yc::gl::node;
 class trivial_render_pass : public yc::graphics::render_pass
 {
 protected:
-  shader *   program {};
-  graphics * ctx;
+  std::shared_ptr<shader>   program;
+  std::shared_ptr<graphics> ctx;
 
 public:
   virtual ~trivial_render_pass() override = default;
   trivial_render_pass(
-        std::string              name,
-        yc::graphics::pass_type  type,
-        shader *                 shader,
-        yc::graphics::graphics * graphics)
+        std::string                             name,
+        yc::graphics::pass_type                 type,
+        std::shared_ptr<shader>                 shader,
+        std::shared_ptr<yc::graphics::graphics> graphics)
   : render_pass(std::move(name), type)
-  , program(shader)
-  , ctx(dynamic_cast<::graphics *>(graphics)) {};
+  , program(std::move(shader))
+  , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics)) {};
 };
 
 /* Performs rendering to the framebuffer. */
@@ -54,12 +54,14 @@ class framebuffers_pass : public trivial_render_pass
 {
 protected:
   framebuffers_pass(
-        std::string name, shader * shader, yc::graphics::graphics * graphics)
+        std::string                             name,
+        std::shared_ptr<shader>                 shader,
+        std::shared_ptr<yc::graphics::graphics> graphics)
   : trivial_render_pass(
           std::move(name),
           yc::graphics::pass_type::VIRTUAL_PASS,
-          shader,
-          graphics) {};
+          std::move(shader),
+          std::move(graphics)) {};
 
   void on_object(yc::graphics::node * object) override {
     /* Has no sense for current pass. */
@@ -74,12 +76,14 @@ class primitive_pass : public trivial_render_pass
 {
 protected:
   primitive_pass(
-        std::string name, shader * program, yc::graphics::graphics * graphics)
+        std::string                             name,
+        std::shared_ptr<shader>                 shader,
+        std::shared_ptr<yc::graphics::graphics> graphics)
   : trivial_render_pass(
           std::move(name),
           yc::graphics::pass_type::OBJECT_PASS,
-          program,
-          graphics) {};
+          std::move(shader),
+          std::move(graphics)) {};
 };
 
 /* No framebuffers are used,
@@ -88,12 +92,14 @@ class final_pass : public trivial_render_pass
 {
 public:
   final_pass(
-        std::string name, shader * program, yc::graphics::graphics * graphics)
+        std::string                             name,
+        std::shared_ptr<shader>                 shader,
+        std::shared_ptr<yc::graphics::graphics> graphics)
   : trivial_render_pass(
           std::move(name),
           yc::graphics::pass_type::VIRTUAL_PASS,
-          program,
-          graphics) {};
+          std::move(shader),
+          std::move(graphics)) {};
 
   void on_object(yc::graphics::node * object) override {
     /* Has no sense for current pass. */
@@ -120,28 +126,27 @@ private:
 
   GLuint VAO, VBO, EBO;
 
-  texture * tex1;
-  texture * tex2;
+  std::shared_ptr<texture> tex1;
+  std::shared_ptr<texture> tex2;
+  std::shared_ptr<node>    box;
 
-  yc::gl::uniform_int u_tex1 {};
-  yc::gl::uniform_int u_tex2 {};
+  yc::gl::uniform_int  u_tex1 {};
+  yc::gl::uniform_int  u_tex2 {};
   yc::gl::uniform_mat4 u_transform {};
 
   float rotation = 0;
 
-  yc::gl::node * box;
-
 public:
   triangle_pass(
-        shader *                 shader,
-        texture *                tex1,
-        texture *                tex2,
-        yc::gl::node *           box,
-        yc::graphics::graphics * graphics)
-  : final_pass("triangle_pass", shader, graphics)
-  , tex1(tex1)
-  , tex2(tex2)
-  , box(box) {};
+        std::shared_ptr<texture>                tex1,
+        std::shared_ptr<texture>                tex2,
+        std::shared_ptr<node>                   box,
+        std::shared_ptr<shader>                 shader,
+        std::shared_ptr<yc::graphics::graphics> graphics)
+  : final_pass("triangle_pass", std::move(shader), std::move(graphics))
+  , tex1(std::move(tex1))
+  , tex2(std::move(tex2))
+  , box(std::move(box)) {};
 
   void before_loop() override
   {
@@ -176,8 +181,8 @@ public:
     ctx->glEnableVertexAttribArray(2);
 
     program->use();
-    u_tex1 = program->get_uniform<int>("texture1");
-    u_tex2 = program->get_uniform<int>("texture2");
+    u_tex1      = program->get_uniform<int>("texture1");
+    u_tex2      = program->get_uniform<int>("texture2");
     u_transform = program->get_uniform<glm::mat4>("transform");
 
     u_tex1->set(0);
@@ -207,14 +212,17 @@ public:
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-std::vector<yc::graphics::render_pass *> yc::trivial_render_chain(
-      yc::graphics::graphics * graphics, yc::app::asset_factory * asset_factory)
+std::vector<std::shared_ptr<yc::graphics::render_pass>>
+yc::trivial_render_chain(
+      const std::shared_ptr<yc::graphics::graphics> & graphics,
+      const std::shared_ptr<yc::app::asset_factory> & asset_factory)
 {
-  std::vector<yc::graphics::render_pass *> passes = { new triangle_pass(
-        asset_factory->load_asset<shader>("triangle"),
-        asset_factory->load_asset<texture>("tex1"),
-        asset_factory->load_asset<texture>("tex2"),
-        asset_factory->load_asset<node>("box"), graphics) };
+  std::vector<std::shared_ptr<yc::graphics::render_pass>> passes
+        = { std::make_shared<triangle_pass>(
+              asset_factory->load_asset<texture>("tex1"),
+              asset_factory->load_asset<texture>("tex2"),
+              asset_factory->load_asset<node>("box"),
+              asset_factory->load_asset<shader>("triangle"), graphics) };
 
   return passes;
 }

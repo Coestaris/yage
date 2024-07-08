@@ -75,15 +75,15 @@ protected:
         size_t &               out_w,
         size_t &               out_h);
 
-  yc::graphics::graphics * graphics;
-  data                     sources;
+  std::shared_ptr<yc::graphics::graphics> graphics;
+  data                                    sources;
 
   texture(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics)
-  : asset(std::move(name), cacher)
-  , graphics(graphics)
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics)
+  : asset(std::move(name), std::move(cacher))
+  , graphics(std::move(graphics))
   {
   }
 

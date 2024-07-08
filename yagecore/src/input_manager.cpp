@@ -11,6 +11,7 @@
 #include "yagecore/keyboard.hpp"
 #include "yagecore/mouse.hpp"
 #include "yagecore/graphics/input_events.hpp"
+#include "yagecore/graphics/window.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -66,13 +67,14 @@ void yc::app::input_manager::update()
   }
 }
 
-yc::app::input_manager::input_manager(yc::graphics::input_events * input)
+yc::app::input_manager::input_manager(
+      const std::shared_ptr<yc::graphics::window>& window)
 {
-  this->input = input;
+  this->window = window;
 
-  input->key_pressed.add_listener(&key_pressed_listener);
-  input->key_released.add_listener(&key_released_listener);
-  input->mouse_pressed.add_listener(&mouse_pressed_listener);
-  input->mouse_moved.add_listener(&mouse_moved_listener);
-  input->mouse_released.add_listener(&mouse_released_listener);
+  window->input.key_pressed.add_listener(&key_pressed_listener);
+  window->input.key_released.add_listener(&key_released_listener);
+  window->input.mouse_pressed.add_listener(&mouse_pressed_listener);
+  window->input.mouse_moved.add_listener(&mouse_moved_listener);
+  window->input.mouse_released.add_listener(&mouse_released_listener);
 }

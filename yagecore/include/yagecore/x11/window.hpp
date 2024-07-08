@@ -27,7 +27,7 @@ namespace yc::x11
 class window : public yc::graphics::window
 {
 private:
-  yc::gl::graphics context;
+  std::shared_ptr<yc::gl::graphics> graphics;
 
   Colormap        colormap;
   XIC             xic;
@@ -70,11 +70,11 @@ public:
     close();
   }
 
-  yc::error                open() override;
-  yc::error                update() override;
-  yc::error                close() override;
-  bool                     is_open() override;
-  yc::graphics::graphics * get_graphics() override;
+  yc::error                               open() override;
+  yc::error                               update() override;
+  yc::error                               close() override;
+  bool                                    is_open() override;
+  std::shared_ptr<yc::graphics::graphics> get_graphics() override;
 
   yc::error set_mode(yc::graphics::settings::window_mode mode) override;
   yc::error set_geometry(yc::graphics::geometry & geometry) override;

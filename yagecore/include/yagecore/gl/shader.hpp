@@ -28,7 +28,8 @@ namespace yc::gl
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class shader : public yc::graphics::shader
+class shader : public yc::graphics::shader,
+               public std::enable_shared_from_this<shader>
 {
 private:
   class reloadable
@@ -42,76 +43,96 @@ public:
   template <typename T> class uniform : public reloadable
   {
   private:
-    static inline void
-    internal_set(yc::gl::graphics * ctx, GLint location, int value)
+    static inline void internal_set(
+          const std::shared_ptr<yc::gl::graphics> & ctx,
+          GLint                                     location,
+          int                                       value)
     {
       ctx->glUniform1i(location, value);
     }
 
-    static inline void
-    internal_set(yc::gl::graphics * ctx, GLint location, float value)
+    static inline void internal_set(
+          const std::shared_ptr<yc::gl::graphics> & ctx,
+          GLint                                     location,
+          float                                     value)
     {
       ctx->glUniform1f(location, value);
     }
 
-    static inline void
-    internal_set(yc::gl::graphics * ctx, GLint location, glm::vec2 value)
+    static inline void internal_set(
+          const std::shared_ptr<yc::gl::graphics> & ctx,
+          GLint                                     location,
+          glm::vec2                                 value)
     {
       ctx->glUniform2f(location, value.x, value.y);
     }
 
-    static inline void
-    internal_set(yc::gl::graphics * ctx, GLint location, glm::vec3 value)
+    static inline void internal_set(
+          const std::shared_ptr<yc::gl::graphics> & ctx,
+          GLint                                     location,
+          glm::vec3                                 value)
     {
       ctx->glUniform3f(location, value.x, value.y, value.z);
     }
 
-    static inline void
-    internal_set(yc::gl::graphics * ctx, GLint location, glm::vec4 value)
+    static inline void internal_set(
+          const std::shared_ptr<yc::gl::graphics> & ctx,
+          GLint                                     location,
+          glm::vec4                                 value)
     {
       ctx->glUniform4f(location, value.x, value.y, value.z, value.w);
     }
 
-    static inline void
-    internal_set(yc::gl::graphics * ctx, GLint location, glm::mat2 value)
+    static inline void internal_set(
+          const std::shared_ptr<yc::gl::graphics> & ctx,
+          GLint                                     location,
+          glm::mat2                                 value)
     {
       ctx->glUniformMatrix2fv(location, 1, GL_FALSE, &value[0][0]);
     }
 
-    static inline void
-    internal_set(yc::gl::graphics * ctx, GLint location, glm::mat3 value)
+    static inline void internal_set(
+          const std::shared_ptr<yc::gl::graphics> & ctx,
+          GLint                                     location,
+          glm::mat3                                 value)
     {
       ctx->glUniformMatrix3fv(location, 1, GL_FALSE, &value[0][0]);
     }
 
-    static inline void
-    internal_set(yc::gl::graphics * ctx, GLint location, glm::mat4 value)
+    static inline void internal_set(
+          const std::shared_ptr<yc::gl::graphics> & ctx,
+          GLint                                     location,
+          glm::mat4                                 value)
     {
       ctx->glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
     }
 
   protected:
-    std::string        name;
-    yc::gl::shader *   shader;
-    GLint              location {};
-    yc::gl::graphics * ctx {};
-    T                  prev_value;
+    std::shared_ptr<yc::gl::graphics> ctx;
+    std::weak_ptr<yc::gl::shader>     shader;
+
+    std::string name;
+    GLint       location {};
+    T           prev_value;
 
   public:
     ~uniform() override = default;
 
-    uniform(std::string name, yc::gl::shader * shader, yc::gl::graphics * ctx)
-    : name(std::move(name))
-    , shader(shader)
-    , ctx(ctx)
+    uniform(
+          std::string                       name,
+          std::shared_ptr<yc::gl::shader>   shader,
+          std::shared_ptr<yc::gl::graphics> ctx)
+    : ctx(std::move(ctx))
+    , shader(std::move(shader))
+    , name(std::move(name))
     {
-      location = shader->get_uniform_location(this->name);
+      location = this->shader.lock()->get_uniform_location(this->name);
     }
 
     void reload() override
     {
       int old_loc = location;
-      int new_loc = shader->get_uniform_location(name, false);
+      int new_loc = shader.lock()->get_uniform_location(name);
 
       logging(
             LOG_INFO, "Reloading uniform %s. %d->%d", name.c_str(), old_loc,
@@ -130,21 +151,23 @@ public:
   };
 
 protected:
-  GLint                                    id;
-  yc::gl::graphics *                       ctx;
-  std::vector<std::shared_ptr<reloadable>> uniforms;
+  /* Shortcut for GL specific graphics */
+  std::shared_ptr<yc::gl::graphics> ctx;
+
+  GLint                                    id {};
+  std::vector<std::shared_ptr<reloadable>> uniforms {};
 
   yc::error load_from_binary(const std::vector<uint8_t> & binary);
   yc::error compile_binary(std::vector<uint8_t> & binary);
 
 public:
   ~shader() override = default;
-  shader(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics)
-  : yc::graphics::shader(std::move(name), cacher, graphics)
-  , ctx(dynamic_cast<yc::gl::graphics *>(graphics))
+  explicit shader(
+        std::string                                     name,
+        std::shared_ptr<yc::app::asset_cacher>          cacher,
+        const std::shared_ptr<yc::graphics::graphics> & graphics)
+  : yc::graphics::shader(std::move(name), std::move(cacher), graphics)
+  , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics))
   {
   }
 
@@ -163,7 +186,8 @@ public:
   template <typename T>
   std::shared_ptr<uniform<T>> get_uniform(std::string name)
   {
-    auto u = std::make_shared<uniform<T>>(std::move(name), this, ctx);
+    auto u = std::make_shared<uniform<T>>(
+          std::move(name), shared_from_this(), ctx);
     uniforms.push_back(u);
     return u;
   }

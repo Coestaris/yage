@@ -30,29 +30,25 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-yc::graphics::window * yc::create_window(yc::graphics::settings & settings)
+std::shared_ptr<yc::graphics::window>
+yc::create_window(yc::graphics::settings & settings)
 {
 #if YAGE_PLATFORM_X11
   logging(LOG_INFO, "Creating X11 window");
-  return new yc::x11::window(settings);
+  return std::make_shared<yc::x11::window>(settings);
 #elif YAGE_PLATFORM_WAYLAND
   logging(LOG_INFO, "Creating wayland window");
-  return new yc::wayland::window(settings);
+  return std::make_shared<yc::wayland::window>(settings);
 #elif YAGE_PLATFORM_WIN_GL
   logging(LOG_INFO, "Creating Windows (OpenGL) window");
-  return new yc::win_gl::window(settings);
+  return std::make_shared<yc::win_gl::window>(settings);
 #elif YAGE_PLATFORM_WIN_DX
   logging(LOG_INFO, "Creating Windows (DirectX) window");
-  return new yc::win_dx::window(settings);
+  return std::make_shared<yc::win_dx::window>(settings);
 #elif YAGE_PLATFORM_DARWIN
   logging(LOG_INFO, "Creating Darwin window");
-  return new yc::darwin::window(settings);
+  return std::make_shared<yc::darwin::window>(settings);
 #else
   throw std::runtime_error("Unsupported platform");
 #endif
-}
-
-void yc::destroy_window(yc::graphics::window * window)
-{
-  delete window;
 }

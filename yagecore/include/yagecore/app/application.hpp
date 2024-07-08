@@ -11,6 +11,7 @@
 /* Includes ================================================================= */
 #include <string>
 #include <algorithm>
+#include <utility>
 
 #include "yagecore/os_events.hpp"
 #include "yagecore/util/sync_point.hpp"
@@ -50,14 +51,15 @@ class renderer;
 class application
 {
 private:
-  yc::os_events *        os_events;
-  yc::app::input_manager input;
+  std::shared_ptr<yc::os_events>        os_events;
+  std::shared_ptr<yc::graphics::window> window;
+  std::shared_ptr<input_manager>        input_mgr;
 
 public:
   class common_data
   {
   private:
-    std::vector<yc::app::object *> objects;
+    std::vector<std::shared_ptr<yc::app::object>> objects;
 
     yc::util::sync_point pre_frame_sync { 2 };
     yc::util::sync_point post_frame_sync { 2 };
@@ -71,8 +73,8 @@ public:
   class logic_data
   {
   private:
-    std::vector<yc::app::object *> object_to_add;
-    std::mutex                     object_to_add_mutex;
+    std::vector<std::shared_ptr<yc::app::object>> object_to_add;
+    std::mutex                                    object_to_add_mutex;
 
     friend class yc::app::threads::logic;
     friend class application;
@@ -81,54 +83,58 @@ public:
 
   /* acts like renderer data,
    * and additionally used to perform custom rendering */
-  class subrenderer_
+  class subrenderer
   {
   protected:
-    application *                     app;
-    yc::app::asset_factory *          asset_factory;
-    yc::graphics::window *            window;
-    std::vector<yc::graphics::node *> objects;
+    application *                           app;
+    std::shared_ptr<yc::app::asset_factory> asset_factory;
+    std::shared_ptr<yc::graphics::window>   window;
+    std::vector<yc::graphics::node *>       objects;
 
     friend class yc::app::threads::renderer;
     friend class application;
 
-    virtual ~subrenderer_() = default;
+    virtual ~subrenderer() = default;
 
-    subrenderer_(
-          yc::app::asset_factory * asset_factory, yc::graphics::window * window)
-    : asset_factory(asset_factory)
-    , window(window) {};
+    subrenderer(
+          std::shared_ptr<yc::app::asset_factory> asset_factory,
+          std::shared_ptr<yc::graphics::window>   window)
+    : asset_factory(std::move(asset_factory))
+    , window(std::move(window)) {};
 
     virtual void before_loop() = 0;
     virtual void loop()        = 0;
+  };
 
-  } * subrenderer;
+  std::shared_ptr<subrenderer> renderer;
 
   application(
-        yc::app::application::subrenderer_ * subrenderer,
-        yc::graphics::input_events *         input_events,
-        yc::os_events *                      os_events)
-  : os_events(os_events)
-  , input(input_events)
-  , subrenderer(subrenderer)
+        std::shared_ptr<yc::app::application::subrenderer> subrenderer,
+        std::shared_ptr<yc::graphics::window>              window,
+        std::shared_ptr<yc::os_events>                     os_events)
+  : os_events(std::move(os_events))
+  , window(std::move(window))
+  , renderer(std::move(subrenderer))
   {
-    subrenderer->app = this;
+    renderer->app = this;
+    input_mgr     = std::make_shared<input_manager>(this->window);
   }
 
   yc::error start();
 
   void stop()
   {
-    subrenderer->window->close();
+    renderer->window->close();
   }
 
-  void add_object(yc::app::object * object)
+  void add_object(std::shared_ptr<yc::app::object> object)
   {
     std::lock_guard<std::mutex> lock(logic_data.object_to_add_mutex);
-    logic_data.object_to_add.push_back(object);
+    logic_data.object_to_add.push_back(std::move(object));
   }
 
-  void destroy_object(yc::app::object * object, bool hard = false)
+  void destroy_object(
+        const std::shared_ptr<yc::app::object> & object, bool hard = false)
   {
     if (hard)
     {
@@ -138,8 +144,6 @@ public:
       {
         common_data.objects.erase(it);
       }
-
-      delete object;
     }
     else
     {
@@ -151,14 +155,7 @@ public:
   {
     for (auto & object : common_data.objects)
     {
-      if (hard)
-      {
-        delete object;
-      }
-      else
-      {
-        object->logic_data.should_be_deleted = true;
-      }
+      object->logic_data.should_be_deleted = true;
     }
 
     if (hard)
@@ -167,16 +164,16 @@ public:
     }
   }
 
-  yc::graphics::geometry get_geometry() const
+  [[nodiscard]] yc::graphics::geometry get_geometry() const
   {
     yc::graphics::geometry geometry {};
-    subrenderer->window->get_geometry(geometry);
+    renderer->window->get_geometry(geometry);
     return geometry;
   }
 
-  input_manager & get_input()
+  std::shared_ptr<input_manager> get_input()
   {
-    return input;
+    return input_mgr;
   }
 };
 

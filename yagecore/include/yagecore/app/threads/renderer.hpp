@@ -32,7 +32,7 @@ private:
   yc::app::frequency_keeper keeper;
 
   size_t                   instances_count = 0;
-  yc::graphics::graphics * graphics {}; /* cache */
+  std::shared_ptr<yc::graphics::graphics> graphics {}; /* cache */
 
 public:
   yc::signal_event_listener stop_signal_listener;
@@ -70,7 +70,7 @@ public:
   , profiler(profiler)
   {
     int max_fps = 0;
-    app->subrenderer->window->get_max_fps(max_fps);
+    app->renderer->window->get_max_fps(max_fps);
     keeper = yc::app::frequency_keeper(max_fps);
   }
 };

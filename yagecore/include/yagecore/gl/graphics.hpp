@@ -32,6 +32,8 @@ private:
   bool has_extension(const char * extension);
 
 public:
+  ~graphics() override = default;
+
   /* function cache. Because we don't know what
    * version of OpenGL we are using */
   PFNGLCREATESHADERPROC            glCreateShader {};
@@ -74,23 +76,18 @@ public:
 
   yc::error init(int bits_per_pixel, int width, int height);
 
-  yc::graphics::shader * create_shader(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics) override;
-  yc::error destroy_shader(yc::graphics::shader * shader) override;
-
-  yc::graphics::node * create_node(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics) override;
-  yc::error destroy_node(yc::graphics::node * node) override;
-
-  yc::graphics::texture * create_texture(
-        std::string              name,
-        yc::app::asset_cacher *  cacher,
-        yc::graphics::graphics * graphics) override;
-  yc::error destroy_texture(yc::graphics::texture * texture) override;
+  std::shared_ptr<yc::graphics::shader> create_shader(
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics) override;
+  std::shared_ptr<yc::graphics::node> create_node(
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics) override;
+  std::shared_ptr<yc::graphics::texture> create_texture(
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics) override;
 
   bool supports_shader_language(const std::string & language) override
   {

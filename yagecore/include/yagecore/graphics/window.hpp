@@ -70,7 +70,7 @@ public:
   virtual yc::error                update()       = 0;
   virtual yc::error                close()        = 0;
   virtual bool                     is_open()      = 0;
-  virtual yc::graphics::graphics * get_graphics() = 0;
+  virtual std::shared_ptr<yc::graphics::graphics> get_graphics() = 0;
 
   virtual yc::error set_mode(settings::window_mode mode) = 0;
   virtual yc::error get_mode(settings::window_mode & mode)

@@ -386,7 +386,8 @@ yc::error yc::x11::window::open()
   logging(LOG_DEBUG, "Making GLX context current");
   glXMakeCurrent(display, win, glx_context);
 
-  if (context.init(16, settings.width, settings.height) != yc::error::OK)
+  graphics = std::make_shared<yc::gl::graphics>();
+  if (graphics->init(16, settings.width, settings.height) != yc::error::OK)
   {
     logging(LOG_ERROR, "Failed to initialize graphics context");
     XCloseDisplay(display);
@@ -601,9 +602,9 @@ bool yc::x11::window::is_open()
   return opened;
 }
 
-yc::graphics::graphics * yc::x11::window::get_graphics()
+std::shared_ptr<yc::graphics::graphics> yc::x11::window::get_graphics()
 {
-  return &context;
+  return graphics;
 }
 
 void yc::x11::window::event_loop::run()

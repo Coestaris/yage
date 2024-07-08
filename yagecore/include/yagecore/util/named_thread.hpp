@@ -25,8 +25,8 @@ class named_thread
 private:
   static std::unordered_map<std::thread::id, std::string> thread_names;
 
-  std::thread * thread = nullptr;
-  std::string   name;
+  std::unique_ptr<std::thread> thread;
+  std::string                  name;
 
   virtual void run() = 0;
 
@@ -52,11 +52,6 @@ public:
   {
   }
 
-  virtual ~named_thread()
-  {
-    delete thread;
-  }
-
   std::string get_name() const
   {
     return name;
@@ -64,7 +59,7 @@ public:
 
   void start()
   {
-    thread = new std::thread(&named_thread::start_inplace, this);
+    thread = std::make_unique<std::thread>(&named_thread::start_inplace, this);
     set_port_name();
   }
 
