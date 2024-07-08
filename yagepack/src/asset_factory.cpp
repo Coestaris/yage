@@ -289,7 +289,7 @@ yagepack::asset_factory::read_assets(yc::graphics::graphics * graphics)
     }
 
     auto * shader = graphics->create_shader(basename, &cacher, graphics);
-    shader->set_sources(sources);
+    shader->set_sources(const_cast<yc::graphics::shader::data &>(sources));
     assets[basename] = shader;
   });
   parser.on_texture([this, graphics](
@@ -433,7 +433,7 @@ void yagepack::asset_factory::pack_watchdog::run()
         return;
       }
 
-      shader->set_sources(sources);
+      shader->set_sources(const_cast<yc::graphics::shader::data &>(sources));
     });
     parser.on_texture([this,
                        p](const std::string &                 basename,

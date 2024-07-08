@@ -19,6 +19,7 @@
 #include "yagecore/platform.hpp"
 #include "yagecore/gl/texture.hpp"
 #include "yagecore/gl/node.hpp"
+#include "glm/ext/matrix_transform.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -122,6 +123,12 @@ private:
   texture * tex1;
   texture * tex2;
 
+  yc::gl::uniform_int u_tex1 {};
+  yc::gl::uniform_int u_tex2 {};
+  yc::gl::uniform_mat4 u_transform {};
+
+  float rotation = 0;
+
   yc::gl::node * box;
 
 public:
@@ -169,8 +176,12 @@ public:
     ctx->glEnableVertexAttribArray(2);
 
     program->use();
-    program->set_uniform(program->get_uniform_location("texture1"), 0);
-    program->set_uniform(program->get_uniform_location("texture2"), 1);
+    u_tex1 = program->get_uniform<int>("texture1");
+    u_tex2 = program->get_uniform<int>("texture2");
+    u_transform = program->get_uniform<glm::mat4>("transform");
+
+    u_tex1->set(0);
+    u_tex2->set(1);
   }
 
   void begin() override
@@ -178,8 +189,13 @@ public:
     tex2->use(GL_TEXTURE0);
     tex1->use(GL_TEXTURE1);
 
+    auto transform = glm::mat4(1.0f);
+    transform = glm::rotate(transform, rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+    rotation += 0.01f;
+
     ctx->glBindVertexArray(VAO);
     program->use();
+    u_transform->set(transform);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
   }
 

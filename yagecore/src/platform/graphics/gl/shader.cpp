@@ -23,6 +23,8 @@
 /* Shared functions ========================================================= */
 yc::error yc::gl::shader::load()
 {
+  live = true;
+
   if (sources.empty())
   {
     logging(LOG_ERROR, "No sources to load");
@@ -53,8 +55,7 @@ yc::error yc::gl::shader::load()
   return load_from_binary(binary);
 }
 
-yc::error yc::gl::shader::load_from_binary(
-      const std::vector<uint8_t> & binary)
+yc::error yc::gl::shader::load_from_binary(const std::vector<uint8_t> & binary)
 {
   /* Create program */
   id = ctx->glCreateProgram();
@@ -82,8 +83,16 @@ yc::error yc::gl::shader::load_from_binary(
     return yc::error::EXTERNAL_API_ERROR;
   }
 
-  live   = true;
   loaded = true;
+
+#if USE_DEBUG
+  use();
+  /* Reload uniforms */
+  for (auto & uniform : uniforms)
+  {
+    uniform->reload();
+  }
+#endif
 
   return yc::error::OK;
 }
@@ -117,8 +126,7 @@ GLint yc::gl::shader::get_attribute_location(
   return location;
 }
 
-yc::error yc::gl::shader::compile_binary(
-      std::vector<uint8_t> & binary)
+yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
 {
   if (sources.empty())
   {
@@ -130,16 +138,15 @@ yc::error yc::gl::shader::compile_binary(
 
   auto program = ctx->glCreateProgram();
 
-  for (auto & [type, uri] : sources)
+  auto types = sources.get_types();
+  for (auto & type : types)
   {
     /* Load source */
-    std::vector<uint8_t> source;
-    uri.read(source);
+    auto source = sources.get_source(type);
+
     if (source.empty())
     {
-      logging(
-            LOG_ERROR, "Failed to read shader source: %s",
-            uri.get_uri().c_str());
+      logging(LOG_ERROR, "Failed to read shader source: %s", type.c_str());
       return yc::error::EXTERNAL_API_ERROR;
     }
 
@@ -165,7 +172,7 @@ yc::error yc::gl::shader::compile_binary(
       return yc::error::EXTERNAL_API_ERROR;
     }
 
-    const char * c_source = reinterpret_cast<const char *>(source.data());
+    const char * c_source = source.c_str();
     GLint        length   = source.size();
     ctx->glShaderSource(shader, 1, &c_source, &length);
     ctx->glCompileShader(shader);

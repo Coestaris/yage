@@ -20,6 +20,8 @@
 /* Shared functions ========================================================= */
 yc::error yc::gl::node::load()
 {
+  live = true;
+
   logging(LOG_DEBUG, "Loading GLTF node: %s", get_name().c_str());
 
   if (!load_gltf(sources.get_uri()))

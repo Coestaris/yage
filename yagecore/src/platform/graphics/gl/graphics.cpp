@@ -158,7 +158,6 @@ yc::graphics::texture * yc::gl::graphics::create_texture(
       yc::graphics::graphics * graphics)
 {
   return new yc::gl::texture(name, cacher, graphics);
-
 }
 
 yc::graphics::node * yc::gl::graphics::create_node(
@@ -305,11 +304,17 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
   glProgramBinary           = reinterpret_cast<PFNGLPROGRAMBINARYPROC>(gl_lookup("glProgramBinary", true));
   glActiveTexture           = reinterpret_cast<PFNGLACTIVETEXTUREPROC>(gl_lookup("glActiveTexture", true));
   glBindTexture             = reinterpret_cast<PFNGLBINDTEXTUREEXTPROC>(gl_lookup("glBindTexture", true));
-  glGenerateMipmap = reinterpret_cast<PFNGLGENERATEMIPMAPPROC>(gl_lookup("glGenerateMipmap", true));
-  glGetUniformLocation = reinterpret_cast<PFNGLGETUNIFORMLOCATIONPROC>(gl_lookup("glGetUniformLocation", true));
-  glGetAttribLocation = reinterpret_cast<PFNGLGETATTRIBLOCATIONPROC>(gl_lookup("glGetAttribLocation", true));
-  glUniform1i = reinterpret_cast<PFNGLUNIFORM1IPROC>(gl_lookup("glUniform1i", true));
-  glUniform1f = reinterpret_cast<PFNGLUNIFORM1FPROC>(gl_lookup("glUniform1f", true));
+  glGenerateMipmap          = reinterpret_cast<PFNGLGENERATEMIPMAPPROC>(gl_lookup("glGenerateMipmap", true));
+  glGetUniformLocation      = reinterpret_cast<PFNGLGETUNIFORMLOCATIONPROC>(gl_lookup("glGetUniformLocation", true));
+  glGetAttribLocation       = reinterpret_cast<PFNGLGETATTRIBLOCATIONPROC>(gl_lookup("glGetAttribLocation", true));
+  glUniform1i               = reinterpret_cast<PFNGLUNIFORM1IPROC>(gl_lookup("glUniform1i", true));
+  glUniform1f               = reinterpret_cast<PFNGLUNIFORM1FPROC>(gl_lookup("glUniform1f", true));
+  glUniform2f               = reinterpret_cast<PFNGLUNIFORM2FPROC>(gl_lookup("glUniform2f", true));
+  glUniform3f               = reinterpret_cast<PFNGLUNIFORM3FPROC>(gl_lookup("glUniform3f", true));
+  glUniform4f               = reinterpret_cast<PFNGLUNIFORM4FPROC>(gl_lookup("glUniform4f", true));
+  glUniformMatrix2fv        = reinterpret_cast<PFNGLUNIFORMMATRIX2FVPROC>(gl_lookup("glUniformMatrix2fv", true));
+  glUniformMatrix3fv        = reinterpret_cast<PFNGLUNIFORMMATRIX3FVPROC>(gl_lookup("glUniformMatrix3fv", true));
+  glUniformMatrix4fv        = reinterpret_cast<PFNGLUNIFORMMATRIX4FVPROC>(gl_lookup("glUniformMatrix4fv", true));
   // clang-format on
 
   glShadeModel(GL_SMOOTH); // Enable Smooth Shading

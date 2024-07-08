@@ -65,6 +65,12 @@ public:
   PFNGLGETATTRIBLOCATIONPROC       glGetAttribLocation {};
   PFNGLUNIFORM1IPROC               glUniform1i {};
   PFNGLUNIFORM1FPROC               glUniform1f {};
+  PFNGLUNIFORM2FPROC               glUniform2f {};
+  PFNGLUNIFORM3FPROC               glUniform3f {};
+  PFNGLUNIFORM4FPROC               glUniform4f {};
+  PFNGLUNIFORMMATRIX2FVPROC        glUniformMatrix2fv {};
+  PFNGLUNIFORMMATRIX3FVPROC        glUniformMatrix3fv {};
+  PFNGLUNIFORMMATRIX4FVPROC        glUniformMatrix4fv {};
 
   yc::error init(int bits_per_pixel, int width, int height);
 

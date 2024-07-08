@@ -22,6 +22,8 @@
 /* Shared functions ========================================================= */
 yc::error yc::gl::texture::load()
 {
+  live = true;
+
   if (sources.empty())
   {
     logging(LOG_ERROR, "No sources to load");

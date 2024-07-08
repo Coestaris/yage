@@ -36,7 +36,9 @@ public:
     std::string language;
 
     /* type -> source url */
-    std::unordered_map<std::string, yc::util::uri> sources;
+    std::unordered_map<std::string, yc::util::uri> uris;
+    /* Cache for loaded sources */
+    std::unordered_map<std::string, std::string> sources;
 
   public:
     data() = default;
@@ -45,13 +47,13 @@ public:
     {
     }
 
-    std::string get_hash(const std::string & name) const
+    std::string get_hash(const std::string & name)
     {
       yc::fast_hasher hasher;
-      for (const auto & [type, uri] : sources)
+      for (const auto & [type, uri] : uris)
       {
         hasher.add(type);
-        hasher.add(uri.get_uri());
+        hasher.add(get_source(type));
       }
 
       return "_shader" + name + "_" + hasher.as_string();
@@ -59,27 +61,67 @@ public:
 
     void add_source(std::string type, const yc::util::uri & url)
     {
-      sources[type] = url;
+      uris[type] = url;
     }
 
-    bool operator==(const data & other) const
+    bool operator==(data & other)
     {
-      return sources == other.sources;
+      /* Compare URI by content, not as a string */
+      if (uris.size() != other.uris.size())
+      {
+        return false;
+      }
+
+      for (const auto & [type, uri] : uris)
+      {
+        if (other.uris.find(type) == other.uris.end())
+        {
+          return false;
+        }
+
+        if (uri != other.uris.at(type))
+        {
+          return false;
+        }
+
+        std::string old_source = get_source(type);
+        std::string new_source = other.get_source(type);
+
+        if (old_source != new_source)
+        {
+          return false;
+        }
+      }
+
+      return true;
     }
 
-    /* Implement iterator */
-    auto begin()
+    std::vector<std::string> get_types() const
     {
-      return sources.begin();
+      std::vector<std::string> types;
+      for (const auto & [type, uri] : uris)
+      {
+        types.push_back(type);
+      }
+
+      return types;
     }
-    auto end()
+
+    std::string get_source(const std::string & type)
     {
-      return sources.end();
+      if (sources.find(type) == sources.end())
+      {
+        std::vector<uint8_t> data;
+        uris.at(type).read(data);
+        sources[type] = std::string(data.begin(), data.end());
+      }
+
+      return sources.at(type);
     }
 
     bool empty() const
     {
-      return sources.empty();
+      return uris.empty();
     }
 
     std::string get_language() const
@@ -102,7 +144,7 @@ protected:
   }
 
 public:
-  void set_sources(const data & _sources)
+  void set_sources(data & _sources)
   {
     if (!(sources == _sources))
     {
