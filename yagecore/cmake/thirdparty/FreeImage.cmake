@@ -1,0 +1,9 @@
+add_definitions(-DFREEIMAGE_LIB)
+add_subdirectory(${PROJECT_DIR}/thirdparty/FreeImage)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_DIR}/thirdparty/FreeImage/Source)
+target_link_libraries(${PROJECT_NAME} PRIVATE FreeImage::FreeImage)
+
+if (NOT YAGECORE_STATIC)
+    target_compile_options(FreeImage PRIVATE -fPIC)
+endif()
