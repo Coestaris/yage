@@ -37,6 +37,7 @@ extern PFNGLUSEPROGRAMPROC              glUseProgram;
 extern PFNGLDELETEPROGRAMPROC           glDeleteProgram;
 extern PFNGLGETPROGRAMBINARYPROC        glGetProgramBinary;
 extern PFNGLGENVERTEXARRAYSPROC         glGenVertexArrays;
+extern PFNGLDELETEVERTEXARRAYSPROC      glDeleteVertexArrays;
 extern PFNGLBUFFERDATAPROC              glBufferData;
 extern PFNGLGENBUFFERSPROC              glGenBuffers;
 extern PFNGLDELETEBUFFERSPROC           glDeleteBuffers;

@@ -113,6 +113,7 @@ class triangle_pass : public final_pass
 private:
   glm::mat4 proj;
   glm::mat4 view;
+  glm::mat4 model;
 
   std::shared_ptr<node>    box;
   std::shared_ptr<texture> tex1;
@@ -149,24 +150,32 @@ public:
     proj = glm::perspective(
           glm::radians(45.0f),
           geometry.width / static_cast<float>(geometry.height), 0.1f, 100.0f);
-    view = glm::identity<glm::mat4>();
+    view = glm::lookAt(
+          glm::vec3(0.0f, 0.0f, 3.0f),
+          glm::vec3(0.0f, 0.0f, 0.0f),
+          glm::vec3(0.0f, 1.0f, 0.0f));
 
-    u_texture1 = program->get_uniform<int>("texture1");
-    u_texture2 = program->get_uniform<int>("texture2");
-    u_proj     = program->get_uniform<glm::mat4>("projection");
-    u_view     = program->get_uniform<glm::mat4>("view");
-    u_model    = program->get_uniform<glm::mat4>("model");
+    model = glm::mat4(1.0f);
+
+//    u_texture1 = program->get_uniform<int>("texture1");
+//    u_texture2 = program->get_uniform<int>("texture2");
+//    u_proj     = program->get_uniform<glm::mat4>("projection");
+//    u_view     = program->get_uniform<glm::mat4>("view");
+//    u_model    = program->get_uniform<glm::mat4>("model");
+//
+//    u_proj->set(proj);
+//    u_view->set(view);
+//    u_model->set(model);
 
     program->use();
-    u_texture1->set(0);
-    u_texture2->set(1);
+//    u_texture1->set(0);
+//    u_texture2->set(1);
   }
 
   void begin() override
   {
-    tex2->use(GL_TEXTURE0);
-    tex1->use(GL_TEXTURE1);
-
+//    tex2->use(GL_TEXTURE0);
+//    tex1->use(GL_TEXTURE1);
     program->use();
     box->draw();
   }

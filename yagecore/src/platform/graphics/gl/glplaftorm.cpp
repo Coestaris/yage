@@ -39,6 +39,7 @@ PFNGLUSEPROGRAMPROC              yc::gl::glUseProgram;
 PFNGLDELETEPROGRAMPROC           yc::gl::glDeleteProgram;
 PFNGLGETPROGRAMBINARYPROC        yc::gl::glGetProgramBinary;
 PFNGLGENVERTEXARRAYSPROC         yc::gl::glGenVertexArrays;
+PFNGLDELETEVERTEXARRAYSPROC      yc::gl::glDeleteVertexArrays;
 PFNGLBUFFERDATAPROC              yc::gl::glBufferData;
 PFNGLGENBUFFERSPROC              yc::gl::glGenBuffers;
 PFNGLDELETEBUFFERSPROC           yc::gl::glDeleteBuffers;
@@ -121,6 +122,7 @@ void yc::gl::gl_update_cache()
   yc::gl::glUseProgram              = reinterpret_cast<PFNGLUSEPROGRAMPROC>(gl_lookup("glUseProgram", true));
   yc::gl::glDeleteProgram           = reinterpret_cast<PFNGLDELETEPROGRAMPROC>(gl_lookup("glDeleteProgram", true));
   yc::gl::glGetProgramBinary        = reinterpret_cast<PFNGLGETPROGRAMBINARYPROC>(gl_lookup("glGetProgramBinary", true));
+  yc::gl::glDeleteVertexArrays      = reinterpret_cast<PFNGLDELETEVERTEXARRAYSPROC>(gl_lookup("glDeleteVertexArrays", true));
   yc::gl::glGenVertexArrays         = reinterpret_cast<PFNGLGENVERTEXARRAYSPROC>(gl_lookup("glGenVertexArrays", true));
   yc::gl::glBufferData              = reinterpret_cast<PFNGLBUFFERDATAPROC>(gl_lookup("glBufferData", true));
   yc::gl::glGenBuffers              = reinterpret_cast<PFNGLGENBUFFERSPROC>(gl_lookup("glGenBuffers", true));

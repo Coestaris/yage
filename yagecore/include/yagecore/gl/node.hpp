@@ -26,13 +26,15 @@ namespace yc::gl
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
+class node;
+
 class mesh_buffer : public yc::graphics::mesh_buffer
 {
-private:
+protected:
   /* Shortcut for GL specific graphics */
   std::shared_ptr<yc::gl::graphics> ctx;
 
-  /* ATTENTION: VAO is handled by parent Node class */
+  friend node;
   GLuint vao, vbo, ebo;
 
 public:
@@ -50,17 +52,23 @@ public:
 
   void unload() override
   {
+    if (vao)
+      yc::gl::glDeleteVertexArrays(1, &vao);
     if (vbo)
       yc::gl::glDeleteBuffers(1, &vbo);
     if (ebo)
       yc::gl::glDeleteBuffers(1, &ebo);
   }
 
+  static inline void draw(GLuint vao_)
+  {
+    yc::gl::glBindVertexArray(vao_);
+    yc::gl::glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+  }
+
   inline void draw() override
   {
-    yc::gl::glBindVertexArray(vao);
-    yc::gl::glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-    // ctx->glBindVertexArray(0);
+    draw(vao);
   }
 };
 
@@ -69,14 +77,16 @@ class node : public yc::graphics::node
 private:
   /* Shortcut for GL specific graphics */
   std::shared_ptr<yc::gl::graphics> ctx;
-  /* gltf index -> GL buffer */
-  std::unordered_map<size_t, GLuint> vbos;
   /* map to translate gltf attribute names to GL attribute locations
    * (that used in users' shaders) */
   std::unordered_map<std::string, GLint> attribute_map;
+  /* Little optimization to avoid recursive tree traversal,
+   * we just store all the flat VAOs to draw them in one go. */
+  std::vector<GLuint> flat_vaos_to_draw;
 
   bool load_gltf(const yc::util::uri & uri);
   bool parse_gltf(const fastgltf::Asset & asset);
+  void flat_vaos(std::vector<GLuint> & vaos);
 
 public:
   ~node() override = default;
@@ -92,6 +102,29 @@ public:
 
   yc::error load() override;
   void      unload() override;
+
+  inline void draw() override
+  {
+#if USE_DEBUG
+    if (!live)
+    {
+      return;
+    }
+#endif
+
+    /* Little optimization */
+    if (type_ == yc::graphics::node::type::TOPLEVEL)
+    {
+      for (auto vao : flat_vaos_to_draw)
+      {
+        mesh_buffer::draw(vao);
+      }
+    }
+    else
+    {
+      yc::graphics::node::draw();
+    }
+  }
 };
 
 /* Variables ================================================================ */

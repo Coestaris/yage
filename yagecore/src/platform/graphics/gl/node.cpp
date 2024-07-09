@@ -19,6 +19,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-move"
 #include "fastgltf/core.hpp"
+#include "fastgltf/tools.hpp"
 #pragma GCC diagnostic pop
 
 /* Defines ================================================================== */
@@ -47,11 +48,7 @@ yc::error yc::gl::node::load()
 
 void yc::gl::node::unload()
 {
-  /* Unload all buffers */
-  for (auto & vbo : vbos)
-  {
-    yc::gl::glDeleteBuffers(1, &vbo.second);
-  }
+  flat_vaos_to_draw.clear();
 
   /* Unload all meshes */
   for (auto & mesh : meshes)
@@ -87,7 +84,8 @@ bool yc::gl::node::load_gltf(const yc::util::uri & uri)
 
   success          = true;
   auto asset_error = parser.loadGltf(
-        data.get(), yc::basedir(uri.get_uri()), fastgltf::Options::None);
+        data.get(), yc::basedir(uri.get_uri()),
+        fastgltf::Options::LoadExternalBuffers);
   if (auto error = asset_error.error(); error != fastgltf::Error::None)
   {
     logging(
@@ -103,125 +101,8 @@ bool yc::gl::node::load_gltf(const yc::util::uri & uri)
   return parse_gltf(asset_error.get());
 }
 
-struct vertex_attribute
-{
-  size_t                 buffer_index;
-  fastgltf::AccessorType type;
-  size_t                 count;
-  void *                 byte_offset;
-  size_t                 byte_stride;
-  fastgltf::BufferTarget target;
-};
-
-vertex_attribute get_vertex_attribute(
-      const fastgltf::Asset &     asset,
-      const fastgltf::Primitive & primitive,
-      const std::string &         attribute_name)
-{
-  vertex_attribute attr;
-
-  /* Fail if no attribute */
-  for (size_t i = 0; i < primitive.attributes.size(); i++)
-  {
-    if (std::strcmp(
-              primitive.attributes[i].name.c_str(), attribute_name.c_str())
-        != 0)
-      continue;
-
-    auto & gltf_accessor
-          = asset.accessors[primitive.attributes[i].accessorIndex];
-    auto & gltf_buffer_view
-          = asset.bufferViews[gltf_accessor.bufferViewIndex.value()];
-
-    attr.buffer_index = gltf_buffer_view.bufferIndex;
-    attr.type         = gltf_accessor.type;
-    attr.count        = gltf_accessor.count;
-    attr.byte_offset  = reinterpret_cast<void *>(gltf_buffer_view.byteOffset);
-    if (gltf_buffer_view.byteStride)
-    {
-      attr.byte_stride = gltf_buffer_view.byteStride.value();
-    }
-    else
-    {
-      attr.byte_stride = gltf_buffer_view.byteLength / gltf_accessor.count;
-    }
-
-    attr.target = gltf_buffer_view.target.value();
-
-    return attr;
-  }
-
-  throw std::runtime_error(attribute_name + " attribute not found");
-}
-
-vertex_attribute get_indices(
-      const fastgltf::Asset & asset, const fastgltf::Primitive & primitive)
-{
-  vertex_attribute attr;
-
-  if (!primitive.indicesAccessor)
-  {
-    throw std::runtime_error("No indices accessor");
-  }
-
-  /* Fail if no attribute */
-  auto & gltf_accessor = asset.accessors[primitive.indicesAccessor.value()];
-  auto & gltf_buffer_view
-        = asset.bufferViews[gltf_accessor.bufferViewIndex.value()];
-
-  attr.buffer_index = gltf_buffer_view.bufferIndex;
-  attr.type         = gltf_accessor.type;
-  attr.count        = gltf_accessor.count;
-  attr.byte_offset  = reinterpret_cast<void *>(gltf_buffer_view.byteOffset);
-  attr.byte_stride  = gltf_buffer_view.byteLength / gltf_accessor.count;
-
-  attr.target = gltf_buffer_view.target.value();
-
-  return attr;
-}
-
 bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
 {
-  /* Load all buffer to the GPU */
-  for (size_t i = 0; i < asset.buffers.size(); i++)
-  {
-    auto & gltf_buffer = asset.buffers[i];
-    auto   buffer_name = gltf_buffer.name.c_str();
-
-    /* If stores URI - load it */
-    std::vector<uint8_t> data;
-    if (std::holds_alternative<fastgltf::sources::URI>(gltf_buffer.data))
-    {
-      /* TODO: This is not valid! */
-      auto uri = yc::util::uri(yc::join_path(
-            sources.get_work_dir(),
-            std::get<fastgltf::sources::URI>(gltf_buffer.data).uri.c_str()));
-
-      uri.read(data);
-      if (data.empty())
-      {
-        logging(
-              LOG_ERROR, "Failed to read buffer data from URI: %s",
-              uri.get_uri().c_str());
-        return false;
-      }
-    }
-    else
-    {
-      throw std::runtime_error("Unsupported buffer data type");
-    }
-
-    /* Load buffer data to the GPU */
-    GLuint buffer;
-
-    yc::gl::glGenBuffers(1, &buffer);
-    yc::gl::glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    yc::gl::glBufferData(
-          GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
-
-    vbos[i] = buffer;
-  }
-
   for (auto & gltf_scene : asset.scenes)
   {
     auto scene = std::make_shared<yc::gl::node>(
@@ -263,55 +144,148 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
       node->transform = transform;
       scene->children.push_back(node);
 
+      std::vector<uint32_t> indices;
+
+      struct vertex
+      {
+        glm::vec3 position;
+        glm::vec3 color;
+        glm::vec3 normal;
+        glm::vec2 uvs;
+      };
+
+      std::vector<vertex> vertices;
+
       /* Load meshes */
       if (gltf_node.meshIndex)
       {
         auto & gltf_mesh = asset.meshes[gltf_node.meshIndex.value()];
-        auto   mesh      = std::make_shared<yc::gl::node>(
-              gltf_mesh.name.c_str(), cacher, graphics, type::MESH);
-
-        node->children.push_back(mesh);
 
         /* Load vertices */
         for (auto & gltf_primitive : gltf_mesh.primitives)
         {
-          auto pos = get_vertex_attribute(asset, gltf_primitive, "POSITION");
-          auto nor = get_vertex_attribute(asset, gltf_primitive, "NORMAL");
-          auto tex = get_vertex_attribute(asset, gltf_primitive, "TEXCOORD_0");
+          /* Process indices */
+          auto & gltf_index_accessor
+                = asset.accessors[gltf_primitive.indicesAccessor.value()];
+          size_t start_index = indices.size();
+          indices.reserve(indices.size() + gltf_index_accessor.count);
+          size_t initial_vtx = vertices.size();
+          fastgltf::iterateAccessor<std::uint32_t>(
+                asset, gltf_index_accessor, [&](std::uint32_t idx) {
+                  indices.push_back(idx + initial_vtx);
+                });
 
-          /* Setup Vertex Array Object */
-          GLuint vao;
-          yc::gl::glGenVertexArrays(1, &vao);
-          yc::gl::glBindVertexArray(vao);
-          yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbos[pos.buffer_index]);
-          yc::gl::glEnableVertexAttribArray(0);
-          yc::gl::glVertexAttribPointer(
-                0, 3, GL_FLOAT, GL_FALSE, pos.byte_stride, pos.byte_offset);
-          yc::gl::glEnableVertexAttribArray(1);
-          yc::gl::glVertexAttribPointer(
-                1, 3, GL_FLOAT, GL_FALSE, nor.byte_stride, nor.byte_offset);
-          yc::gl::glEnableVertexAttribArray(2);
-          yc::gl::glVertexAttribPointer(
-                2, 2, GL_FLOAT, GL_FALSE, tex.byte_stride, tex.byte_offset);
+          /* Process positions */
+          auto & gltf_pos_accessor
+                = asset.accessors[gltf_primitive.findAttribute("POSITION")
+                                        ->accessorIndex];
+          vertices.resize(vertices.size() + gltf_pos_accessor.count);
 
-          /* Load indices */
-          auto   indices = get_indices(asset, gltf_primitive);
-          GLuint ebo;
-          /* EBO data is in the same buffer as VBO */
-          yc::gl::glGenBuffers(1, &ebo);
-          yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-          yc::gl::glBufferData(
-                GL_ELEMENT_ARRAY_BUFFER, indices.count * 2, nullptr,
-                GL_STATIC_DRAW);
+          fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
+                asset, gltf_pos_accessor,
+                [&](fastgltf::math::fvec3 pos, std::size_t idx) {
+                  vertex v   = {};
+                  v.position = glm::vec3(pos[0], pos[1], pos[2]);
+                  vertices[initial_vtx + index] = v;
+                });
 
-          auto mesh_buffer = std::make_shared<yc::gl::mesh_buffer>(
-                ctx, vao, vbos[pos.buffer_index], ebo);
+          /* Process normals */
+          auto & gltf_normal_accessor
+                = asset.accessors[gltf_primitive.findAttribute("NORMAL")
+                                        ->accessorIndex];
+          fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
+                asset, gltf_normal_accessor,
+                [&](fastgltf::math::fvec3 normal, std::size_t idx) {
+                  vertices[initial_vtx + idx].normal
+                        = glm::vec3(normal[0], normal[1], normal[2]);
+                });
 
-          mesh->meshes.push_back(mesh_buffer);
+          /* Process colors */
+          auto & gltf_color_accessor
+                = asset.accessors[gltf_primitive.findAttribute("COLOR_0")
+                                        ->accessorIndex];
+          fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
+                asset, gltf_color_accessor,
+                [&](fastgltf::math::fvec3 color, std::size_t idx) {
+                  vertices[initial_vtx + idx].color
+                        = glm::vec3(color[0], color[1], color[2]);
+                });
+
+          /* Process UVs */
+          auto & gltf_uv_accessor
+                = asset.accessors[gltf_primitive.findAttribute("TEXCOORD_0")
+                                        ->accessorIndex];
+          fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec2>(
+                asset, gltf_uv_accessor,
+                [&](fastgltf::math::fvec2 uv, std::size_t idx) {
+                  vertices[initial_vtx + idx].uvs = glm::vec2(uv[0], uv[1]);
+                });
         }
       }
+
+      /* Create Vertex Array Object */
+      GLuint vao, vbo, ebo;
+
+      yc::gl::glGenVertexArrays(1, &vao);
+      yc::gl::glGenBuffers(1, &vbo);
+      yc::gl::glGenBuffers(1, &ebo);
+
+      /* TODO: Find a better way to calculate size */
+      std::vector<float> positions;
+      for (auto & vertex : vertices)
+      {
+        positions.push_back(vertex.position.x);
+        positions.push_back(vertex.position.y);
+        positions.push_back(vertex.position.z);
+        positions.push_back(vertex.normal.x);
+        positions.push_back(vertex.normal.y);
+        positions.push_back(vertex.normal.z);
+        positions.push_back(vertex.uvs.x);
+        positions.push_back(vertex.uvs.y);
+      }
+
+      yc::gl::glBindVertexArray(vao);
+      yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbo);
+      yc::gl::glBufferData(
+            GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(),
+            GL_STATIC_DRAW);
+      yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+      yc::gl::glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t),
+            indices.data(), GL_STATIC_DRAW);
+
+      yc::gl::glVertexAttribPointer(
+            0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+            reinterpret_cast<void *>(0));
+      yc::gl::glEnableVertexAttribArray(0);
+      yc::gl::glVertexAttribPointer(
+            1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+            reinterpret_cast<void *>(3 * sizeof(float)));
+      yc::gl::glEnableVertexAttribArray(1);
+      yc::gl::glVertexAttribPointer(
+            2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+            reinterpret_cast<void *>(6 * sizeof(float)));
+      yc::gl::glEnableVertexAttribArray(2);
+
+      auto mesh_buffer
+            = std::make_shared<yc::gl::mesh_buffer>(ctx, vao, vbo, ebo);
+      node->meshes.push_back(mesh_buffer);
     }
   }
 
+  flat_vaos(flat_vaos_to_draw);
+
   return true;
+}
+void yc::gl::node::flat_vaos(std::vector<GLuint> & vaos)
+{
+  for (auto & mesh : meshes)
+  {
+    vaos.push_back(dynamic_cast<yc::gl::mesh_buffer *>(mesh.get())->vao);
+  }
+
+  for (auto & child : children)
+  {
+    dynamic_cast<yc::gl::node *>(child.get())->flat_vaos(vaos);
+  }
 }

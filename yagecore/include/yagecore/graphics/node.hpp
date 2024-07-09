@@ -104,8 +104,6 @@ protected:
 
   std::vector<std::shared_ptr<mesh_buffer>> meshes;
   std::vector<std::shared_ptr<node>>        children;
-  // std::unordered_map<std::string, image>                        images;
-  // std::unordered_map<std::string, std::shared_ptr<material>>    materials;
 
   /* Transformation matrix for the meshes.
    * Note, that this matrix IS used to render meshes directly.
@@ -122,6 +120,11 @@ protected:
   , graphics(std::move(graphics))
   , type_(type)
   {
+    if (type != type::TOPLEVEL)
+    {
+      live   = true;
+      loaded = true;
+    }
   }
 
 public:
@@ -142,10 +145,12 @@ public:
 
   virtual void draw()
   {
+#if USE_DEBUG
     if (!live)
     {
       return;
     }
+#endif
 
     for (auto & mesh : meshes)
     {
