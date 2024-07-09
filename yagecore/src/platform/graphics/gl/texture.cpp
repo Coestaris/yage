@@ -99,7 +99,7 @@ yc::error yc::gl::texture::load()
       glTexImage2D(
             GL_TEXTURE_2D, level, int_format, image_width, image_height, 0,
             GL_RGBA, GL_UNSIGNED_BYTE, image_data.data());
-      ctx->glGenerateMipmap(GL_TEXTURE_2D);
+      yc::gl::glGenerateMipmap(GL_TEXTURE_2D);
 
       id     = texture;
       live   = true;

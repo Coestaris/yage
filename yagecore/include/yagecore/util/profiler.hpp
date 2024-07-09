@@ -154,6 +154,7 @@ public:
 
   ~file_profiler()
   {
+    flush();
     fclose(file);
   }
 

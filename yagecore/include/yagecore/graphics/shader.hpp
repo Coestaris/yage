@@ -34,6 +34,7 @@ public:
   {
   private:
     std::string language;
+    std::string   work_dir {};
 
     /* type -> source url */
     std::unordered_map<std::string, yc::util::uri> uris;
@@ -57,6 +58,11 @@ public:
       }
 
       return "_shader" + name + "_" + hasher.as_string();
+    }
+
+    void set_work_dir(const std::string & dir)
+    {
+      work_dir = dir;
     }
 
     void add_source(const std::string & type, const yc::util::uri & url)
@@ -105,6 +111,11 @@ public:
       }
 
       return types;
+    }
+
+    std::string get_work_dir() const
+    {
+      return work_dir;
     }
 
     std::string get_source(const std::string & type)

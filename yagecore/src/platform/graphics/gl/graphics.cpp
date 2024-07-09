@@ -225,6 +225,8 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
         LOG_INFO, "gl shading language version: %s",
         glGetString(GL_SHADING_LANGUAGE_VERSION));
 
+  gl_update_cache();
+
   cache_extensions();
   print_extensions();
 
@@ -235,10 +237,8 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
 
   if (has_extension("GL_KHR_debug"))
   {
-    gl_call(
-          "glDebugMessageControl", GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0,
-          nullptr, GL_TRUE);
-    gl_call("glDebugMessageCallback", GLDebugMessageCallback, nullptr);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    glDebugMessageCallback(GLDebugMessageCallback, nullptr);
   }
   else
   {
@@ -258,56 +258,10 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
     logging(LOG_INFO, "  Binary format: 0x%x", format);
   }
 
-  // clang-format off
-  glCreateShader            = reinterpret_cast<PFNGLCREATESHADERPROC>(gl_lookup("glCreateShader", true));
-  glShaderSource            = reinterpret_cast<PFNGLSHADERSOURCEPROC>(gl_lookup("glShaderSource", true));
-  glCompileShader           = reinterpret_cast<PFNGLCOMPILESHADERPROC>(gl_lookup("glCompileShader", true));
-  glGetShaderiv             = reinterpret_cast<PFNGLGETSHADERIVPROC>(gl_lookup("glGetShaderiv", true));
-  glGetShaderInfoLog        = reinterpret_cast<PFNGLGETSHADERINFOLOGPROC>(gl_lookup("glGetShaderInfoLog", true));
-  glDeleteShader            = reinterpret_cast<PFNGLDELETESHADERPROC>(gl_lookup("glDeleteShader", true));
-  glCreateProgram           = reinterpret_cast<PFNGLCREATEPROGRAMPROC>(gl_lookup("glCreateProgram", true));
-  glAttachShader            = reinterpret_cast<PFNGLATTACHSHADERPROC>(gl_lookup("glAttachShader", true));
-  glLinkProgram             = reinterpret_cast<PFNGLLINKPROGRAMPROC>(gl_lookup("glLinkProgram", true));
-  glGetProgramiv            = reinterpret_cast<PFNGLGETPROGRAMIVPROC>(gl_lookup("glGetProgramiv", true));
-  glGetProgramInfoLog       = reinterpret_cast<PFNGLGETPROGRAMINFOLOGPROC>(gl_lookup("glGetProgramInfoLog", true));
-  glUseProgram              = reinterpret_cast<PFNGLUSEPROGRAMPROC>(gl_lookup("glUseProgram", true));
-  glDeleteProgram           = reinterpret_cast<PFNGLDELETEPROGRAMPROC>(gl_lookup("glDeleteProgram", true));
-  glGetProgramBinary        = reinterpret_cast<PFNGLGETPROGRAMBINARYPROC>(gl_lookup("glGetProgramBinary", true));
-  glGenVertexArrays         = reinterpret_cast<PFNGLGENVERTEXARRAYSPROC>(gl_lookup("glGenVertexArrays", true));
-  glBufferData              = reinterpret_cast<PFNGLBUFFERDATAPROC>(gl_lookup("glBufferData", true));
-  glGenBuffers              = reinterpret_cast<PFNGLGENBUFFERSPROC>(gl_lookup("glGenBuffers", true));
-  glBindVertexArray         = reinterpret_cast<PFNGLBINDVERTEXARRAYPROC>(gl_lookup("glBindVertexArray", true));
-  glBindBuffer              = reinterpret_cast<PFNGLBINDBUFFERPROC>(gl_lookup("glBindBuffer", true));
-  glVertexAttribPointer     = reinterpret_cast<PFNGLVERTEXATTRIBPOINTERPROC>(gl_lookup("glVertexAttribPointer", true));
-  glEnableVertexAttribArray = reinterpret_cast<PFNGLENABLEVERTEXATTRIBARRAYPROC>(gl_lookup("glEnableVertexAttribArray", true));
-  glDrawArrays              = reinterpret_cast<PFNGLDRAWARRAYSEXTPROC>(gl_lookup("glDrawArrays", true));
-  glShaderBinary            = reinterpret_cast<PFNGLSHADERBINARYPROC>(gl_lookup("glShaderBinary", true));
-  glProgramBinary           = reinterpret_cast<PFNGLPROGRAMBINARYPROC>(gl_lookup("glProgramBinary", true));
-  glActiveTexture           = reinterpret_cast<PFNGLACTIVETEXTUREPROC>(gl_lookup("glActiveTexture", true));
-  glBindTexture             = reinterpret_cast<PFNGLBINDTEXTUREEXTPROC>(gl_lookup("glBindTexture", true));
-  glGenerateMipmap          = reinterpret_cast<PFNGLGENERATEMIPMAPPROC>(gl_lookup("glGenerateMipmap", true));
-  glGetUniformLocation      = reinterpret_cast<PFNGLGETUNIFORMLOCATIONPROC>(gl_lookup("glGetUniformLocation", true));
-  glGetAttribLocation       = reinterpret_cast<PFNGLGETATTRIBLOCATIONPROC>(gl_lookup("glGetAttribLocation", true));
-  glUniform1i               = reinterpret_cast<PFNGLUNIFORM1IPROC>(gl_lookup("glUniform1i", true));
-  glUniform1f               = reinterpret_cast<PFNGLUNIFORM1FPROC>(gl_lookup("glUniform1f", true));
-  glUniform2f               = reinterpret_cast<PFNGLUNIFORM2FPROC>(gl_lookup("glUniform2f", true));
-  glUniform3f               = reinterpret_cast<PFNGLUNIFORM3FPROC>(gl_lookup("glUniform3f", true));
-  glUniform4f               = reinterpret_cast<PFNGLUNIFORM4FPROC>(gl_lookup("glUniform4f", true));
-  glUniformMatrix2fv        = reinterpret_cast<PFNGLUNIFORMMATRIX2FVPROC>(gl_lookup("glUniformMatrix2fv", true));
-  glUniformMatrix3fv        = reinterpret_cast<PFNGLUNIFORMMATRIX3FVPROC>(gl_lookup("glUniformMatrix3fv", true));
-  glUniformMatrix4fv        = reinterpret_cast<PFNGLUNIFORMMATRIX4FVPROC>(gl_lookup("glUniformMatrix4fv", true));
-  // clang-format on
-
   glShadeModel(GL_SMOOTH); // Enable Smooth Shading
   glEnable(GL_DEPTH_TEST); // Enables Depth Testing
   glDepthFunc(GL_LEQUAL);  // The Type Of Depth Testing To Do
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
-  /* Setup orthographic projection */
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0, width, height, 0, -1, 1);
-  glMatrixMode(GL_MODELVIEW);
 
   return yc::error::OK;
 }

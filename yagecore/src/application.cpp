@@ -60,8 +60,5 @@ yc::error yc::app::application::start()
 
   logging(LOG_INFO, "Logic thread has finished");
 
-  renderer_profiler->flush();
-  logic_profiler->flush();
-
   return yc::error::OK;
 }

@@ -42,3 +42,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     include
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE yagecore)
+
+file(GLOB_RECURSE ___src *.cpp *.hpp)
+foreach (file ${___src})
+    get_filename_component(filename ${file} NAME)
+    set_source_files_properties(${file} PROPERTIES COMPILE_DEFINITIONS "__SHORT_FILE__=\"${filename}\";__USE_SHORT_FILE__=1")
+endforeach ()

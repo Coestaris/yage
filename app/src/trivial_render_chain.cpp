@@ -20,6 +20,7 @@
 #include "yagecore/gl/texture.hpp"
 #include "yagecore/gl/node.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/matrix_clip_space.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -40,10 +41,10 @@ protected:
 public:
   virtual ~trivial_render_pass() override = default;
   trivial_render_pass(
-        std::string                             name,
-        yc::graphics::pass_type                 type,
-        std::shared_ptr<shader>                 shader,
-        std::shared_ptr<yc::graphics::graphics> graphics)
+        std::string                                     name,
+        yc::graphics::pass_type                         type,
+        std::shared_ptr<shader>                         shader,
+        const std::shared_ptr<yc::graphics::graphics> & graphics)
   : render_pass(std::move(name), type)
   , program(std::move(shader))
   , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics)) {};
@@ -110,29 +111,18 @@ public:
 class triangle_pass : public final_pass
 {
 private:
-  // clang-format off
-  static constexpr const float vertices[] = {
-      // positions          // colors           // texture coords
-      0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-      0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-      -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-      -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
-  };
-  static constexpr const int indices[] = {
-      0, 1, 3, // first triangle
-      1, 2, 3  // second triangle
-  };
-  // clang-format on
+  glm::mat4 proj;
+  glm::mat4 view;
 
-  GLuint VAO, VBO, EBO;
-
+  std::shared_ptr<node>    box;
   std::shared_ptr<texture> tex1;
   std::shared_ptr<texture> tex2;
-  std::shared_ptr<node>    box;
 
-  yc::gl::uniform_int  u_tex1 {};
-  yc::gl::uniform_int  u_tex2 {};
-  yc::gl::uniform_mat4 u_transform {};
+  yc::gl::uniform_int  u_texture1;
+  yc::gl::uniform_int  u_texture2;
+  yc::gl::uniform_mat4 u_proj;
+  yc::gl::uniform_mat4 u_view;
+  yc::gl::uniform_mat4 u_model;
 
   float rotation = 0;
 
@@ -144,49 +134,32 @@ public:
         std::shared_ptr<shader>                 shader,
         std::shared_ptr<yc::graphics::graphics> graphics)
   : final_pass("triangle_pass", std::move(shader), std::move(graphics))
+  , box(std::move(box))
   , tex1(std::move(tex1))
-  , tex2(std::move(tex2))
-  , box(std::move(box)) {};
+  , tex2(std::move(tex2)) {};
 
   void before_loop() override
   {
-    ctx->glGenVertexArrays(1, &VAO);
-    ctx->glGenBuffers(1, &VBO);
-    ctx->glGenBuffers(1, &EBO);
+    yc::graphics::geometry geometry;
+    if (auto window = ctx->get_window().lock())
+    {
+      window->get_geometry(geometry);
+    }
 
-    ctx->glBindVertexArray(VAO);
+    proj = glm::perspective(
+          glm::radians(45.0f),
+          geometry.width / static_cast<float>(geometry.height), 0.1f, 100.0f);
+    view = glm::identity<glm::mat4>();
 
-    ctx->glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    ctx->glBufferData(
-          GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    ctx->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    ctx->glBufferData(
-          GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // position attribute
-    ctx->glVertexAttribPointer(
-          0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-          reinterpret_cast<void *>(0));
-    ctx->glEnableVertexAttribArray(0);
-    // color attribute
-    ctx->glVertexAttribPointer(
-          1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-          reinterpret_cast<void *>(3 * sizeof(float)));
-    ctx->glEnableVertexAttribArray(1);
-    // texture coord attribute
-    ctx->glVertexAttribPointer(
-          2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-          reinterpret_cast<void *>(6 * sizeof(float)));
-    ctx->glEnableVertexAttribArray(2);
+    u_texture1 = program->get_uniform<int>("texture1");
+    u_texture2 = program->get_uniform<int>("texture2");
+    u_proj     = program->get_uniform<glm::mat4>("projection");
+    u_view     = program->get_uniform<glm::mat4>("view");
+    u_model    = program->get_uniform<glm::mat4>("model");
 
     program->use();
-    u_tex1      = program->get_uniform<int>("texture1");
-    u_tex2      = program->get_uniform<int>("texture2");
-    u_transform = program->get_uniform<glm::mat4>("transform");
-
-    u_tex1->set(0);
-    u_tex2->set(1);
+    u_texture1->set(0);
+    u_texture2->set(1);
   }
 
   void begin() override
@@ -194,14 +167,8 @@ public:
     tex2->use(GL_TEXTURE0);
     tex1->use(GL_TEXTURE1);
 
-    auto transform = glm::mat4(1.0f);
-    transform = glm::rotate(transform, rotation, glm::vec3(0.0f, 0.0f, 1.0f));
-    rotation += 0.01f;
-
-    ctx->glBindVertexArray(VAO);
     program->use();
-    u_transform->set(transform);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    box->draw();
   }
 
   void end() override

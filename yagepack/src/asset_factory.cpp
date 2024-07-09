@@ -175,6 +175,7 @@ yagepack::asset_factory::pack_parser::parse_texture_sources(
   param.border_color = glm::vec4(
         root["border_color"][0].asFloat(), root["border_color"][1].asFloat(),
         root["border_color"][2].asFloat(), root["border_color"][3].asFloat());
+  sources.set_work_dir(dir);
   sources.set_parameters(param);
 
   for (const auto & uri : root["uris"])
@@ -223,6 +224,7 @@ yagepack::asset_factory::pack_parser::parse_shader_sources(
 
     sources.add_source(type.asString(), resolve_uri(dir, uri.asString()));
   }
+  sources.set_work_dir(dir);
 
   return sources;
 }
@@ -254,6 +256,7 @@ yagepack::asset_factory::pack_parser::parse_gltf_sources(
     return {};
   }
 
+  sources.set_work_dir(dir);
   sources.set_uri(resolve_uri(dir, uri.asString()));
   return sources;
 }
@@ -458,6 +461,28 @@ void yagepack::asset_factory::pack_watchdog::run()
       }
 
       texture->set_sources(sources);
+    });
+
+    parser.on_gltf([this,
+                    p](const std::string &              basename,
+                       const yc::graphics::node::data & sources) {
+      if (factory->assets.find(basename) == factory->assets.end())
+      {
+        logging(
+              LOG_WARN, "New glTF: %s. Please rerun the application",
+              basename.c_str());
+      }
+
+      auto node = std::dynamic_pointer_cast<yc::graphics::node>(
+            factory->assets[basename]);
+      if (!node)
+      {
+        logging(
+              LOG_ERROR, "Failed to cast asset to node: %s", basename.c_str());
+        return;
+      }
+
+      node->set_sources(sources);
     });
 
     if (parser.parse(p, meta_files, false) != yc::error::OK)

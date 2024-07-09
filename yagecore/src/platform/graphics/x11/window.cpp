@@ -386,7 +386,7 @@ yc::error yc::x11::window::open()
   logging(LOG_DEBUG, "Making GLX context current");
   glXMakeCurrent(display, win, glx_context);
 
-  graphics = std::make_shared<yc::gl::graphics>();
+  graphics = std::make_shared<yc::gl::graphics>(shared_from_this());
   if (graphics->init(16, settings.width, settings.height) != yc::error::OK)
   {
     logging(LOG_ERROR, "Failed to initialize graphics context");

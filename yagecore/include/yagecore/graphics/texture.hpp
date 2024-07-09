@@ -32,6 +32,7 @@ public:
   {
   private:
     std::vector<yc::util::uri> uris {};
+    std::string                work_dir {};
     texture_param              parameters {};
 
   public:
@@ -43,6 +44,11 @@ public:
     void set_parameters(const texture_param & _parameters)
     {
       parameters = _parameters;
+    }
+
+    void set_work_dir(const std::string & dir)
+    {
+      work_dir = dir;
     }
 
     bool operator==(const data & other) const
@@ -58,6 +64,11 @@ public:
     std::vector<yc::util::uri> get_uris() const
     {
       return uris;
+    }
+
+    std::string get_work_dir() const
+    {
+      return work_dir;
     }
 
     texture_param get_parameters() const

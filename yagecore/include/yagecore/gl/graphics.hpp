@@ -32,47 +32,9 @@ private:
   bool has_extension(const std::string & extension);
 
 public:
+  explicit graphics(const std::shared_ptr<yc::graphics::window> & window)
+  : yc::graphics::graphics(window) {};
   ~graphics() override = default;
-
-  /* function cache. Because we don't know what
-   * version of OpenGL we are using */
-  PFNGLCREATESHADERPROC            glCreateShader {};
-  PFNGLSHADERSOURCEPROC            glShaderSource {};
-  PFNGLCOMPILESHADERPROC           glCompileShader {};
-  PFNGLGETSHADERIVPROC             glGetShaderiv {};
-  PFNGLGETSHADERINFOLOGPROC        glGetShaderInfoLog {};
-  PFNGLDELETESHADERPROC            glDeleteShader {};
-  PFNGLCREATEPROGRAMPROC           glCreateProgram {};
-  PFNGLATTACHSHADERPROC            glAttachShader {};
-  PFNGLLINKPROGRAMPROC             glLinkProgram {};
-  PFNGLGETPROGRAMIVPROC            glGetProgramiv {};
-  PFNGLGETPROGRAMINFOLOGPROC       glGetProgramInfoLog {};
-  PFNGLUSEPROGRAMPROC              glUseProgram {};
-  PFNGLDELETEPROGRAMPROC           glDeleteProgram {};
-  PFNGLGETPROGRAMBINARYPROC        glGetProgramBinary {};
-  PFNGLGENVERTEXARRAYSPROC         glGenVertexArrays {};
-  PFNGLBUFFERDATAPROC              glBufferData {};
-  PFNGLGENBUFFERSPROC              glGenBuffers {};
-  PFNGLBINDVERTEXARRAYPROC         glBindVertexArray {};
-  PFNGLBINDBUFFERPROC              glBindBuffer {};
-  PFNGLVERTEXATTRIBPOINTERPROC     glVertexAttribPointer {};
-  PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray {};
-  PFNGLDRAWARRAYSEXTPROC           glDrawArrays {};
-  PFNGLSHADERBINARYPROC            glShaderBinary {};
-  PFNGLPROGRAMBINARYPROC           glProgramBinary {};
-  PFNGLACTIVETEXTUREPROC           glActiveTexture {};
-  PFNGLBINDTEXTUREEXTPROC          glBindTexture {};
-  PFNGLGENERATEMIPMAPPROC          glGenerateMipmap {};
-  PFNGLGETUNIFORMLOCATIONPROC      glGetUniformLocation {};
-  PFNGLGETATTRIBLOCATIONPROC       glGetAttribLocation {};
-  PFNGLUNIFORM1IPROC               glUniform1i {};
-  PFNGLUNIFORM1FPROC               glUniform1f {};
-  PFNGLUNIFORM2FPROC               glUniform2f {};
-  PFNGLUNIFORM3FPROC               glUniform3f {};
-  PFNGLUNIFORM4FPROC               glUniform4f {};
-  PFNGLUNIFORMMATRIX2FVPROC        glUniformMatrix2fv {};
-  PFNGLUNIFORMMATRIX3FVPROC        glUniformMatrix3fv {};
-  PFNGLUNIFORMMATRIX4FVPROC        glUniformMatrix4fv {};
 
   yc::error init(int bits_per_pixel, int width, int height);
 

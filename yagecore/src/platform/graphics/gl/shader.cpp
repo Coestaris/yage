@@ -58,26 +58,26 @@ yc::error yc::gl::shader::load()
 yc::error yc::gl::shader::load_from_binary(const std::vector<uint8_t> & binary)
 {
   /* Create program */
-  id = ctx->glCreateProgram();
+  id = yc::gl::glCreateProgram();
 
   /* First 4 bytes of binary are shader type */
   GLenum type
         = *reinterpret_cast<GLenum *>(const_cast<uint8_t *>(binary.data()));
 
   /* Need to skip 4 bytes */
-  ctx->glProgramBinary(
+  yc::gl::glProgramBinary(
         id, type, binary.data() + sizeof(type), binary.size() - sizeof(type));
 
   /* Check if program is valid */
   GLint status;
-  ctx->glGetProgramiv(id, GL_LINK_STATUS, &status);
+  yc::gl::glGetProgramiv(id, GL_LINK_STATUS, &status);
   if (status == GL_FALSE)
   {
     GLint length;
-    ctx->glGetProgramiv(id, GL_INFO_LOG_LENGTH, &length);
+    yc::gl::glGetProgramiv(id, GL_INFO_LOG_LENGTH, &length);
 
     std::string log(length, '\0');
-    ctx->glGetProgramInfoLog(id, length, nullptr, log.data());
+    yc::gl::glGetProgramInfoLog(id, length, nullptr, log.data());
 
     logging(LOG_ERROR, "Failed to link program: %s", log.c_str());
     return yc::error::EXTERNAL_API_ERROR;
@@ -99,13 +99,13 @@ yc::error yc::gl::shader::load_from_binary(const std::vector<uint8_t> & binary)
 
 void yc::gl::shader::unload()
 {
-  ctx->glDeleteProgram(id);
+  yc::gl::glDeleteProgram(id);
 }
 
 GLint yc::gl::shader::get_uniform_location(
       const std::string & name, bool required)
 {
-  GLint location = ctx->glGetUniformLocation(id, name.c_str());
+  GLint location = yc::gl::glGetUniformLocation(id, name.c_str());
   if (location == -1 && required)
   {
     throw std::runtime_error("Failed to get uniform location: " + name);
@@ -117,7 +117,7 @@ GLint yc::gl::shader::get_uniform_location(
 GLint yc::gl::shader::get_attribute_location(
       const std::string & name, bool required)
 {
-  GLint location = ctx->glGetAttribLocation(id, name.c_str());
+  GLint location = yc::gl::glGetAttribLocation(id, name.c_str());
   if (location == -1 && required)
   {
     throw std::runtime_error("Failed to get attribute location: " + name);
@@ -136,7 +136,7 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
 
   logging(LOG_DEBUG, "Loading shader: %s", name.c_str());
 
-  auto program = ctx->glCreateProgram();
+  auto program = yc::gl::glCreateProgram();
 
   auto types = sources.get_types();
   for (auto & type : types)
@@ -165,7 +165,7 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
       return yc::error::INVALID_ARGUMENT;
     }
 
-    GLuint shader = ctx->glCreateShader(gl_type);
+    GLuint shader = yc::gl::glCreateShader(gl_type);
     if (!shader)
     {
       logging(LOG_ERROR, "Failed to create shader");
@@ -174,15 +174,15 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
 
     const char * c_source = source.c_str();
     GLint        length   = source.size();
-    ctx->glShaderSource(shader, 1, &c_source, &length);
-    ctx->glCompileShader(shader);
+    yc::gl::glShaderSource(shader, 1, &c_source, &length);
+    yc::gl::glCompileShader(shader);
 
     GLint status;
-    ctx->glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-    ctx->glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+    yc::gl::glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    yc::gl::glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
     std::string log;
     log.resize(length);
-    ctx->glGetShaderInfoLog(shader, length, nullptr, log.data());
+    yc::gl::glGetShaderInfoLog(shader, length, nullptr, log.data());
 
     /* Separate messages by new line */
     size_t start = 0;
@@ -213,20 +213,20 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
       return yc::error::EXTERNAL_API_ERROR;
     }
 
-    ctx->glAttachShader(program, shader);
-    ctx->glDeleteShader(shader);
+    yc::gl::glAttachShader(program, shader);
+    yc::gl::glDeleteShader(shader);
   }
 
-  ctx->glLinkProgram(program);
+  yc::gl::glLinkProgram(program);
 
   GLint status;
-  ctx->glGetProgramiv(program, GL_LINK_STATUS, &status);
+  yc::gl::glGetProgramiv(program, GL_LINK_STATUS, &status);
 
   GLint length;
-  ctx->glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+  yc::gl::glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
   std::string log;
   log.resize(length);
-  ctx->glGetProgramInfoLog(program, length, nullptr, log.data());
+  yc::gl::glGetProgramInfoLog(program, length, nullptr, log.data());
 
   /* Separate messages by new line */
   size_t start = 0;
@@ -258,12 +258,12 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
   }
 
   GLint binary_length;
-  ctx->glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binary_length);
+  yc::gl::glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binary_length);
   binary.resize(binary_length);
   GLenum binary_format;
-  ctx->glGetProgramBinary(
+  yc::gl::glGetProgramBinary(
         program, binary_length, nullptr, &binary_format, binary.data());
-  ctx->glDeleteProgram(program);
+  yc::gl::glDeleteProgram(program);
 
   /* Prepend binary format (4 bytes) */
   binary.insert(

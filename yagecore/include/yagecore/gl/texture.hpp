@@ -14,6 +14,7 @@
 #include "GL/gl.h"
 #include "yagecore/graphics/texture.hpp"
 #include "yagecore/gl/graphics.hpp"
+#include "glplatform.hpp"
 
 namespace yc::gl
 {
@@ -44,8 +45,8 @@ public:
 
   inline void use(GLenum texture_unit)
   {
-    ctx->glActiveTexture(texture_unit);
-    ctx->glBindTexture(GL_TEXTURE_2D, id);
+    yc::gl::glActiveTexture(texture_unit);
+    yc::gl::glBindTexture(GL_TEXTURE_2D, id);
   }
 };
 

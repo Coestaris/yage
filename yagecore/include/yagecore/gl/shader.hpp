@@ -22,6 +22,7 @@
 
 #include "yagecore/graphics/shader.hpp"
 #include "yagecore/gl/graphics.hpp"
+#include "glplatform.hpp"
 
 namespace yc::gl
 {
@@ -48,7 +49,7 @@ public:
           GLint                                     location,
           int                                       value)
     {
-      ctx->glUniform1i(location, value);
+      yc::gl::glUniform1i(location, value);
     }
 
     static inline void internal_set(
@@ -56,7 +57,7 @@ public:
           GLint                                     location,
           float                                     value)
     {
-      ctx->glUniform1f(location, value);
+      yc::gl::glUniform1f(location, value);
     }
 
     static inline void internal_set(
@@ -64,7 +65,7 @@ public:
           GLint                                     location,
           glm::vec2                                 value)
     {
-      ctx->glUniform2f(location, value.x, value.y);
+      yc::gl::glUniform2f(location, value.x, value.y);
     }
 
     static inline void internal_set(
@@ -72,7 +73,7 @@ public:
           GLint                                     location,
           glm::vec3                                 value)
     {
-      ctx->glUniform3f(location, value.x, value.y, value.z);
+      yc::gl::glUniform3f(location, value.x, value.y, value.z);
     }
 
     static inline void internal_set(
@@ -80,7 +81,7 @@ public:
           GLint                                     location,
           glm::vec4                                 value)
     {
-      ctx->glUniform4f(location, value.x, value.y, value.z, value.w);
+      yc::gl::glUniform4f(location, value.x, value.y, value.z, value.w);
     }
 
     static inline void internal_set(
@@ -88,7 +89,7 @@ public:
           GLint                                     location,
           glm::mat2                                 value)
     {
-      ctx->glUniformMatrix2fv(location, 1, GL_FALSE, &value[0][0]);
+      yc::gl::glUniformMatrix2fv(location, 1, GL_FALSE, &value[0][0]);
     }
 
     static inline void internal_set(
@@ -96,7 +97,7 @@ public:
           GLint                                     location,
           glm::mat3                                 value)
     {
-      ctx->glUniformMatrix3fv(location, 1, GL_FALSE, &value[0][0]);
+      yc::gl::glUniformMatrix3fv(location, 1, GL_FALSE, &value[0][0]);
     }
 
     static inline void internal_set(
@@ -104,7 +105,7 @@ public:
           GLint                                     location,
           glm::mat4                                 value)
     {
-      ctx->glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
+      yc::gl::glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
     }
 
   protected:
@@ -180,7 +181,7 @@ public:
 
   inline void use()
   {
-    ctx->glUseProgram(id);
+    yc::gl::glUseProgram(id);
   }
 
   template <typename T>

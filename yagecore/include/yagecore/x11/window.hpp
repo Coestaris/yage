@@ -24,7 +24,8 @@ namespace yc::x11
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class window : public yc::graphics::window
+class window : public yc::graphics::window,
+               public std::enable_shared_from_this<window>
 {
 private:
   std::shared_ptr<yc::gl::graphics> graphics;
