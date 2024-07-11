@@ -63,7 +63,7 @@ public:
   static inline void draw(GLuint vao_)
   {
     yc::gl::glBindVertexArray(vao_);
-    yc::gl::glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
   }
 
   inline void draw() override
