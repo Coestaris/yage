@@ -48,7 +48,7 @@ yc::error yc::gl::node::load()
 
 void yc::gl::node::unload()
 {
-  flat_vaos_to_draw.clear();
+  flat_drawables.clear();
 
   /* Unload all meshes */
   for (auto & mesh : meshes)
@@ -145,16 +145,7 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
       scene->children.push_back(node);
 
       std::vector<uint32_t> indices;
-
-      struct vertex
-      {
-        glm::vec3 position;
-        glm::vec3 color;
-        glm::vec3 normal;
-        glm::vec2 uvs;
-      };
-
-      std::vector<vertex> vertices;
+      std::vector<vertex>   vertices;
 
       /* Load meshes */
       if (gltf_node.meshIndex)
@@ -183,158 +174,290 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
                   indices.push_back(idx + start_index);
                 });
 
-          /* Process positions */
-          if (gltf_primitive.findAttribute("POSITION")
-              == gltf_primitive.attributes.end())
-          {
-            logging(
-                  LOG_ERROR, "No positions found in GLTF node: %s",
-                  get_name().c_str());
+          if (!process_position(gltf_primitive, vertices))
             return false;
-          }
-          auto & gltf_pos_accessor
-                = asset.accessors[gltf_primitive.findAttribute("POSITION")
-                                        ->accessorIndex];
-
-          size_t initial_vtx = vertices.size();
-          vertices.resize(vertices.size() + gltf_pos_accessor.count);
-
-          fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
-                asset, gltf_pos_accessor,
-                [&](fastgltf::math::fvec3 pos, std::size_t idx) {
-                  vertex v   = {};
-                  v.position = glm::vec3(pos[0], pos[1], pos[2]);
-                  vertices[initial_vtx + index] = v;
-                });
-
-          /* Process normals */
-          if (gltf_primitive.findAttribute("NORMAL")
-              != gltf_primitive.attributes.end())
-          {
-            auto & gltf_normal_accessor
-                  = asset.accessors[gltf_primitive.findAttribute("NORMAL")
-                                          ->accessorIndex];
-            fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
-                  asset, gltf_normal_accessor,
-                  [&](fastgltf::math::fvec3 normal, std::size_t idx) {
-                    vertices[initial_vtx + idx].normal
-                          = glm::vec3(normal[0], normal[1], normal[2]);
-                  });
-          }
-          else
-          {
-            logging(
-                  LOG_WARN, "No normals found in GLTF node: %s",
-                  get_name().c_str());
-          }
-
-          /* Process colors */
-          if (gltf_primitive.findAttribute("COLOR_0")
-              != gltf_primitive.attributes.end())
-          {
-            auto & gltf_color_accessor
-                  = asset.accessors[gltf_primitive.findAttribute("COLOR_0")
-                                          ->accessorIndex];
-
-            fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
-                  asset, gltf_color_accessor,
-                  [&](fastgltf::math::fvec3 color, std::size_t idx) {
-                    vertices[initial_vtx + idx].color
-                          = glm::vec3(color[0], color[1], color[2]);
-                  });
-          }
-          else
-          {
-            logging(
-                  LOG_WARN, "No colors found in GLTF node: %s",
-                  get_name().c_str());
-          }
-
-          /* Process UVs */
-          if (gltf_primitive.findAttribute("TEXCOORD_0")
-              != gltf_primitive.attributes.end())
-          {
-            auto & gltf_uv_accessor
-                  = asset.accessors[gltf_primitive.findAttribute("TEXCOORD_0")
-                                          ->accessorIndex];
-            fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec2>(
-                  asset, gltf_uv_accessor,
-                  [&](fastgltf::math::fvec2 uv, std::size_t idx) {
-                    vertices[initial_vtx + idx].uvs = glm::vec2(uv[0], uv[1]);
-                  });
-          }
-          else
-          {
-            logging(
-                  LOG_WARN, "No UVs found in GLTF node: %s",
-                  get_name().c_str());
-          }
+          if (!process_normal(gltf_primitive, vertices))
+            return false;
+          if (!process_tangent(gltf_primitive, vertices))
+            return false;
+          if (!process_texcoord(gltf_primitive, vertices))
+            return false;
+          if (!process_color(gltf_primitive, vertices))
+            return false;
+          if (!process_joints(gltf_primitive, vertices))
+            return false;
+          if (!process_weights(gltf_primitive, vertices))
+            return false;
         }
       }
 
-      /* Create Vertex Array Object */
-      GLuint vao, vbo, ebo;
-
-      yc::gl::glGenVertexArrays(1, &vao);
-      yc::gl::glGenBuffers(1, &vbo);
-      yc::gl::glGenBuffers(1, &ebo);
-
-      /* TODO: Find a better way to calculate size */
-      std::vector<float> positions;
-      for (auto & vertex : vertices)
+      auto mesh_buffer = make_buffer(vertices, indices);
+      if (!mesh_buffer)
       {
-        positions.push_back(vertex.position.x);
-        positions.push_back(vertex.position.y);
-        positions.push_back(vertex.position.z);
-        positions.push_back(vertex.normal.x);
-        positions.push_back(vertex.normal.y);
-        positions.push_back(vertex.normal.z);
-        positions.push_back(vertex.uvs.x);
-        positions.push_back(vertex.uvs.y);
+        logging(
+              LOG_ERROR, "Failed to create mesh buffer for GLTF node: %s",
+              get_name().c_str());
+        return false;
       }
 
-      yc::gl::glBindVertexArray(vao);
-      yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbo);
-      yc::gl::glBufferData(
-            GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(),
-            GL_STATIC_DRAW);
-      yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-      yc::gl::glBufferData(
-            GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t),
-            indices.data(), GL_STATIC_DRAW);
-
-      yc::gl::glVertexAttribPointer(
-            0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-            reinterpret_cast<void *>(0));
-      yc::gl::glEnableVertexAttribArray(0);
-      yc::gl::glVertexAttribPointer(
-            1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-            reinterpret_cast<void *>(3 * sizeof(float)));
-      yc::gl::glEnableVertexAttribArray(1);
-      yc::gl::glVertexAttribPointer(
-            2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-            reinterpret_cast<void *>(6 * sizeof(float)));
-      yc::gl::glEnableVertexAttribArray(2);
-
-      auto mesh_buffer
-            = std::make_shared<yc::gl::mesh_buffer>(ctx, vao, vbo, ebo);
       node->meshes.push_back(mesh_buffer);
     }
   }
 
-  flat_vaos(flat_vaos_to_draw);
+  flat_drawable(flat_drawables);
 
   return true;
 }
-void yc::gl::node::flat_vaos(std::vector<GLuint> & vaos)
+void yc::gl::node::flat_drawable(
+      std::vector<mesh_buffer::drawable_mesh> & drawables)
 {
   for (auto & mesh : meshes)
   {
-    vaos.push_back(dynamic_cast<yc::gl::mesh_buffer *>(mesh.get())->vao);
+    drawables.push_back(
+          dynamic_cast<yc::gl::mesh_buffer *>(mesh.get())->drawable);
   }
 
   for (auto & child : children)
   {
-    dynamic_cast<yc::gl::node *>(child.get())->flat_vaos(vaos);
+    dynamic_cast<yc::gl::node *>(child.get())->flat_drawable(drawables);
   }
+}
+
+bool yc::gl::node::process_position(
+      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+{
+  if (!layout.need_type(POSITION))
+  {
+    return true;
+  }
+
+  if (primitive.findAttribute("POSITION") == primitive.attributes.end())
+  {
+    if (layout.required(POSITION))
+    {
+      logging(
+            LOG_ERROR, "No positions found in GLTF node: %s",
+            get_name().c_str());
+      return false;
+    }
+    else
+    {
+      logging(
+            LOG_ERROR,
+            "No positions found in GLTF node: %s. All vectors will "
+            "be zeroed",
+            get_name().c_str());
+    }
+  }
+
+  auto & gltf_pos_accessor
+        = asset.accessors[primitive.findAttribute("POSITION")->accessorIndex];
+
+  size_t initial_vtx = verticies.size();
+  verticies.resize(verticies.size() + gltf_pos_accessor.count);
+
+  fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
+        asset, gltf_pos_accessor,
+        [&](fastgltf::math::fvec3 pos, std::size_t idx) {
+          vertex v                       = {};
+          v.position                     = glm::vec3(pos[0], pos[1], pos[2]);
+          verticies[initial_vtx + index] = v;
+        });
+}
+
+bool yc::gl::node::process_normal(
+      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+{
+  if (!layout.need_type(NORMAL))
+  {
+    return true;
+  }
+
+  if (primitive.findAttribute("NORMAL") == primitive.attributes.end())
+  {
+    if (layout.required(NORMAL))
+    {
+      logging(
+            LOG_ERROR, "No ccc found in GLTF node: %s",
+            get_name().c_str());
+      return false;
+    }
+    else
+    {
+      logging(
+            LOG_ERROR,
+            "No normals found in GLTF node: %s. All vectors will "
+            "be zeroed",
+            get_name().c_str());
+    }
+  }
+
+  auto & gltf_normal_accessor
+        = asset.accessors[primitive.findAttribute("NORMAL")->accessorIndex];
+  fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
+        asset, gltf_normal_accessor,
+        [&](fastgltf::math::fvec3 normal, std::size_t idx) {
+          verticies[initial_vtx + idx].normal
+                = glm::vec3(normal[0], normal[1], normal[2]);
+        });
+}
+
+bool yc::gl::node::process_tangent(
+      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+{
+  if (layout.need_type(TANGENT))
+  {
+    logging(LOG_ERROR, "Tangent is not currently supported");
+    return false;
+  }
+
+  return true;
+}
+
+bool yc::gl::node::process_texcoord(
+      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+{
+
+  if (!layout.need_type(TEXCOORD))
+  {
+    return true;
+  }
+
+  if (primitive.findAttribute("TEXCOORD_0") == primitive.attributes.end())
+  {
+    if (layout.required(TEXCOORD))
+    {
+      logging(
+            LOG_ERROR, "No texture coordinates found in GLTF node: %s",
+            get_name().c_str());
+      return false;
+    }
+    else
+    {
+      logging(
+            LOG_ERROR,
+            "No texture coordinates found in GLTF node: %s. All vectors will "
+            "be zeroed",
+            get_name().c_str());
+    }
+  }
+
+  auto & gltf_uv_accessor
+        = asset.accessors[primitive.findAttribute("TEXCOORD_0")->accessorIndex];
+  fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec2>(
+        asset, gltf_uv_accessor,
+        [&](fastgltf::math::fvec2 uv, std::size_t idx) {
+          verticies[initial_vtx + idx].uvs = glm::vec2(uv[0], uv[1]);
+        });
+}
+
+bool yc::gl::node::process_color(
+      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+{
+
+  if (!layout.need_type(COLOR))
+  {
+    return true;
+  }
+
+  /* TODO: Try to find a better way to handle color */
+  if (primitive.findAttribute("COLOR_0") == primitive.attributes.end())
+  {
+    if (layout.required(COLOR))
+    {
+      logging(
+            LOG_ERROR, "No colors found in GLTF node: %s",
+            get_name().c_str());
+      return false;
+    }
+    else
+    {
+      logging(
+            LOG_ERROR,
+            "No colors found in GLTF node: %s. All vectors will "
+            "be zeroed",
+            get_name().c_str());
+    }
+  }
+
+  auto & gltf_color_accessor
+        = asset.accessors[primitive.findAttribute("COLOR_0")->accessorIndex];
+
+  fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
+        asset, gltf_color_accessor,
+        [&](fastgltf::math::fvec3 color, std::size_t idx) {
+          verticies[initial_vtx + idx].color
+                = glm::vec3(color[0], color[1], color[2]);
+        });
+}
+
+bool yc::gl::node::process_joints(
+      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+{
+  if (layout.need_type(JOINTS))
+  {
+    logging(LOG_ERROR, "Joints is not currently supported");
+    return false;
+  }
+
+  return true;
+}
+
+bool yc::gl::node::process_weights(
+      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+{
+  if (layout.need_type(WEIGHTS))
+  {
+    logging(LOG_ERROR, "Weights is not currently supported");
+    return false;
+  }
+
+  return true;
+}
+
+std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
+      const std::vector<vertex> & verticies,
+      const std::vector<GLuint> & indices)
+{
+  /* Create Vertex Array Object */
+  GLuint vao, vbo, ebo;
+
+  yc::gl::glGenVertexArrays(1, &vao);
+  yc::gl::glGenBuffers(1, &vbo);
+  yc::gl::glGenBuffers(1, &ebo);
+
+  std::vector<float> data;
+  for (auto & vertex : verticies)
+  {
+
+
+  }
+
+  yc::gl::glBindVertexArray(vao);
+  yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  yc::gl::glBufferData(
+        GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(),
+        GL_STATIC_DRAW);
+  yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  yc::gl::glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t),
+        indices.data(), GL_STATIC_DRAW);
+
+  yc::gl::glVertexAttribPointer(
+        0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+        reinterpret_cast<void *>(0));
+  yc::gl::glEnableVertexAttribArray(0);
+  yc::gl::glVertexAttribPointer(
+        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+        reinterpret_cast<void *>(3 * sizeof(float)));
+  yc::gl::glEnableVertexAttribArray(1);
+  yc::gl::glVertexAttribPointer(
+        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+        reinterpret_cast<void *>(6 * sizeof(float)));
+  yc::gl::glEnableVertexAttribArray(2);
+
+  auto mesh_buffer = std::make_shared<yc::gl::mesh_buffer>(
+        ctx, vao, vbo, ebo, indices.size(), 0);
+
+  return std::shared_ptr<yc::gl::mesh_buffer>();
 }
