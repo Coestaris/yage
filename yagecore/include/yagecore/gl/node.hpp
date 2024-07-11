@@ -46,18 +46,22 @@ public:
 
   private:
     GLuint  vao;
+    GLenum  indicies_type;
     GLsizei vertex_count;
 
     /* Attention: Offset already in bytes! */
     void * index_offset;
 
   public:
-    drawable_mesh(GLuint _vao, size_t _vertex_count, size_t _index_offset)
+    drawable_mesh(
+          GLuint _vao,
+          size_t _vertex_count,
+          size_t _index_offset,
+          GLenum _indicies_type)
     : vao(_vao)
+    , indicies_type(_indicies_type)
     , vertex_count(_vertex_count)
-    , index_offset(reinterpret_cast<void *>(_index_offset * sizeof(GLuint)))
-    {
-    }
+    , index_offset(reinterpret_cast<void *>(_index_offset * sizeof(GLuint))) {};
   } drawable;
 
   mesh_buffer(
@@ -66,11 +70,12 @@ public:
         GLuint                                    _vbo,
         GLuint                                    _ebo,
         size_t                                    _vertex_count,
-        size_t                                    _index_offset)
+        size_t                                    _index_offset,
+        GLenum                                    _indicies_type)
   : ctx(graphics)
   , vbo(_vbo)
   , ebo(_ebo)
-  , drawable(_vao, _vertex_count, _index_offset)
+  , drawable(_vao, _vertex_count, _index_offset, _indicies_type)
   {
   }
 
@@ -88,7 +93,8 @@ public:
   {
     yc::gl::glBindVertexArray(info.vao);
     yc::gl::glDrawElements(
-          GL_TRIANGLES, info.vertex_count, GL_UNSIGNED_INT, info.index_offset);
+          GL_TRIANGLES, info.vertex_count, info.indicies_type,
+          info.index_offset);
     yc::gl::glBindVertexArray(0);
   }
 
@@ -101,35 +107,36 @@ public:
 class node : public yc::graphics::node
 {
 public:
-  enum node_layout_type
+  class attr_layout_item
   {
-    POSITION, /* Always vec3 */
-    NORMAL,   /* Always vec3 */
-    TANGENT,  /* Always vec3 */
-    TEXCOORD, /* Always vec2 */
-    COLOR,    /* Always vec4 */
-    JOINTS,   /* Always ivec4 */
-    WEIGHTS,  /* Always vec4 */
-  };
+  public:
+    enum type
+    {
+      POSITION, /* Always vec3 */
+      NORMAL,   /* Always vec3 */
+      TANGENT,  /* Always vec3 */
+      TEXCOORD, /* Always vec2 */
+      COLOR,    /* Always vec4 */
+      JOINTS,   /* Always ivec4 */
+      WEIGHTS,  /* Always vec4 */
+    };
 
-  class node_layout
-  {
   private:
-    node_layout_type type;
-    GLint            location;
-    bool             required;
+    type  type_;
+    GLint location;
+    bool  required;
 
   public:
-    node_layout(node_layout_type _type, GLint _location, bool _required = true)
-    : type(_type)
+    attr_layout_item(type _type, GLint _location, bool _required = true)
+    : type_(_type)
     , location(_location)
     , required(_required)
     {
     }
 
-    inline node_layout_type get_type() const
+    inline type get_type() const
     {
-      return type;
+      return type_;
     }
 
     inline GLint get_location() const
@@ -144,7 +151,7 @@ public:
 
     size_t get_size() const
     {
-      switch (type)
+      switch (type_)
       {
         case POSITION:
         case NORMAL:
@@ -175,16 +182,17 @@ private:
     glm::vec4  weights;
   };
 
-  class layout
+  class attr_layout
   {
   private:
-    std::vector<node_layout> items;
+    std::vector<attr_layout_item> items;
 
-    std::optional<node_layout> get(node_layout_type type) const
+    [[nodiscard]] std::optional<attr_layout_item>
+    get(attr_layout_item::type type_) const
     {
       for (auto & item : items)
       {
-        if (item.get_type() == type)
+        if (item.get_type() == type_)
         {
           return item;
         }
@@ -193,39 +201,49 @@ private:
     }
 
   public:
-    layout(const std::vector<node_layout> & layout_)
+    attr_layout() = default;
+    attr_layout(const std::vector<attr_layout_item> & layout_)
     : items(layout_) {};
 
-    bool need_type(node_layout_type type) const
+    [[nodiscard]] bool need_type(attr_layout_item::type type_) const
     {
-      return get(type).has_value();
+      return get(type_).has_value();
     }
 
-    bool required(node_layout_type type) const
+    [[nodiscard]] bool required(attr_layout_item::type type_) const
     {
-      if (auto item = get(type))
+      if (auto item = get(type_))
       {
         return item->get_required();
       }
       return false;
     }
 
+    [[nodiscard]] GLint location(attr_layout_item::type type_) const
+    {
+      if (auto item = get(type_))
+      {
+        return item->get_location();
+      }
+      return -1;
+    }
+
     /* Implement iterator */
-    std::vector<node_layout>::const_iterator begin() const
+    [[nodiscard]] std::vector<attr_layout_item>::const_iterator begin() const
     {
       return items.begin();
     }
 
-    std::vector<node_layout>::const_iterator end() const
+    [[nodiscard]] std::vector<attr_layout_item>::const_iterator end() const
     {
       return items.end();
     }
   };
 
-  static layout layout;
+  static attr_layout layout;
 
 public:
-  static void set_layout(const std::vector<node_layout> & layout_)
+  static void set_layout(const std::vector<attr_layout_item> & layout_)
   {
     layout = layout_;
   }
@@ -245,30 +263,51 @@ private:
   void flat_drawable(std::vector<mesh_buffer::drawable_mesh> & drawables);
 
   bool process_position(
-        const fastgltf::Primitive & primitive, std::vector<vertex> & verticies);
+        const fastgltf::Asset &     asset,
+        const fastgltf::Primitive & primitive,
+        std::vector<vertex> &       verticies,
+        size_t &                    initial_vtx);
   bool process_normal(
-        const fastgltf::Primitive & primitive, std::vector<vertex> & verticies);
+        const fastgltf::Asset &     asset,
+        const fastgltf::Primitive & primitive,
+        std::vector<vertex> &       verticies,
+        size_t &                    initial_vtx);
   bool process_tangent(
-        const fastgltf::Primitive & primitive, std::vector<vertex> & verticies);
+        const fastgltf::Asset &     asset,
+        const fastgltf::Primitive & primitive,
+        std::vector<vertex> &       verticies,
+        size_t &                    initial_vtx);
   bool process_texcoord(
-        const fastgltf::Primitive & primitive, std::vector<vertex> & verticies);
+        const fastgltf::Asset &     asset,
+        const fastgltf::Primitive & primitive,
+        std::vector<vertex> &       verticies,
+        size_t &                    initial_vtx);
   bool process_color(
-        const fastgltf::Primitive & primitive, std::vector<vertex> & verticies);
+        const fastgltf::Asset &     asset,
+        const fastgltf::Primitive & primitive,
+        std::vector<vertex> &       verticies,
+        size_t &                    initial_vtx);
   bool process_joints(
-        const fastgltf::Primitive & primitive, std::vector<vertex> & verticies);
+        const fastgltf::Asset &     asset,
+        const fastgltf::Primitive & primitive,
+        std::vector<vertex> &       verticies,
+        size_t &                    initial_vtx);
   bool process_weights(
-        const fastgltf::Primitive & primitive, std::vector<vertex> & verticies);
+        const fastgltf::Asset &     asset,
+        const fastgltf::Primitive & primitive,
+        std::vector<vertex> &       verticies,
+        size_t &                    initial_vtx);
   std::shared_ptr<yc::gl::mesh_buffer> make_buffer(
         const std::vector<vertex> & verticies,
         const std::vector<GLuint> & indices);
 
 public:
   ~node() override = default;
-  explicit node(
-        std::string                                     name,
-        std::shared_ptr<yc::app::asset_cacher>          cacher,
-        const std::shared_ptr<yc::graphics::graphics> & graphics,
-        type                                            type = type::TOPLEVEL)
+  explicit
+  node(std::string                                     name,
+       std::shared_ptr<yc::app::asset_cacher>          cacher,
+       const std::shared_ptr<yc::graphics::graphics> & graphics,
+       type                                            type = type::TOPLEVEL)
   : yc::graphics::node(std::move(name), std::move(cacher), graphics, type)
   , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics))
   {
@@ -289,7 +328,7 @@ public:
     /* Little optimization */
     if (type_ == yc::graphics::node::type::TOPLEVEL)
     {
-      for (auto drawable : flat_drawables)
+      for (auto & drawable : flat_drawables)
       {
         mesh_buffer::draw(drawable);
       }

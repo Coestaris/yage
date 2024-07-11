@@ -193,10 +193,10 @@ yc::trivial_render_chain(
       const std::shared_ptr<yc::graphics::graphics> & graphics,
       const std::shared_ptr<yc::app::asset_factory> & asset_factory)
 {
-  std::vector<node::node_layout> layout = {
-    node::node_layout(node::node_layout_type::POSITION, 0),
-//    node::node_layout(node::node_layout_type::NORMAL, 1),
-//    node::node_layout(node::node_layout_type::TEXCOORD, 2),
+  std::vector<node::attr_layout_item> layout = {
+    node::attr_layout_item(node::attr_layout_item::type::POSITION, 0),
+    node::attr_layout_item(node::attr_layout_item::type::NORMAL, 1, false),
+    node::attr_layout_item(node::attr_layout_item::type::TEXCOORD, 2, false),
   };
   node::set_layout(layout);
 

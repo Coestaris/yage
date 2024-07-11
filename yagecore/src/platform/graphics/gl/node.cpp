@@ -20,12 +20,16 @@
 #pragma GCC diagnostic ignored "-Wredundant-move"
 #include "fastgltf/core.hpp"
 #include "fastgltf/tools.hpp"
+
+#include <numeric>
 #pragma GCC diagnostic pop
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
 /* Variables ================================================================ */
+yc::gl::node::attr_layout yc::gl::node::layout;
+
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
 yc::error yc::gl::node::load()
@@ -174,19 +178,20 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
                   indices.push_back(idx + start_index);
                 });
 
-          if (!process_position(gltf_primitive, vertices))
+          size_t initial_vtx = 0;
+          if (!process_position(asset, gltf_primitive, vertices, initial_vtx))
             return false;
-          if (!process_normal(gltf_primitive, vertices))
+          if (!process_normal(asset, gltf_primitive, vertices, initial_vtx))
             return false;
-          if (!process_tangent(gltf_primitive, vertices))
+          if (!process_tangent(asset, gltf_primitive, vertices, initial_vtx))
             return false;
-          if (!process_texcoord(gltf_primitive, vertices))
+          if (!process_texcoord(asset, gltf_primitive, vertices, initial_vtx))
             return false;
-          if (!process_color(gltf_primitive, vertices))
+          if (!process_color(asset, gltf_primitive, vertices, initial_vtx))
             return false;
-          if (!process_joints(gltf_primitive, vertices))
+          if (!process_joints(asset, gltf_primitive, vertices, initial_vtx))
             return false;
-          if (!process_weights(gltf_primitive, vertices))
+          if (!process_weights(asset, gltf_primitive, vertices, initial_vtx))
             return false;
         }
       }
@@ -208,6 +213,7 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
 
   return true;
 }
+
 void yc::gl::node::flat_drawable(
       std::vector<mesh_buffer::drawable_mesh> & drawables)
 {
@@ -224,72 +230,76 @@ void yc::gl::node::flat_drawable(
 }
 
 bool yc::gl::node::process_position(
-      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+      const fastgltf::Asset &     asset,
+      const fastgltf::Primitive & primitive,
+      std::vector<vertex> &       verticies,
+      size_t &                    initial_vtx)
 {
-  if (!layout.need_type(POSITION))
+  if (!layout.need_type(attr_layout_item::type::POSITION))
   {
     return true;
   }
 
   if (primitive.findAttribute("POSITION") == primitive.attributes.end())
   {
-    if (layout.required(POSITION))
+    if (layout.required(attr_layout_item::type::POSITION))
     {
       logging(
             LOG_ERROR, "No positions found in GLTF node: %s",
             get_name().c_str());
       return false;
     }
-    else
-    {
-      logging(
-            LOG_ERROR,
-            "No positions found in GLTF node: %s. All vectors will "
-            "be zeroed",
-            get_name().c_str());
-    }
+
+    logging(
+          LOG_WARN,
+          "No positions found in GLTF node: %s. All vectors will "
+          "be zeroed",
+          get_name().c_str());
+    return true;
   }
 
   auto & gltf_pos_accessor
         = asset.accessors[primitive.findAttribute("POSITION")->accessorIndex];
 
-  size_t initial_vtx = verticies.size();
+  initial_vtx = verticies.size();
   verticies.resize(verticies.size() + gltf_pos_accessor.count);
-
   fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
         asset, gltf_pos_accessor,
         [&](fastgltf::math::fvec3 pos, std::size_t idx) {
-          vertex v                       = {};
-          v.position                     = glm::vec3(pos[0], pos[1], pos[2]);
-          verticies[initial_vtx + index] = v;
+          vertex v                     = {};
+          v.position                   = glm::vec3(pos[0], pos[1], pos[2]);
+          verticies[initial_vtx + idx] = v;
         });
+
+  return true;
 }
 
 bool yc::gl::node::process_normal(
-      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+      const fastgltf::Asset &     asset,
+      const fastgltf::Primitive & primitive,
+      std::vector<vertex> &       verticies,
+      size_t &                    initial_vtx)
 {
-  if (!layout.need_type(NORMAL))
+  if (!layout.need_type(attr_layout_item::type::NORMAL))
   {
     return true;
   }
 
   if (primitive.findAttribute("NORMAL") == primitive.attributes.end())
   {
-    if (layout.required(NORMAL))
+    if (layout.required(attr_layout_item::type::NORMAL))
     {
       logging(
-            LOG_ERROR, "No ccc found in GLTF node: %s",
-            get_name().c_str());
+            LOG_ERROR, "No normals found in GLTF node: %s", get_name().c_str());
       return false;
     }
-    else
-    {
-      logging(
-            LOG_ERROR,
-            "No normals found in GLTF node: %s. All vectors will "
-            "be zeroed",
-            get_name().c_str());
-    }
+
+    logging(
+          LOG_WARN,
+          "No normals found in GLTF node: %s. All vectors will "
+          "be zeroed",
+          get_name().c_str());
+    return true;
   }
 
   auto & gltf_normal_accessor
@@ -300,12 +310,17 @@ bool yc::gl::node::process_normal(
           verticies[initial_vtx + idx].normal
                 = glm::vec3(normal[0], normal[1], normal[2]);
         });
+
+  return true;
 }
 
 bool yc::gl::node::process_tangent(
-      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+      const fastgltf::Asset &     asset,
+      const fastgltf::Primitive & primitive,
+      std::vector<vertex> &       verticies,
+      size_t &                    initial_vtx)
 {
-  if (layout.need_type(TANGENT))
+  if (layout.need_type(attr_layout_item::type::TANGENT))
   {
     logging(LOG_ERROR, "Tangent is not currently supported");
     return false;
@@ -315,31 +330,33 @@ bool yc::gl::node::process_tangent(
 }
 
 bool yc::gl::node::process_texcoord(
-      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+      const fastgltf::Asset &     asset,
+      const fastgltf::Primitive & primitive,
+      std::vector<vertex> &       verticies,
+      size_t &                    initial_vtx)
 {
 
-  if (!layout.need_type(TEXCOORD))
+  if (!layout.need_type(attr_layout_item::type::TEXCOORD))
   {
     return true;
   }
 
   if (primitive.findAttribute("TEXCOORD_0") == primitive.attributes.end())
   {
-    if (layout.required(TEXCOORD))
+    if (layout.required(attr_layout_item::type::TEXCOORD))
     {
       logging(
             LOG_ERROR, "No texture coordinates found in GLTF node: %s",
             get_name().c_str());
       return false;
     }
-    else
-    {
-      logging(
-            LOG_ERROR,
-            "No texture coordinates found in GLTF node: %s. All vectors will "
-            "be zeroed",
-            get_name().c_str());
-    }
+
+    logging(
+          LOG_WARN,
+          "No texture coordinates found in GLTF node: %s. All vectors will "
+          "be zeroed",
+          get_name().c_str());
+    return true;
   }
 
   auto & gltf_uv_accessor
@@ -349,13 +366,18 @@ bool yc::gl::node::process_texcoord(
         [&](fastgltf::math::fvec2 uv, std::size_t idx) {
           verticies[initial_vtx + idx].uvs = glm::vec2(uv[0], uv[1]);
         });
+
+  return true;
 }
 
 bool yc::gl::node::process_color(
-      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+      const fastgltf::Asset &     asset,
+      const fastgltf::Primitive & primitive,
+      std::vector<vertex> &       verticies,
+      size_t &                    initial_vtx)
 {
 
-  if (!layout.need_type(COLOR))
+  if (!layout.need_type(attr_layout_item::type::COLOR))
   {
     return true;
   }
@@ -363,21 +385,19 @@ bool yc::gl::node::process_color(
   /* TODO: Try to find a better way to handle color */
   if (primitive.findAttribute("COLOR_0") == primitive.attributes.end())
   {
-    if (layout.required(COLOR))
+    if (layout.required(attr_layout_item::type::COLOR))
     {
       logging(
-            LOG_ERROR, "No colors found in GLTF node: %s",
-            get_name().c_str());
+            LOG_ERROR, "No colors found in GLTF node: %s", get_name().c_str());
       return false;
     }
-    else
-    {
-      logging(
-            LOG_ERROR,
-            "No colors found in GLTF node: %s. All vectors will "
-            "be zeroed",
-            get_name().c_str());
-    }
+
+    logging(
+          LOG_WARN,
+          "No colors found in GLTF node: %s. All vectors will "
+          "be zeroed",
+          get_name().c_str());
+    return true;
   }
 
   auto & gltf_color_accessor
@@ -387,14 +407,19 @@ bool yc::gl::node::process_color(
         asset, gltf_color_accessor,
         [&](fastgltf::math::fvec3 color, std::size_t idx) {
           verticies[initial_vtx + idx].color
-                = glm::vec3(color[0], color[1], color[2]);
+                = glm::vec4(color[0], color[1], color[2], 1.0f);
         });
+
+  return true;
 }
 
 bool yc::gl::node::process_joints(
-      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+      const fastgltf::Asset &     asset,
+      const fastgltf::Primitive & primitive,
+      std::vector<vertex> &       verticies,
+      size_t &                    initial_vtx)
 {
-  if (layout.need_type(JOINTS))
+  if (layout.need_type(attr_layout_item::type::JOINTS))
   {
     logging(LOG_ERROR, "Joints is not currently supported");
     return false;
@@ -404,9 +429,12 @@ bool yc::gl::node::process_joints(
 }
 
 bool yc::gl::node::process_weights(
-      const fastgltf::Primitive & primitive, std::vector<vertex> & verticies)
+      const fastgltf::Asset &     asset,
+      const fastgltf::Primitive & primitive,
+      std::vector<vertex> &       verticies,
+      size_t &                    initial_vtx)
 {
-  if (layout.need_type(WEIGHTS))
+  if (layout.need_type(attr_layout_item::type::WEIGHTS))
   {
     logging(LOG_ERROR, "Weights is not currently supported");
     return false;
@@ -419,45 +447,140 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
       const std::vector<vertex> & verticies,
       const std::vector<GLuint> & indices)
 {
+  size_t stride = std::accumulate(
+        layout.begin(), layout.end(), 0,
+        [](size_t acc, const attr_layout_item & elem) {
+          return acc + elem.get_size();
+        });
+
+  class attr_descr
+  {
+  public:
+    size_t offset; /* In bytes */
+    size_t stride; /* In bytes */
+    size_t size;   /* Components */
+    GLenum type;   /* Type */
+    GLint  location;
+
+    attr_descr(
+          size_t _offset,
+          size_t _stride,
+          size_t _size,
+          GLenum _type,
+          GLint  _loc)
+    : offset(_offset)
+    , stride(_stride)
+    , size(_size)
+    , type(_type)
+    , location(_loc) {};
+  };
+  std::vector<attr_descr> attrs;
+
+  std::vector<uint8_t> data;
+  data.resize(verticies.size() * stride);
+
+  size_t offset = 0; /* In bytes */
+  for (auto & item : layout)
+  {
+    switch (item.get_type())
+    {
+      case attr_layout_item::type::POSITION:
+      {
+        static_assert(sizeof(verticies[0].position) == 3 * sizeof(float));
+        static_assert(sizeof(float) == sizeof(GLfloat));
+
+        attrs.emplace_back(
+              offset, stride, 3, GL_FLOAT,
+              layout.location(attr_layout_item::type::POSITION));
+        for (size_t i = 0; i < verticies.size(); i++)
+        {
+          auto & vertex = verticies[i];
+          std::memcpy(
+                data.data() + i * stride + offset, &vertex.position,
+                sizeof(vertex.position));
+        }
+
+        offset += sizeof(glm::vec3);
+        break;
+      }
+
+      case attr_layout_item::type::NORMAL:
+      {
+        attrs.emplace_back(
+              offset, stride, 3, GL_FLOAT,
+              layout.location(attr_layout_item::type::NORMAL));
+        static_assert(sizeof(verticies[0].normal) == 3 * sizeof(float));
+        static_assert(sizeof(float) == sizeof(GLfloat));
+
+        for (size_t i = 0; i < verticies.size(); i++)
+        {
+          auto & vertex = verticies[i];
+          std::memcpy(
+                data.data() + i * stride + offset, &vertex.normal,
+                sizeof(vertex.normal));
+        }
+
+        offset += sizeof(verticies[0].normal);
+        break;
+      }
+
+      case attr_layout_item::type::TEXCOORD:
+      {
+        static_assert(sizeof(verticies[0].uvs) == 2 * sizeof(float));
+        static_assert(sizeof(float) == sizeof(GLfloat));
+
+        attrs.emplace_back(
+              offset, stride, 2, GL_FLOAT,
+              layout.location(attr_layout_item::type::TEXCOORD));
+
+        for (size_t i = 0; i < verticies.size(); i++)
+        {
+          auto & vertex = verticies[i];
+          std::memcpy(
+                data.data() + i * stride + offset, &vertex.uvs,
+                sizeof(vertex.uvs));
+        }
+
+        offset += sizeof(verticies[0].uvs);
+        break;
+      }
+
+      default:
+      {
+        logging(
+              LOG_ERROR, "Unsupported attribute type: %d",
+              static_cast<int>(item.get_type()));
+        return nullptr;
+      }
+    }
+  }
+
   /* Create Vertex Array Object */
   GLuint vao, vbo, ebo;
-
   yc::gl::glGenVertexArrays(1, &vao);
   yc::gl::glGenBuffers(1, &vbo);
   yc::gl::glGenBuffers(1, &ebo);
 
-  std::vector<float> data;
-  for (auto & vertex : verticies)
-  {
-
-
-  }
-
+  /* Upload data to GPU */
   yc::gl::glBindVertexArray(vao);
   yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbo);
   yc::gl::glBufferData(
-        GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(),
-        GL_STATIC_DRAW);
+        GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+
+  /* Upload indices to GPU */
   yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
   yc::gl::glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t),
+        GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
         indices.data(), GL_STATIC_DRAW);
 
-  yc::gl::glVertexAttribPointer(
-        0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        reinterpret_cast<void *>(0));
-  yc::gl::glEnableVertexAttribArray(0);
-  yc::gl::glVertexAttribPointer(
-        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        reinterpret_cast<void *>(3 * sizeof(float)));
-  yc::gl::glEnableVertexAttribArray(1);
-  yc::gl::glVertexAttribPointer(
-        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        reinterpret_cast<void *>(6 * sizeof(float)));
-  yc::gl::glEnableVertexAttribArray(2);
+  for (auto & attr : attrs)
+  {
+    yc::gl::glEnableVertexAttribArray(attr.location);
+    yc::gl::glVertexAttribPointer(
+          attr.location, attr.size, attr.type, GL_FALSE, stride,
+          reinterpret_cast<void *>(attr.offset));
+  }
 
-  auto mesh_buffer = std::make_shared<yc::gl::mesh_buffer>(
-        ctx, vao, vbo, ebo, indices.size(), 0);
-
-  return std::shared_ptr<yc::gl::mesh_buffer>();
+  return std::make_shared<yc::gl::mesh_buffer>(
+        ctx, vao, vbo, ebo, indices.size(), 0, GL_UNSIGNED_INT);
 }
