@@ -581,6 +581,10 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
           reinterpret_cast<void *>(attr.offset));
   }
 
+  logging(
+        LOG_DEBUG, "Loaded %" PRIuPTR " vertices/%" PRIuPTR " indices",
+        verticies.size(), indices.size());
+
   return std::make_shared<yc::gl::mesh_buffer>(
         ctx, vao, vbo, ebo, indices.size(), 0, GL_UNSIGNED_INT);
 }

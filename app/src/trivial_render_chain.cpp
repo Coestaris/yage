@@ -39,7 +39,7 @@ protected:
   std::shared_ptr<graphics> ctx;
 
 public:
-  virtual ~trivial_render_pass() override = default;
+  ~trivial_render_pass() override = default;
   trivial_render_pass(
         std::string                                     name,
         yc::graphics::pass_type                         type,
@@ -119,8 +119,8 @@ private:
   std::shared_ptr<texture> tex1;
   std::shared_ptr<texture> tex2;
 
-  yc::gl::uniform_int  u_texture1;
-  yc::gl::uniform_int  u_texture2;
+  // yc::gl::uniform_int  u_texture1;
+  // yc::gl::uniform_int  u_texture2;
   yc::gl::uniform_mat4 u_proj;
   yc::gl::uniform_mat4 u_view;
   yc::gl::uniform_mat4 u_model;
@@ -147,25 +147,23 @@ public:
       window->get_geometry(geometry);
     }
 
+    view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -8.0f));
+
     proj = glm::perspective(
           glm::radians(45.0f),
           geometry.width / static_cast<float>(geometry.height), 0.1f, 100.0f);
-    view = glm::lookAt(
-          glm::vec3(0.0f, 0.0f, 3.0f),
-          glm::vec3(0.0f, 0.0f, 0.0f),
-          glm::vec3(0.0f, 1.0f, 0.0f));
 
-    model = glm::mat4(1.0f);
 
 //    u_texture1 = program->get_uniform<int>("texture1");
 //    u_texture2 = program->get_uniform<int>("texture2");
-//    u_proj     = program->get_uniform<glm::mat4>("projection");
-//    u_view     = program->get_uniform<glm::mat4>("view");
-//    u_model    = program->get_uniform<glm::mat4>("model");
+    u_proj     = program->get_uniform<glm::mat4>("projection");
+    u_view     = program->get_uniform<glm::mat4>("view");
+    u_model    = program->get_uniform<glm::mat4>("model");
 //
-//    u_proj->set(proj);
-//    u_view->set(view);
-//    u_model->set(model);
+    u_proj->set(proj);
+    u_view->set(view);
+    u_model->set(model);
 
     program->use();
 //    u_texture1->set(0);
@@ -176,6 +174,12 @@ public:
   {
 //    tex2->use(GL_TEXTURE0);
 //    tex1->use(GL_TEXTURE1);
+
+    rotation += 1.0f;
+    model = glm::rotate(
+          glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.5f, 1.0f, 0.0f));
+    u_model->set(model);
+
     program->use();
     box->draw();
   }
@@ -204,7 +208,7 @@ yc::trivial_render_chain(
         = { std::make_shared<triangle_pass>(
               asset_factory->load_asset<texture>("tex1"),
               asset_factory->load_asset<texture>("tex2"),
-              asset_factory->load_asset<node>("triangle_m"),
+              asset_factory->load_asset<node>("Suzanne"),
               asset_factory->load_asset<shader>("triangle"), graphics) };
 
   return passes;

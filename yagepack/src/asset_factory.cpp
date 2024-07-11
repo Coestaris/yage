@@ -240,7 +240,7 @@ yagepack::asset_factory::pack_parser::parse_gltf_sources(
     return {};
   }
 
-  if (model_type.asString() != "GLTF")
+  if (model_type.asString() != "GLTF" && model_type.asString() != "GLB")
   {
     logging(
           LOG_ERROR, "Unsupported model type: %s",
