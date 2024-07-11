@@ -197,7 +197,7 @@ yc::trivial_render_chain(
         = { std::make_shared<triangle_pass>(
               asset_factory->load_asset<texture>("tex1"),
               asset_factory->load_asset<texture>("tex2"),
-              asset_factory->load_asset<node>("box"),
+              asset_factory->load_asset<node>("triangle_m"),
               asset_factory->load_asset<shader>("triangle"), graphics) };
 
   return passes;

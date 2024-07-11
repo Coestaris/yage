@@ -1,18 +1,23 @@
 /** ========================================================================
  *
- * @file X11Display.cpp
+ * @file window.cpp
  * @date 06-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "window.hpp"
-#include "yagecore/log.hpp"
-
 #include <gl/gl.h>    // Header File For The OpenGL32 Library
 #include <gl/glu.h>   // Header File For The GLu32 Library
 #include <gl/glaux.h> // Header File For The Glaux Library
+#include <unordered_map>
+
+#include "yagecore/log.hpp"
+#include "yagecore/error.hpp"
+#include "yagecore/keyboard.hpp"
+#include "yagecore/mouse.hpp"
+#include "yagecore/win_gl/window.hpp"
+#include "yagecore/graphics/window.hpp"
 
 /* Defines ================================================================== */
 #define BITS_PER_PIXEL 8
@@ -55,11 +60,12 @@ static void log_pfd(PIXELFORMATDESCRIPTOR * pdf)
 
 /* TODO: can be moved to common part,
  * since have a lot of common code with DirectX */
-yc::error yage::platform::graphics::win_gl::window::open()
+yc::error yc::win_gl::window::open()
 {
-  logging(LOG_INFO, "Opening window: %s. Geometry: %d %d. Fullscreen: %s",
-      settings.title.c_str(), settings.width, settings.height,
-      yc::graphics::to_string(settings.win_mode).c_str());
+  logging(
+        LOG_INFO, "Opening window: %s. Geometry: %d %d. Fullscreen: %s",
+        settings.title.c_str(), settings.width, settings.height,
+        yc::graphics::to_string(settings.win_mode).c_str());
 
   RECT WindowRect;
   WindowRect.left   = 0;
@@ -87,7 +93,9 @@ yc::error yage::platform::graphics::win_gl::window::open()
   logging(LOG_DEBUG, "Trying to register window class");
   if (!RegisterClass(&wc))
   {
-    logging(LOG_ERROR, "Failed To Register The Window Class: %lu", GetLastError());
+    logging(
+          LOG_ERROR, "Failed To Register The Window Class: %lu",
+          GetLastError());
     return yc::error::EXTERNAL_API_ERROR;
   }
 
@@ -110,8 +118,9 @@ yc::error yage::platform::graphics::win_gl::window::open()
     if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN)
         != DISP_CHANGE_SUCCESSFUL)
     {
-      logging(LOG_ERROR, "The Requested Fullscreen Mode Is Not Supported: %lu",
-          GetLastError());
+      logging(
+            LOG_ERROR, "The Requested Fullscreen Mode Is Not Supported: %lu",
+            GetLastError());
       return yc::error::EXTERNAL_API_ERROR;
     }
 
@@ -126,9 +135,10 @@ yc::error yage::platform::graphics::win_gl::window::open()
               | WS_MAXIMIZEBOX; /* Windows Style */
   }
 
-  logging(LOG_DEBUG,
-      "Trying to adjust window to true requested size. dw=0x%lx, dwEx=0x%lx",
-      dwStyle, dwExStyle);
+  logging(
+        LOG_DEBUG,
+        "Trying to adjust window to true requested size. dw=0x%lx, dwEx=0x%lx",
+        dwStyle, dwExStyle);
   if (!AdjustWindowRectEx(&WindowRect, dwStyle, FALSE, dwExStyle))
   {
     logging(LOG_ERROR, "Failed To Adjust Window Rect: %lu", GetLastError());
@@ -207,7 +217,8 @@ yc::error yage::platform::graphics::win_gl::window::open()
   if (!(PixelFormat = ChoosePixelFormat(hDC, &pfd)))
   {
     close();
-    logging(LOG_ERROR, "Can't Find A Suitable PixelFormat: %lu", GetLastError());
+    logging(
+          LOG_ERROR, "Can't Find A Suitable PixelFormat: %lu", GetLastError());
     return yc::error::EXTERNAL_API_ERROR;
   }
 
@@ -222,17 +233,21 @@ yc::error yage::platform::graphics::win_gl::window::open()
   if (!(hRC = wglCreateContext(hDC)))
   {
     close();
-    logging(LOG_ERROR, "Can't Create A GL Rendering Context: %lu", GetLastError());
+    logging(
+          LOG_ERROR, "Can't Create A GL Rendering Context: %lu",
+          GetLastError());
     return yc::error::EXTERNAL_API_ERROR;
   }
 
-  logging(LOG_DEBUG, "Trying to activate rendering context. hDC=0x%p, hRC=0x%p",
-      hDC, hRC);
+  logging(
+        LOG_DEBUG, "Trying to activate rendering context. hDC=0x%p, hRC=0x%p",
+        hDC, hRC);
   if (!wglMakeCurrent(hDC, hRC))
   {
     close();
-    logging(LOG_ERROR, "Can't Activate The GL Rendering Context: %lu",
-        GetLastError());
+    logging(
+          LOG_ERROR, "Can't Activate The GL Rendering Context: %lu",
+          GetLastError());
     return yc::error::EXTERNAL_API_ERROR;
   }
 
@@ -242,7 +257,8 @@ yc::error yage::platform::graphics::win_gl::window::open()
   SetForegroundWindow(hWnd); /* Slightly Higher Priority */
   SetFocus(hWnd);            /* Sets Keyboard Focus To The Window */
 
-  if (context.init(BITS_PER_PIXEL, settings.width, settings.height)
+  context = std::make_shared<yc::gl::graphics>(shared_from_this());
+  if (context->init(BITS_PER_PIXEL, settings.width, settings.height)
       != yc::error::OK)
   {
     logging(LOG_ERROR, "Failed to initialize graphics context");
@@ -255,7 +271,7 @@ yc::error yage::platform::graphics::win_gl::window::open()
   return yc::error::OK;
 }
 
-yc::error yage::platform::graphics::win_gl::window::close()
+yc::error yc::win_gl::window::close()
 {
   if (!opened)
   {
@@ -305,12 +321,11 @@ yc::error yage::platform::graphics::win_gl::window::close()
   return yc::error::OK;
 }
 
-std::shared_ptr<yc::graphics::graphics>
-yage::platform::graphics::win_gl::window::get_graphics()
+std::shared_ptr<yc::graphics::graphics> yc::win_gl::window::get_graphics()
 {
-  return &context;
+  return context;
 }
-yc::error yage::platform::graphics::win_gl::window::update()
+yc::error yc::win_gl::window::update()
 {
   if (!opened)
   {
@@ -327,14 +342,15 @@ yc::error yage::platform::graphics::win_gl::window::update()
 
   if (!SwapBuffers(hDC))
   {
-    logging(LOG_ERROR, "SwapBuffers failed: %lu. hDC=0x%p", GetLastError(), hDC);
+    logging(
+          LOG_ERROR, "SwapBuffers failed: %lu. hDC=0x%p", GetLastError(), hDC);
     return yc::error::EXTERNAL_API_ERROR;
   }
 
   return yc::error::OK;
 }
 
-bool yage::platform::graphics::win_gl::window::is_open()
+bool yc::win_gl::window::is_open()
 {
   return opened;
 }
@@ -476,8 +492,9 @@ static yc::key convert_key(WPARAM winkey)
 #if USE_DEBUG
   if (keymap.find(winkey) == keymap.end())
   {
-    logging(LOG_WARN, "Key not found: 0x%llx (%c)", winkey,
-        static_cast<char>(winkey));
+    logging(
+          LOG_WARN, "Key not found: 0x%llx (%c)", winkey,
+          static_cast<char>(winkey));
   }
 #endif
 
@@ -486,15 +503,12 @@ static yc::key convert_key(WPARAM winkey)
 
 static yc::mouse convert_button(WPARAM winbutton)
 {
-  static const std::unordered_map<WPARAM, yc::mouse> buttonmap
-        = { { WM_LBUTTONDOWN, yc::mouse::LEFT },
-            { WM_RBUTTONDOWN, yc::mouse::RIGHT },
-            { WM_MBUTTONDOWN, yc::mouse::MIDDLE },
-            { WM_XBUTTONDOWN, yc::mouse::X1 },
-            { WM_LBUTTONUP, yc::mouse::LEFT },
-            { WM_RBUTTONUP, yc::mouse::RIGHT },
-            { WM_MBUTTONUP, yc::mouse::MIDDLE },
-            { WM_XBUTTONUP, yc::mouse::X1 } };
+  static const std::unordered_map<WPARAM, yc::mouse> buttonmap = {
+    { WM_LBUTTONDOWN, yc::mouse::LEFT },   { WM_RBUTTONDOWN, yc::mouse::RIGHT },
+    { WM_MBUTTONDOWN, yc::mouse::MIDDLE }, { WM_XBUTTONDOWN, yc::mouse::X1 },
+    { WM_LBUTTONUP, yc::mouse::LEFT },     { WM_RBUTTONUP, yc::mouse::RIGHT },
+    { WM_MBUTTONUP, yc::mouse::MIDDLE },   { WM_XBUTTONUP, yc::mouse::X1 }
+  };
 
 #if USE_DEBUG
   if (buttonmap.find(winbutton) == buttonmap.end())
@@ -505,11 +519,11 @@ static yc::mouse convert_button(WPARAM winbutton)
   return buttonmap.at(winbutton);
 }
 
-LRESULT CALLBACK yage::platform::graphics::win_gl::window::wnd_proc(
-      HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+yc::win_gl::window::wnd_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   /* Get The Window Context */
-  auto * win = reinterpret_cast<yage::platform::graphics::win_gl::window *>(
+  auto * win = reinterpret_cast<yc::win_gl::window *>(
         GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
   /* Handle key presses */

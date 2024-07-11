@@ -67,17 +67,26 @@ std::string yc::join_path(const std::string & path1, const std::string & path2)
     return path1;
   }
 
+  std::string p1, p2;
   if (path1.back() == '\\' || path1.back() == '/')
   {
-    path1.pop_back();
+    p1 = path1.substr(0, path1.size() - 1);
+  }
+  else
+  {
+    p1 = path1;
   }
 
   if (path2.front() == '\\' || path2.front() == '/')
   {
-    path2.erase(0, 1);
+    p2 = path2.substr(1);
+  }
+  else
+  {
+    p2 = path2;
   }
 
-  return path1 + "\\" + path2;
+  return p1 + "\\" + p2;
 }
 
 std::string yc::absolute_path(const std::string & path)

@@ -60,8 +60,8 @@ protected:
 public:
   yc::graphics::input_events input;
 
-  window(yc::graphics::settings & settings)
-  : settings(settings)
+  window(yc::graphics::settings settings)
+  : settings(std::move(settings))
   {
   }
   virtual ~window() = default;

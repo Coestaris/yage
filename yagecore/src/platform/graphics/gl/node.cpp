@@ -165,20 +165,38 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
         for (auto & gltf_primitive : gltf_mesh.primitives)
         {
           /* Process indices */
+          if (!gltf_primitive.indicesAccessor.has_value())
+          {
+            logging(
+                  LOG_ERROR, "No indices found in GLTF node: %s",
+                  get_name().c_str());
+            return false;
+          }
           auto & gltf_index_accessor
                 = asset.accessors[gltf_primitive.indicesAccessor.value()];
+
           size_t start_index = indices.size();
           indices.reserve(indices.size() + gltf_index_accessor.count);
-          size_t initial_vtx = vertices.size();
+
           fastgltf::iterateAccessor<std::uint32_t>(
                 asset, gltf_index_accessor, [&](std::uint32_t idx) {
-                  indices.push_back(idx + initial_vtx);
+                  indices.push_back(idx + start_index);
                 });
 
           /* Process positions */
+          if (gltf_primitive.findAttribute("POSITION")
+              == gltf_primitive.attributes.end())
+          {
+            logging(
+                  LOG_ERROR, "No positions found in GLTF node: %s",
+                  get_name().c_str());
+            return false;
+          }
           auto & gltf_pos_accessor
                 = asset.accessors[gltf_primitive.findAttribute("POSITION")
                                         ->accessorIndex];
+
+          size_t initial_vtx = vertices.size();
           vertices.resize(vertices.size() + gltf_pos_accessor.count);
 
           fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
@@ -190,36 +208,67 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
                 });
 
           /* Process normals */
-          auto & gltf_normal_accessor
-                = asset.accessors[gltf_primitive.findAttribute("NORMAL")
-                                        ->accessorIndex];
-          fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
-                asset, gltf_normal_accessor,
-                [&](fastgltf::math::fvec3 normal, std::size_t idx) {
-                  vertices[initial_vtx + idx].normal
-                        = glm::vec3(normal[0], normal[1], normal[2]);
-                });
+          if (gltf_primitive.findAttribute("NORMAL")
+              != gltf_primitive.attributes.end())
+          {
+            auto & gltf_normal_accessor
+                  = asset.accessors[gltf_primitive.findAttribute("NORMAL")
+                                          ->accessorIndex];
+            fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
+                  asset, gltf_normal_accessor,
+                  [&](fastgltf::math::fvec3 normal, std::size_t idx) {
+                    vertices[initial_vtx + idx].normal
+                          = glm::vec3(normal[0], normal[1], normal[2]);
+                  });
+          }
+          else
+          {
+            logging(
+                  LOG_WARN, "No normals found in GLTF node: %s",
+                  get_name().c_str());
+          }
 
           /* Process colors */
-          auto & gltf_color_accessor
-                = asset.accessors[gltf_primitive.findAttribute("COLOR_0")
-                                        ->accessorIndex];
-          fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
-                asset, gltf_color_accessor,
-                [&](fastgltf::math::fvec3 color, std::size_t idx) {
-                  vertices[initial_vtx + idx].color
-                        = glm::vec3(color[0], color[1], color[2]);
-                });
+          if (gltf_primitive.findAttribute("COLOR_0")
+              != gltf_primitive.attributes.end())
+          {
+            auto & gltf_color_accessor
+                  = asset.accessors[gltf_primitive.findAttribute("COLOR_0")
+                                          ->accessorIndex];
+
+            fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
+                  asset, gltf_color_accessor,
+                  [&](fastgltf::math::fvec3 color, std::size_t idx) {
+                    vertices[initial_vtx + idx].color
+                          = glm::vec3(color[0], color[1], color[2]);
+                  });
+          }
+          else
+          {
+            logging(
+                  LOG_WARN, "No colors found in GLTF node: %s",
+                  get_name().c_str());
+          }
 
           /* Process UVs */
-          auto & gltf_uv_accessor
-                = asset.accessors[gltf_primitive.findAttribute("TEXCOORD_0")
-                                        ->accessorIndex];
-          fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec2>(
-                asset, gltf_uv_accessor,
-                [&](fastgltf::math::fvec2 uv, std::size_t idx) {
-                  vertices[initial_vtx + idx].uvs = glm::vec2(uv[0], uv[1]);
-                });
+          if (gltf_primitive.findAttribute("TEXCOORD_0")
+              != gltf_primitive.attributes.end())
+          {
+            auto & gltf_uv_accessor
+                  = asset.accessors[gltf_primitive.findAttribute("TEXCOORD_0")
+                                          ->accessorIndex];
+            fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec2>(
+                  asset, gltf_uv_accessor,
+                  [&](fastgltf::math::fvec2 uv, std::size_t idx) {
+                    vertices[initial_vtx + idx].uvs = glm::vec2(uv[0], uv[1]);
+                  });
+          }
+          else
+          {
+            logging(
+                  LOG_WARN, "No UVs found in GLTF node: %s",
+                  get_name().c_str());
+          }
         }
       }
 

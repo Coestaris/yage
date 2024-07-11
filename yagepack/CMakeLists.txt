@@ -5,6 +5,11 @@ option(YAGEPACK_STATIC "Build yagepack as a static library" OFF)
 set(PROJECT_NAME yagepack)
 set(PROJECT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+# For now, build static for Windows
+if (WIN32)
+    set(YAGEPACK_STATIC ON)
+endif()
+
 if (YAGEPACK_STATIC)
     add_library(${PROJECT_NAME} STATIC
             ${sources}

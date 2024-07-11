@@ -16,10 +16,11 @@
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-struct file_watcher_impl
+class file_watcher_impl : public yc::file_watcher::impl
 {
-  std::string watched_file;
-  HANDLE      dir_handle;
+public:
+  std::string watched_file {};
+  HANDLE      dir_handle {};
 };
 
 /* Variables ================================================================ */
@@ -33,8 +34,8 @@ void yc::file_watcher::start_watching()
     return;
   }
 
-  impl       = new file_watcher_impl();
-  auto * ctx = static_cast<file_watcher_impl *>(impl);
+  auto ctx = std::make_shared<file_watcher_impl>();
+  pimpl    = std::dynamic_pointer_cast<impl>(ctx);
 
   ctx->watched_file = watched_files[0];
   std::string dir   = basedir(ctx->watched_file);
@@ -47,7 +48,7 @@ void yc::file_watcher::start_watching()
 
 bool yc::file_watcher::wait_for_changes(uint32_t timeout_ms)
 {
-  auto * ctx = static_cast<file_watcher_impl *>(impl);
+  auto ctx = std::dynamic_pointer_cast<file_watcher_impl>(pimpl);
 
   if (ctx->dir_handle == INVALID_HANDLE_VALUE)
   {
@@ -94,9 +95,6 @@ bool yc::file_watcher::wait_for_changes(uint32_t timeout_ms)
 
 void yc::file_watcher::stop_watching()
 {
-  auto * ctx = static_cast<file_watcher_impl *>(impl);
-
+  auto ctx = std::dynamic_pointer_cast<file_watcher_impl>(pimpl);
   CloseHandle(ctx->dir_handle);
-
-  delete ctx;
 }

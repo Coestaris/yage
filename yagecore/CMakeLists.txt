@@ -10,6 +10,11 @@ option(YAGECORE_BACKEND_WIN_GL OFF)
 option(YAGECORE_BACKEND_WIN_DX OFF)
 option(YAGECORE_STATIC "Build yagepack as a static library" OFF)
 
+# For now, build static for Windows
+if (WIN32)
+    set(YAGECORE_STATIC ON)
+endif()
+
 if (YAGECORE_STATIC)
     add_library(${PROJECT_NAME} STATIC
             ${sources}

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_NAME example)
+set(PROJECT_NAME app)
 set(PROJECT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 add_executable(${PROJECT_NAME}
