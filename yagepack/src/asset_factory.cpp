@@ -338,9 +338,9 @@ yc::error yagepack::asset_factory::destroy()
   watchdog.join();
 #endif
 
-  for (auto & asset : assets)
+  for (auto & [name, asset] : assets)
   {
-    asset.second->unload();
+    asset->unload();
   }
   assets.clear();
 

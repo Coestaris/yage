@@ -29,11 +29,18 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 yc::gl::node::attr_layout yc::gl::node::layout;
+// std::shared_ptr<yc::gl::node::material_factory>
+// yc::gl::node::material_factory_;
 
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
 yc::error yc::gl::node::load()
 {
+  if (loaded)
+  {
+    return OK;
+  }
+
   live = true;
 
   logging(LOG_DEBUG, "Loading GLTF node: %s", get_name().c_str());
@@ -52,7 +59,22 @@ yc::error yc::gl::node::load()
 
 void yc::gl::node::unload()
 {
+  if (!loaded)
+  {
+    return;
+  }
+
   flat_drawables.clear();
+
+  for (auto & texture : textures)
+  {
+    texture->unload();
+  }
+
+  for (auto & material : materials)
+  {
+    material->unload();
+  }
 
   /* Unload all meshes */
   for (auto & mesh : meshes)
@@ -585,6 +607,9 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
         LOG_DEBUG, "Loaded %" PRIuPTR " vertices/%" PRIuPTR " indices",
         verticies.size(), indices.size());
 
+  std::shared_ptr<yc::graphics::material> material
+        = yc::graphics::material::basic_material();
+
   return std::make_shared<yc::gl::mesh_buffer>(
-        ctx, vao, vbo, ebo, indices.size(), 0, GL_UNSIGNED_INT);
+        ctx, vao, vbo, ebo, indices.size(), 0, GL_UNSIGNED_INT, material);
 }

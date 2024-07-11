@@ -22,6 +22,8 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 
+#include <yagecore/app/object.hpp>
+
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
@@ -40,11 +42,11 @@ protected:
 
 public:
   ~trivial_render_pass() override = default;
-  trivial_render_pass(
-        std::string                                     name,
-        yc::graphics::pass_type                         type,
-        std::shared_ptr<shader>                         shader,
-        const std::shared_ptr<yc::graphics::graphics> & graphics)
+   trivial_render_pass(
+         std::string                                     name,
+         yc::graphics::pass_type                         type,
+         std::shared_ptr<shader>                         shader,
+         const std::shared_ptr<yc::graphics::graphics> & graphics)
   : render_pass(std::move(name), type)
   , program(std::move(shader))
   , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics)) {};
@@ -64,7 +66,10 @@ protected:
           std::move(shader),
           std::move(graphics)) {};
 
-  void on_object(std::shared_ptr<yc::graphics::node> object) override {
+  void on_node(const yc::app::object::renderer_data & object) override {
+    /* Has no sense for current pass. */
+  };
+  void on_mesh(std::shared_ptr<yc::graphics::material> material) override {
     /* Has no sense for current pass. */
   };
 };
@@ -102,25 +107,27 @@ public:
           std::move(shader),
           std::move(graphics)) {};
 
-  void on_object(std::shared_ptr<yc::graphics::node> object) override {
+  void on_node(const yc::app::object::renderer_data & object) override {
+    /* Has no sense for current pass. */
+  };
+  void on_mesh(std::shared_ptr<yc::graphics::material> material) override {
     /* Has no sense for current pass. */
   };
 };
 
 /* Custom Passes ============================================================ */
-class triangle_pass : public final_pass
+static glm::mat4 view = glm::mat4(1.0f);
+glm::mat4        app_view;
+
+void yc::after_render(void)
 {
-private:
+  view = app_view;
+}
+
+class basic_geometry_pass : public primitive_pass
+{
   glm::mat4 proj;
-  glm::mat4 view;
-  glm::mat4 model;
 
-  std::shared_ptr<node>    box;
-  std::shared_ptr<texture> tex1;
-  std::shared_ptr<texture> tex2;
-
-  // yc::gl::uniform_int  u_texture1;
-  // yc::gl::uniform_int  u_texture2;
   yc::gl::uniform_mat4 u_proj;
   yc::gl::uniform_mat4 u_view;
   yc::gl::uniform_mat4 u_model;
@@ -128,16 +135,10 @@ private:
   float rotation = 0;
 
 public:
-  triangle_pass(
-        std::shared_ptr<texture>                tex1,
-        std::shared_ptr<texture>                tex2,
-        std::shared_ptr<node>                   box,
+  basic_geometry_pass(
         std::shared_ptr<shader>                 shader,
         std::shared_ptr<yc::graphics::graphics> graphics)
-  : final_pass("triangle_pass", std::move(shader), std::move(graphics))
-  , box(std::move(box))
-  , tex1(std::move(tex1))
-  , tex2(std::move(tex2)) {};
+  : primitive_pass("basic_geometry", std::move(shader), std::move(graphics)) {};
 
   void before_loop() override
   {
@@ -147,41 +148,30 @@ public:
       window->get_geometry(geometry);
     }
 
-    view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -8.0f));
-
     proj = glm::perspective(
           glm::radians(45.0f),
           geometry.width / static_cast<float>(geometry.height), 0.1f, 100.0f);
 
+    u_proj  = program->get_uniform<glm::mat4>("projection");
+    u_view  = program->get_uniform<glm::mat4>("view");
+    u_model = program->get_uniform<glm::mat4>("model");
 
-//    u_texture1 = program->get_uniform<int>("texture1");
-//    u_texture2 = program->get_uniform<int>("texture2");
-    u_proj     = program->get_uniform<glm::mat4>("projection");
-    u_view     = program->get_uniform<glm::mat4>("view");
-    u_model    = program->get_uniform<glm::mat4>("model");
-//
     u_proj->set(proj);
-    u_view->set(view);
-    u_model->set(model);
-
-    program->use();
-//    u_texture1->set(0);
-//    u_texture2->set(1);
   }
 
   void begin() override
   {
-//    tex2->use(GL_TEXTURE0);
-//    tex1->use(GL_TEXTURE1);
-
-    rotation += 1.0f;
-    model = glm::rotate(
-          glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.5f, 1.0f, 0.0f));
-    u_model->set(model);
-
     program->use();
-    box->draw();
+    u_view->set(view);
+  }
+
+  void on_mesh(std::shared_ptr<yc::graphics::material> material) override
+  {
+  }
+
+  void on_node(const yc::app::object::renderer_data & object) override
+  {
+    u_model->set(object.transform);
   }
 
   void end() override
@@ -197,7 +187,7 @@ yc::trivial_render_chain(
       const std::shared_ptr<yc::graphics::graphics> & graphics,
       const std::shared_ptr<yc::app::asset_factory> & asset_factory)
 {
-  std::vector<node::attr_layout_item> layout = {
+  const auto layout = {
     node::attr_layout_item(node::attr_layout_item::type::POSITION, 0),
     node::attr_layout_item(node::attr_layout_item::type::NORMAL, 1, false),
     node::attr_layout_item(node::attr_layout_item::type::TEXCOORD, 2, false),
@@ -205,11 +195,8 @@ yc::trivial_render_chain(
   node::set_layout(layout);
 
   std::vector<std::shared_ptr<yc::graphics::render_pass>> passes
-        = { std::make_shared<triangle_pass>(
-              asset_factory->load_asset<texture>("tex1"),
-              asset_factory->load_asset<texture>("tex2"),
-              asset_factory->load_asset<node>("Suzanne"),
-              asset_factory->load_asset<shader>("triangle"), graphics) };
+        = { std::make_shared<basic_geometry_pass>(
+              asset_factory->load_asset<shader>("basic_geometry"), graphics) };
 
   return passes;
 }

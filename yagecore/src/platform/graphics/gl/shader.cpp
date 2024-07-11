@@ -23,6 +23,11 @@
 /* Shared functions ========================================================= */
 yc::error yc::gl::shader::load()
 {
+  if (loaded)
+  {
+    return OK;
+  }
+
   live = true;
 
   if (sources.empty())
@@ -99,7 +104,14 @@ yc::error yc::gl::shader::load_from_binary(const std::vector<uint8_t> & binary)
 
 void yc::gl::shader::unload()
 {
+  if (!loaded)
+  {
+    return;
+  }
+
   yc::gl::glDeleteProgram(id);
+
+  loaded = false;
 }
 
 GLint yc::gl::shader::get_uniform_location(

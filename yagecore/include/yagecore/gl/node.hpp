@@ -12,6 +12,7 @@
 #include <optional>
 #include "GL/gl.h"
 #include "yagecore/graphics/node.hpp"
+#include "yagecore/graphics/render_pass.hpp"
 #include "yagecore/gl/graphics.hpp"
 #include "glplatform.hpp"
 
@@ -44,38 +45,41 @@ public:
     friend node;
     friend mesh_buffer;
 
-  private:
     GLuint  vao;
     GLenum  indicies_type;
     GLsizei vertex_count;
 
+    std::shared_ptr<yc::graphics::material> material;
+
     /* Attention: Offset already in bytes! */
     void * index_offset;
 
-  public:
     drawable_mesh(
-          GLuint _vao,
-          size_t _vertex_count,
-          size_t _index_offset,
-          GLenum _indicies_type)
+          GLuint                                          _vao,
+          size_t                                          _vertex_count,
+          size_t                                          _index_offset,
+          GLenum                                          _indicies_type,
+          const std::shared_ptr<yc::graphics::material> & _material)
     : vao(_vao)
     , indicies_type(_indicies_type)
     , vertex_count(_vertex_count)
+    , material(_material)
     , index_offset(reinterpret_cast<void *>(_index_offset * sizeof(GLuint))) {};
   } drawable;
 
   mesh_buffer(
-        const std::shared_ptr<yc::gl::graphics> & graphics,
-        GLuint                                    _vao,
-        GLuint                                    _vbo,
-        GLuint                                    _ebo,
-        size_t                                    _vertex_count,
-        size_t                                    _index_offset,
-        GLenum                                    _indicies_type)
+        const std::shared_ptr<yc::gl::graphics> &       graphics,
+        GLuint                                          vao,
+        GLuint                                          _vbo,
+        GLuint                                          _ebo,
+        size_t                                          vertex_count,
+        size_t                                          index_offset,
+        GLenum                                          indicies_type,
+        const std::shared_ptr<yc::graphics::material> & material)
   : ctx(graphics)
   , vbo(_vbo)
   , ebo(_ebo)
-  , drawable(_vao, _vertex_count, _index_offset, _indicies_type)
+  , drawable(vao, vertex_count, index_offset, indicies_type, material)
   {
   }
 
@@ -89,8 +93,12 @@ public:
       yc::gl::glDeleteBuffers(1, &ebo);
   }
 
-  static inline void draw(const drawable_mesh & info)
+  static inline void
+  draw(const std::shared_ptr<yc::graphics::render_pass> & pass,
+       const drawable_mesh &                              info)
   {
+    pass->on_mesh(info.material);
+
     yc::gl::glBindVertexArray(info.vao);
     yc::gl::glDrawElements(
           GL_TRIANGLES, info.vertex_count, info.indicies_type,
@@ -98,9 +106,10 @@ public:
     yc::gl::glBindVertexArray(0);
   }
 
-  inline void draw() override
+  inline void
+  draw(const std::shared_ptr<yc::graphics::render_pass> & pass) override
   {
-    draw(drawable);
+    draw(pass, drawable);
   }
 };
 
@@ -316,7 +325,8 @@ public:
   yc::error load() override;
   void      unload() override;
 
-  inline void draw() override
+  inline void
+  draw(const std::shared_ptr<yc::graphics::render_pass> & pass) override
   {
 #if USE_DEBUG
     if (!live)
@@ -330,12 +340,12 @@ public:
     {
       for (auto & drawable : flat_drawables)
       {
-        mesh_buffer::draw(drawable);
+        mesh_buffer::draw(pass, drawable);
       }
     }
     else
     {
-      yc::graphics::node::draw();
+      yc::graphics::node::draw(pass);
     }
   }
 };

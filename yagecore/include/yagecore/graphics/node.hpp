@@ -14,38 +14,19 @@
 #include <utility>
 #include "glm/mat4x4.hpp"
 
+#include "yagecore/graphics/material.hpp"
+#include "yagecore/graphics/mesh_buffer.hpp"
 #include "yagecore/app/asset.hpp"
 #include "yagecore/util/uri.hpp"
 #include "yagecore/graphics/graphics.hpp"
+#include "yagecore/graphics/texture.hpp"
 
 namespace yc::graphics
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class material
-{
-public:
-  material()          = default;
-  virtual ~material() = default;
-};
-
-class image
-{
-public:
-  image()          = default;
-  virtual ~image() = default;
-};
-
-class mesh_buffer
-{
-public:
-  mesh_buffer()          = default;
-  virtual ~mesh_buffer() = default;
-
-  virtual void unload() = 0;
-  virtual void draw()   = 0;
-};
+class render_pass;
 
 class node : public yc::app::asset
 {
@@ -102,8 +83,12 @@ protected:
   data sources;
   type type_;
 
-  std::vector<std::shared_ptr<mesh_buffer>> meshes;
-  std::vector<std::shared_ptr<node>>        children;
+  /* These texture are handled by the node itself.
+   * Any asset factory has no idea about them. */
+  std::vector<std::shared_ptr<yc::graphics::texture>>     textures;
+  std::vector<std::shared_ptr<yc::graphics::material>>    materials;
+  std::vector<std::shared_ptr<yc::graphics::mesh_buffer>> meshes;
+  std::vector<std::shared_ptr<node>>                      children;
 
   /* Transformation matrix for the meshes.
    * Note, that this matrix IS used to render meshes directly.
@@ -143,7 +128,7 @@ public:
     return type_;
   }
 
-  virtual void draw()
+  virtual void draw(const std::shared_ptr<yc::graphics::render_pass> & pass)
   {
 #if USE_DEBUG
     if (!live)
@@ -154,12 +139,12 @@ public:
 
     for (auto & mesh : meshes)
     {
-      mesh->draw();
+      mesh->draw(pass);
     }
 
     for (auto & child : children)
     {
-      child->draw();
+      child->draw(pass);
     }
   }
 };

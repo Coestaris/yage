@@ -15,6 +15,7 @@
 
 #include "yagecore/time.hpp"
 #include "yagecore/graphics/node.hpp"
+#include "yagecore/app/asset_factory.hpp"
 
 namespace yc::app
 {
@@ -36,15 +37,15 @@ private:
 protected:
   std::shared_ptr<yc::app::application> app;
 
-  virtual void update(yc::milliseconds delta) = 0;
-
 public:
   struct renderer_data
   {
     bool                                visible;
-    std::shared_ptr<yc::graphics::node> primitive;
+    bool                                ready;
+    glm::mat4                           transform;
+    std::shared_ptr<yc::graphics::node> node;
 
-  } data = { false, nullptr };
+  } render = { false, false, glm::mat4(1.0f), nullptr };
 
   class logic_data
   {
@@ -60,6 +61,12 @@ public:
   virtual ~object() = default;
   explicit object(std::shared_ptr<yc::app::application> app)
   : app(std::move(app)) {};
+
+protected:
+  virtual void update(yc::milliseconds delta) = 0;
+
+public:
+  virtual void on_ready(const std::shared_ptr<asset_factory> & factory) = 0;
 
   void update()
   {

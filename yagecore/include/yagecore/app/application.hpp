@@ -83,37 +83,30 @@ public:
 
   /* acts like renderer data,
    * and additionally used to perform custom rendering */
-  class subrenderer
+  class render_data
   {
   protected:
-    std::shared_ptr<yc::app::asset_factory>          asset_factory;
-    std::shared_ptr<yc::graphics::window>            window;
-    std::vector<std::shared_ptr<yc::graphics::node>> objects;
+    std::shared_ptr<yc::app::asset_factory>     asset_factory;
+    std::shared_ptr<yc::graphics::window>       window;
+    std::vector<yc::app::object::renderer_data> objects;
 
     friend class yc::app::threads::renderer;
     friend class application;
 
-    virtual ~subrenderer() = default;
-
-    subrenderer(
+    render_data(
           std::shared_ptr<yc::app::asset_factory> asset_factory,
           std::shared_ptr<yc::graphics::window>   window)
     : asset_factory(std::move(asset_factory))
     , window(std::move(window)) {};
-
-    virtual void before_loop() = 0;
-    virtual void loop()        = 0;
-  };
-
-  std::shared_ptr<subrenderer> renderer;
+  } render_data;
 
   application(
-        std::shared_ptr<yc::app::application::subrenderer> subrenderer,
-        std::shared_ptr<yc::graphics::window>              window,
-        std::shared_ptr<yc::os_events>                     os_events)
+        std::shared_ptr<yc::app::asset_factory>       asset_factory,
+        const std::shared_ptr<yc::graphics::window> & window,
+        std::shared_ptr<yc::os_events>                os_events)
   : os_events(std::move(os_events))
-  , window(std::move(window))
-  , renderer(std::move(subrenderer))
+  , window(window)
+  , render_data(std::move(asset_factory), window)
   {
     input_mgr = std::make_shared<input_manager>(this->window);
   }
@@ -122,7 +115,7 @@ public:
 
   void stop()
   {
-    renderer->window->close();
+    render_data.window->close();
   }
 
   void add_object(std::shared_ptr<yc::app::object> object)
@@ -165,7 +158,7 @@ public:
   [[nodiscard]] yc::graphics::geometry get_geometry() const
   {
     yc::graphics::geometry geometry {};
-    renderer->window->get_geometry(geometry);
+    render_data.window->get_geometry(geometry);
     return geometry;
   }
 

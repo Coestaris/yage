@@ -74,7 +74,7 @@ public:
   , profiler(std::move(profiler))
   {
     int max_fps = 0;
-    app->renderer->window->get_max_fps(max_fps);
+    app->render_data.window->get_max_fps(max_fps);
     keeper = yc::app::frequency_keeper(max_fps);
   }
 };

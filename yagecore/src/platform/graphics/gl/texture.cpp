@@ -22,6 +22,11 @@
 /* Shared functions ========================================================= */
 yc::error yc::gl::texture::load()
 {
+  if (loaded)
+  {
+    return OK;
+  }
+
   live = true;
 
   if (sources.empty())
@@ -122,5 +127,12 @@ yc::error yc::gl::texture::load()
 
 void yc::gl::texture::unload()
 {
+  if (!loaded)
+  {
+    return;
+  }
+
   glDeleteTextures(1, &id);
+
+  loaded = false;
 }

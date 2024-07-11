@@ -17,8 +17,10 @@
 #include "yagecore/platform.hpp"
 #include "yagecore/app/object.hpp"
 #include "yagecore/app/application.hpp"
-
 #include "yagepack/asset_factory.hpp"
+
+#include "objects/suzanne.hpp"
+#include "objects/control.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -26,70 +28,6 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-class movable_obj : public yc::app::object
-{
-public:
-  ~movable_obj() override = default;
-
-  explicit movable_obj(std::shared_ptr<yc::app::application> app)
-  : yc::app::object(app)
-  {
-  }
-
-  void update(yc::milliseconds delta) override
-  {
-  }
-};
-
-class subrenderer : public yc::app::application::subrenderer
-{
-private:
-  std::vector<std::shared_ptr<yc::graphics::render_pass>> passes;
-  std::shared_ptr<yc::graphics::graphics>                 graphics {};
-
-private:
-  void before_loop() override
-  {
-    graphics = window->get_graphics();
-    passes   = yc::trivial_render_chain(graphics, asset_factory);
-
-    for (auto & pass : passes)
-    {
-      pass->before_loop();
-    }
-  }
-
-  void loop() override
-  {
-    asset_factory->poll_assets();
-
-    for (auto & pass : passes)
-    {
-      if (pass->get_skip())
-      {
-        continue;
-      }
-
-      pass->begin();
-      if (pass->get_type() == yc::graphics::pass_type::OBJECT_PASS)
-      {
-        for (auto & object : objects)
-        {
-          pass->on_object(object);
-        }
-      }
-      pass->end();
-    }
-  }
-
-public:
-  subrenderer(
-        std::shared_ptr<yc::app::asset_factory> asset_factory,
-        std::shared_ptr<yc::graphics::window>   window)
-  : yc::app::application::subrenderer(
-          std::move(asset_factory), std::move(window)) {};
-};
-
 std::string lookup_asset_path()
 {
   std::vector<std::string> variants = {
@@ -147,13 +85,13 @@ int main(int argc, char * argv[])
     asset_factory->destroy();
   });
 
-  auto renderer = std::make_shared<subrenderer>(asset_factory, window);
-  auto app = std::make_shared<yc::app::application>(renderer, window, events);
+  auto app
+        = std::make_shared<yc::app::application>(asset_factory, window, events);
 
-  for (int i = 0; i < 10; i++)
-  {
-    app->add_object(std::make_shared<movable_obj>(app));
-  }
+  for (size_t i = 0; i < 100; i++)
+    app->add_object(std::make_shared<app::objects::suzanne>(app));
+
+  app->add_object(std::make_shared<app::objects::control>(app));
 
   app->start();
   app->destroy_all_objects(true);
