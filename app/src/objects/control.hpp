@@ -45,11 +45,14 @@ public:
       app->stop();
     }
 
-    auto mouse_pos   = app->get_input()->mouse_position();
-    auto mouse_delta = mouse_pos - prev_mouse;
-    prev_mouse       = mouse_pos;
-    camera_yaw += mouse_delta.x * 0.1f;
-    camera_pitch += mouse_delta.y * 0.1f;
+    auto mouse_pos = app->get_input()->mouse_position();
+    if (app->get_input()->mouse_pressed(yc::mouse::LEFT))
+    {
+      auto mouse_delta = mouse_pos - prev_mouse;
+      camera_yaw += mouse_delta.x * 0.1f;
+      camera_pitch += mouse_delta.y * 0.1f;
+    }
+    prev_mouse = mouse_pos;
 
     auto camera_dir = glm::vec3(
           cos(glm::radians(camera_pitch)) * sin(glm::radians(camera_yaw)),
@@ -76,6 +79,14 @@ public:
       camera_pos += glm::normalize(
                           glm::cross(camera_dir, glm::vec3(0.0f, 1.0f, 0.0f)))
                     * 0.01f * delta;
+    }
+    if (app->get_input()->key_pressed(yc::key::SPACE))
+    {
+      camera_pos += glm::vec3(0.0f, 0.01f, 0.0f) * delta;
+    }
+    if (app->get_input()->key_pressed(yc::key::SHIFT_L))
+    {
+      camera_pos -= glm::vec3(0.0f, 0.01f, 0.0f) * delta;
     }
 
     app_view = glm::lookAt(

@@ -65,17 +65,6 @@ public:
     if (app->get_input()->key_pressed(yc::key::PAGE_DOWN))
       roll -= 0.3f * delta;
 
-    if (app->get_input()->mouse_pressed(yc::mouse::LEFT))
-    {
-      start_pos = glm::translate(
-                glm::mat4(1.0f),
-                glm::vec3(
-                      glm::linearRand(-8.0f, 8.0f),
-                      glm::linearRand(-8.0f, 8.0f),
-                      glm::linearRand(-8.0f, 8.0f)));
-      start_pos = glm::scale(start_pos, glm::vec3(0.5f));
-    }
-
     render.transform = glm::rotate(
           start_pos, glm::radians(yaw), glm::vec3(0.0f, 1.0f, 0.0f));
     render.transform = glm::rotate(
