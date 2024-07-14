@@ -75,12 +75,23 @@ void yc::app::threads::renderer::run()
     /* Stage 2: Draw the frame using data from previous frame */
     profiler->passed(PROF_POINT_RENDERER_DRAW_START);
     graphics->clear();
+
+#if COLLECT_DRAW_STATISTICS
+    yc::graphics::draw_result draw_result {};
+    size_t                    drawn_nodes = 0;
+#endif
+
     for (const auto & pass : passes)
     {
       if (pass->get_skip())
       {
         continue;
       }
+
+#if COLLECT_DRAW_STATISTICS
+      draw_result = {};
+      drawn_nodes = 0;
+#endif
 
       pass->begin();
       if (pass->get_type() == yc::graphics::pass_type::OBJECT_PASS)
@@ -89,16 +100,29 @@ void yc::app::threads::renderer::run()
         {
           /* Note, that visibility, already accounted,
            * when adding object to the renderer. */
-          pass->on_node(object);
+          if (!pass->on_node(object))
+          {
+            continue;
+          }
+
+#if COLLECT_DRAW_STATISTICS
+          draw_result += object.node->draw(pass);
+          drawn_nodes += 1;
+#else
           object.node->draw(pass);
+#endif
         }
       }
       pass->end();
     }
     // graphics->flush();
 
-    /* Update instances count (for statistics) */
-    instances_count = app->render_data.objects.size();
+#if COLLECT_DRAW_STATISTICS
+    drawables_cpu   = app->render_data.objects.size();
+    drawables_gpu   = drawn_nodes;
+    drawn_meshes    = draw_result.get_drawn_meshes();
+    drawn_triangles = draw_result.get_drawn_triangles();
+#endif
 
     /* Stage 3: Sync with updater after frame */
     profiler->passed(PROF_POINT_RENDERER_DRAW_END);
@@ -113,16 +137,16 @@ void yc::app::threads::renderer::run()
        * It's important to call on_ready from rendeing thread,
        * sice this thread holds graphics context (that may be critical
        * for some API's. Blinking to Windows). */
-      if (!object->render.ready)
+      if (!object->renderer_data.renderable.ready)
       {
         object->on_ready(app->render_data.asset_factory);
-        object->render.ready = true;
+        object->renderer_data.renderable.ready = true;
       }
 
       /* Stage 4.2: Add object to the render list */
-      if (object->render.visible)
+      if (object->renderer_data.renderable.visible)
       {
-        app->render_data.objects.push_back(object->render);
+        app->render_data.objects.push_back(object->renderer_data.renderable);
       }
     }
 

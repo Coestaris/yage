@@ -86,9 +86,9 @@ public:
   class render_data
   {
   protected:
-    std::shared_ptr<yc::app::asset_factory>     asset_factory;
-    std::shared_ptr<yc::graphics::window>       window;
-    std::vector<yc::app::object::renderer_data> objects;
+    std::shared_ptr<yc::app::asset_factory>  asset_factory;
+    std::shared_ptr<yc::graphics::window>    window;
+    std::vector<yc::app::object::renderable> objects;
 
     friend class yc::app::threads::renderer;
     friend class application;

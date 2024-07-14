@@ -10,6 +10,8 @@
 
 /* Includes ================================================================= */
 #include <memory>
+#include "yagecore/graphics/draw_result.hpp"
+#include "yagecore/graphics/aabb.hpp"
 
 namespace yc::graphics
 {
@@ -23,8 +25,11 @@ class mesh_buffer
 public:
   virtual ~mesh_buffer() = default;
 
+  virtual yc::graphics::aabb get_aabb() const = 0;
+
   virtual void unload() = 0;
-  virtual void draw(const std::shared_ptr<yc::graphics::render_pass> & pass)
+  virtual draw_result
+  draw(const std::shared_ptr<yc::graphics::render_pass> & pass)
         = 0;
 };
 

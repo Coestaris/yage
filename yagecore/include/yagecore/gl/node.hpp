@@ -33,63 +33,75 @@ class node;
 
 class mesh_buffer : public yc::graphics::mesh_buffer
 {
+public:
+  struct indicies_info
+  {
+    GLuint ebo;
+    GLenum type;
+
+    /* Attention: Offset already in bytes! */
+    void * offset;
+  };
+
+  struct vertices_info
+  {
+    GLuint             vbo, vao;
+    GLsizei            count;
+    yc::graphics::aabb aabb;
+  };
+
 private:
-  /* Shortcut for GL specific graphics */
-  std::shared_ptr<yc::gl::graphics> ctx;
-
-  GLuint  vbo, ebo, vao;
-  GLenum  indicies_type;
-  GLsizei vertex_count;
-
   friend node;
 
+  /* Shortcut for GL specific graphics */
+  std::shared_ptr<yc::gl::graphics>       ctx;
   std::shared_ptr<yc::graphics::material> material;
 
-  /* Attention: Offset already in bytes! */
-  void * index_offset;
+  vertices_info vertices;
+  indicies_info indicies;
 
 public:
   mesh_buffer(
         const std::shared_ptr<yc::gl::graphics> &       graphics,
-        GLuint                                          vao,
-        GLuint                                          vbo,
-        GLuint                                          ebo,
-        size_t                                          vertex_count,
-        size_t                                          index_offset,
-        GLenum                                          indicies_type,
+        vertices_info                                   vertices,
+        indicies_info                                   indicies,
         const std::shared_ptr<yc::graphics::material> & material)
   : ctx(graphics)
-  , vbo(vbo)
-  , ebo(ebo)
-  , vao(vao)
-  , indicies_type(indicies_type)
-  , vertex_count(vertex_count)
   , material(material)
-  , index_offset(reinterpret_cast<void *>(index_offset * sizeof(GLuint))) {};
+  , vertices(std::move(vertices))
+  , indicies(std::move(indicies))
+  {
+  }
 
   void unload() override
   {
-    if (vao)
-      yc::gl::glDeleteVertexArrays(1, &vao);
-    if (vbo)
-      yc::gl::glDeleteBuffers(1, &vbo);
-    if (ebo)
-      yc::gl::glDeleteBuffers(1, &ebo);
+    if (vertices.vao)
+      yc::gl::glDeleteVertexArrays(1, &vertices.vao);
+    if (vertices.vbo)
+      yc::gl::glDeleteBuffers(1, &vertices.vbo);
+    if (indicies.ebo)
+      yc::gl::glDeleteBuffers(1, &indicies.ebo);
   }
 
-  inline void
+  inline yc::graphics::draw_result
   draw(const std::shared_ptr<yc::graphics::render_pass> & pass) override
   {
     if (!pass->on_mesh(*this, material))
     {
-      return;
+      return yc::graphics::draw_result();
     }
 
-    yc::gl::glBindVertexArray(vao);
+    yc::gl::glBindVertexArray(vertices.vao);
     yc::gl::glDrawElements(
-          GL_TRIANGLES, vertex_count, indicies_type,
-          index_offset);
+          GL_TRIANGLES, vertices.count, indicies.type, indicies.offset);
     yc::gl::glBindVertexArray(0);
+
+    return yc::graphics::draw_result(1, vertices.count);
+  }
+
+  yc::graphics::aabb get_aabb() const override
+  {
+    return vertices.aabb;
   }
 };
 
@@ -244,6 +256,8 @@ private:
    * (that used in users' shaders) */
   std::unordered_map<std::string, GLint> attribute_map;
 
+  yc::graphics::aabb aabb {};
+
   bool load_gltf(const yc::util::uri & uri);
   bool parse_gltf(const fastgltf::Asset & asset);
 
@@ -251,7 +265,8 @@ private:
         const fastgltf::Asset &     asset,
         const fastgltf::Primitive & primitive,
         std::vector<vertex> &       verticies,
-        size_t &                    initial_vtx);
+        size_t &                    initial_vtx,
+        yc::graphics::aabb &        aabb);
   bool process_normal(
         const fastgltf::Asset &     asset,
         const fastgltf::Primitive & primitive,
@@ -284,7 +299,8 @@ private:
         size_t &                    initial_vtx);
   std::shared_ptr<yc::gl::mesh_buffer> make_buffer(
         const std::vector<vertex> & verticies,
-        const std::vector<GLuint> & indices);
+        const std::vector<GLuint> & indices,
+        const yc::graphics::aabb &  aabb);
 
 public:
   ~node() override = default;
@@ -300,6 +316,11 @@ public:
 
   yc::error load() override;
   void      unload() override;
+
+  yc::graphics::aabb get_aabb() const
+  {
+    return aabb;
+  }
 };
 
 /* Variables ================================================================ */

@@ -53,7 +53,7 @@ public:
 
   /** Called before rendering single object.
    * If returns false, object will be skipped */
-  virtual bool on_node(const yc::app::object::renderer_data & object) = 0;
+  virtual bool on_node(const yc::app::object::renderable & object) = 0;
 
   /** Called before rendering single mesh.
    * If returns false, mesh will be skipped */

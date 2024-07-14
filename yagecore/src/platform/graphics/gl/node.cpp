@@ -75,7 +75,7 @@ void yc::gl::node::unload()
   }
 
   /* Unload all meshes */
-  for (auto & mesh : meshes)
+  if (mesh)
   {
     mesh->unload();
   }
@@ -171,7 +171,8 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
       std::vector<uint32_t> indices;
       std::vector<vertex>   vertices;
 
-      /* Load meshes */
+      /* Load mesh */
+      aabb = {};
       if (gltf_node.meshIndex)
       {
         auto & gltf_mesh = asset.meshes[gltf_node.meshIndex.value()];
@@ -199,7 +200,8 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
                 });
 
           size_t initial_vtx = 0;
-          if (!process_position(asset, gltf_primitive, vertices, initial_vtx))
+          if (!process_position(
+                    asset, gltf_primitive, vertices, initial_vtx, aabb))
             return false;
           if (!process_normal(asset, gltf_primitive, vertices, initial_vtx))
             return false;
@@ -216,16 +218,15 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
         }
       }
 
-      auto mesh_buffer = make_buffer(vertices, indices);
-      if (!mesh_buffer)
+      /* Curently, mesh always have the same bounding box with the node */
+      node->mesh = make_buffer(vertices, indices, aabb);
+      if (!node->mesh)
       {
         logging(
               LOG_ERROR, "Failed to create mesh buffer for GLTF node: %s",
               get_name().c_str());
         return false;
       }
-
-      node->meshes.push_back(mesh_buffer);
     }
   }
 
@@ -236,7 +237,8 @@ bool yc::gl::node::process_position(
       const fastgltf::Asset &     asset,
       const fastgltf::Primitive & primitive,
       std::vector<vertex> &       verticies,
-      size_t &                    initial_vtx)
+      size_t &                    initial_vtx,
+      yc::graphics::aabb &        aabb)
 {
   if (!layout.need_type(attr_layout_item::type::POSITION))
   {
@@ -272,6 +274,8 @@ bool yc::gl::node::process_position(
           vertex v                     = {};
           v.position                   = glm::vec3(pos[0], pos[1], pos[2]);
           verticies[initial_vtx + idx] = v;
+
+          aabb.extend(v.position);
         });
 
   return true;
@@ -448,7 +452,8 @@ bool yc::gl::node::process_weights(
 
 std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
       const std::vector<vertex> & verticies,
-      const std::vector<GLuint> & indices)
+      const std::vector<GLuint> & indices,
+      const yc::graphics::aabb &  aabb)
 {
   size_t stride = std::accumulate(
         layout.begin(), layout.end(), 0,
@@ -588,9 +593,22 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
         LOG_DEBUG, "Loaded %" PRIuPTR " vertices/%" PRIuPTR " indices",
         verticies.size(), indices.size());
 
+  /* Stub for now */
   std::shared_ptr<yc::graphics::material> material
         = yc::graphics::material::basic_material();
 
+  yc::gl::mesh_buffer::indicies_info indicies = {
+    .ebo    = ebo,
+    .type   = GL_UNSIGNED_INT,
+    .offset = reinterpret_cast<void *>(0 * sizeof(GLuint)),
+  };
+  yc::gl::mesh_buffer::vertices_info vertices = {
+    .vbo   = vbo,
+    .vao   = vao,
+    .count = static_cast<GLsizei>(indices.size()),
+    .aabb  = aabb,
+  };
+
   return std::make_shared<yc::gl::mesh_buffer>(
-        ctx, vao, vbo, ebo, indices.size(), 0, GL_UNSIGNED_INT, material);
+        ctx, vertices, indicies, material);
 }

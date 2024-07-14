@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "glm/vec2.hpp"
+#include "glm/ext/matrix_transform.hpp"
 
 #include "yagecore/time.hpp"
 #include "yagecore/graphics/node.hpp"
@@ -27,6 +28,7 @@ class application;
 namespace threads
 {
 class logic;
+class renderer;
 }
 
 /** Base class for all objects in the application.
@@ -35,15 +37,10 @@ class logic;
  * User should inherit from this class to create custom objects. */
 class object
 {
-private:
-  yc::milliseconds last_update = 0;
-
-protected:
-  std::shared_ptr<yc::app::application> app;
-
 public:
-  struct renderer_data
+  class renderable
   {
+  public:
     /** If true, object should be rendered */
     bool visible {};
     /** If true, object is ready to be rendered (on_ready called) */
@@ -53,7 +50,26 @@ public:
     /** Node to render */
     std::shared_ptr<yc::graphics::node> node {};
 
-  } render;
+    glm::mat4 aabb_transform = glm::mat4(1.0f);
+  };
+
+private:
+  yc::milliseconds last_update = 0;
+
+protected:
+  std::shared_ptr<yc::app::application> app;
+
+public:
+  class
+  {
+  private:
+    renderable renderable;
+
+    friend class object;
+    friend class application;
+    friend class yc::app::threads::renderer;
+
+  } renderer_data;
 
   class logic_data
   {
@@ -76,6 +92,27 @@ protected:
    *
    * Attention: This method is called from the logic thread. */
   virtual void update(yc::milliseconds delta) = 0;
+
+  void set_visible(bool visible)
+  {
+    renderer_data.renderable.visible = visible;
+  }
+
+  void set_node(std::shared_ptr<yc::graphics::node> node)
+  {
+    renderer_data.renderable.node = std::move(node);
+  }
+
+  void set_transform(const glm::mat4 & transform)
+  {
+    renderer_data.renderable.transform = transform;
+    if (renderer_data.renderable.node)
+    {
+      renderer_data.renderable.aabb_transform
+            = transform
+              * renderer_data.renderable.node->get_aabb().get_transform();
+    }
+  }
 
 public:
   /** This function is called when the object is ready to be rendered.

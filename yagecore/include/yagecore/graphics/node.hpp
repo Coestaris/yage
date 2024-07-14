@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file render_primitive.hpp
+ * @file node.hpp
  * @date 28-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
@@ -14,12 +14,14 @@
 #include <utility>
 #include "glm/mat4x4.hpp"
 
+#include "yagecore/graphics/draw_result.hpp"
 #include "yagecore/graphics/material.hpp"
 #include "yagecore/graphics/mesh_buffer.hpp"
 #include "yagecore/app/asset.hpp"
 #include "yagecore/util/uri.hpp"
 #include "yagecore/graphics/graphics.hpp"
 #include "yagecore/graphics/texture.hpp"
+#include "yagecore/graphics/aabb.hpp"
 
 namespace yc::graphics
 {
@@ -87,7 +89,9 @@ protected:
    * Any asset factory has no idea about them. */
   std::vector<std::shared_ptr<yc::graphics::texture>>     textures;
   std::vector<std::shared_ptr<yc::graphics::material>>    materials;
-  std::vector<std::shared_ptr<yc::graphics::mesh_buffer>> meshes;
+  std::shared_ptr<yc::graphics::mesh_buffer> mesh;
+  // std::shared_ptr<yc::graphics::mesh_buffer> light;
+  // std::shared_ptr<yc::graphics::mesh_buffer> camera;
   std::vector<std::shared_ptr<node>>                      children;
 
   /* Transformation matrix for the meshes.
@@ -128,25 +132,30 @@ public:
     return type_;
   }
 
-  virtual void draw(const std::shared_ptr<yc::graphics::render_pass> & pass)
+  draw_result draw(const std::shared_ptr<yc::graphics::render_pass> & pass)
   {
 #if USE_DEBUG
     if (!live)
     {
-      return;
+      return draw_result();
     }
 #endif
 
-    for (auto & mesh : meshes)
+    draw_result result {};
+    if (mesh)
     {
-      mesh->draw(pass);
+      result += mesh->draw(pass);
     }
 
     for (auto & child : children)
     {
-      child->draw(pass);
+      result += child->draw(pass);
     }
+
+    return result;
   }
+
+  virtual yc::graphics::aabb get_aabb() const = 0;
 };
 
 /* Variables ================================================================ */
