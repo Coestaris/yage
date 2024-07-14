@@ -33,83 +33,63 @@ class node;
 
 class mesh_buffer : public yc::graphics::mesh_buffer
 {
-protected:
+private:
   /* Shortcut for GL specific graphics */
   std::shared_ptr<yc::gl::graphics> ctx;
 
-  GLuint vbo, ebo;
+  GLuint  vbo, ebo, vao;
+  GLenum  indicies_type;
+  GLsizei vertex_count;
+
+  friend node;
+
+  std::shared_ptr<yc::graphics::material> material;
+
+  /* Attention: Offset already in bytes! */
+  void * index_offset;
 
 public:
-  class drawable_mesh
-  {
-    friend node;
-    friend mesh_buffer;
-
-    GLuint  vao;
-    GLenum  indicies_type;
-    GLsizei vertex_count;
-
-    std::shared_ptr<yc::graphics::material> material;
-
-    /* Attention: Offset already in bytes! */
-    void * index_offset;
-
-    drawable_mesh(
-          GLuint                                          _vao,
-          size_t                                          _vertex_count,
-          size_t                                          _index_offset,
-          GLenum                                          _indicies_type,
-          const std::shared_ptr<yc::graphics::material> & _material)
-    : vao(_vao)
-    , indicies_type(_indicies_type)
-    , vertex_count(_vertex_count)
-    , material(_material)
-    , index_offset(reinterpret_cast<void *>(_index_offset * sizeof(GLuint))) {};
-  } drawable;
-
   mesh_buffer(
         const std::shared_ptr<yc::gl::graphics> &       graphics,
         GLuint                                          vao,
-        GLuint                                          _vbo,
-        GLuint                                          _ebo,
+        GLuint                                          vbo,
+        GLuint                                          ebo,
         size_t                                          vertex_count,
         size_t                                          index_offset,
         GLenum                                          indicies_type,
         const std::shared_ptr<yc::graphics::material> & material)
   : ctx(graphics)
-  , vbo(_vbo)
-  , ebo(_ebo)
-  , drawable(vao, vertex_count, index_offset, indicies_type, material)
-  {
-  }
+  , vbo(vbo)
+  , ebo(ebo)
+  , vao(vao)
+  , indicies_type(indicies_type)
+  , vertex_count(vertex_count)
+  , material(material)
+  , index_offset(reinterpret_cast<void *>(index_offset * sizeof(GLuint))) {};
 
   void unload() override
   {
-    if (drawable.vao)
-      yc::gl::glDeleteVertexArrays(1, &drawable.vao);
+    if (vao)
+      yc::gl::glDeleteVertexArrays(1, &vao);
     if (vbo)
       yc::gl::glDeleteBuffers(1, &vbo);
     if (ebo)
       yc::gl::glDeleteBuffers(1, &ebo);
   }
 
-  static inline void
-  draw(const std::shared_ptr<yc::graphics::render_pass> & pass,
-       const drawable_mesh &                              info)
-  {
-    pass->on_mesh(info.material);
-
-    yc::gl::glBindVertexArray(info.vao);
-    yc::gl::glDrawElements(
-          GL_TRIANGLES, info.vertex_count, info.indicies_type,
-          info.index_offset);
-    yc::gl::glBindVertexArray(0);
-  }
-
   inline void
   draw(const std::shared_ptr<yc::graphics::render_pass> & pass) override
   {
-    draw(pass, drawable);
+    if (!pass->on_mesh(*this, material))
+    {
+      return;
+    }
+
+    yc::gl::glBindVertexArray(vao);
+    yc::gl::glDrawElements(
+          GL_TRIANGLES, vertex_count, indicies_type,
+          index_offset);
+    yc::gl::glBindVertexArray(0);
   }
 };
 
@@ -263,13 +243,9 @@ private:
   /* map to translate gltf attribute names to GL attribute locations
    * (that used in users' shaders) */
   std::unordered_map<std::string, GLint> attribute_map;
-  /* Little optimization to avoid recursive tree traversal,
-   * we just store all the flat VAOs to draw them in one go. */
-  std::vector<mesh_buffer::drawable_mesh> flat_drawables;
 
   bool load_gltf(const yc::util::uri & uri);
   bool parse_gltf(const fastgltf::Asset & asset);
-  void flat_drawable(std::vector<mesh_buffer::drawable_mesh> & drawables);
 
   bool process_position(
         const fastgltf::Asset &     asset,
@@ -324,30 +300,6 @@ public:
 
   yc::error load() override;
   void      unload() override;
-
-  inline void
-  draw(const std::shared_ptr<yc::graphics::render_pass> & pass) override
-  {
-#if USE_DEBUG
-    if (!live)
-    {
-      return;
-    }
-#endif
-
-    /* Little optimization */
-    if (type_ == yc::graphics::node::type::TOPLEVEL)
-    {
-      for (auto & drawable : flat_drawables)
-      {
-        mesh_buffer::draw(pass, drawable);
-      }
-    }
-    else
-    {
-      yc::graphics::node::draw(pass);
-    }
-  }
 };
 
 /* Variables ================================================================ */

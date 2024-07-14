@@ -64,8 +64,6 @@ void yc::gl::node::unload()
     return;
   }
 
-  flat_drawables.clear();
-
   for (auto & texture : textures)
   {
     texture->unload();
@@ -231,24 +229,7 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
     }
   }
 
-  flat_drawable(flat_drawables);
-
   return true;
-}
-
-void yc::gl::node::flat_drawable(
-      std::vector<mesh_buffer::drawable_mesh> & drawables)
-{
-  for (auto & mesh : meshes)
-  {
-    drawables.push_back(
-          dynamic_cast<yc::gl::mesh_buffer *>(mesh.get())->drawable);
-  }
-
-  for (auto & child : children)
-  {
-    dynamic_cast<yc::gl::node *>(child.get())->flat_drawable(drawables);
-  }
 }
 
 bool yc::gl::node::process_position(

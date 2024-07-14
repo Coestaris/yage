@@ -29,6 +29,10 @@ namespace threads
 class logic;
 }
 
+/** Base class for all objects in the application.
+ * Object is a part of the application, that can be updated and rendered.
+ * It can be a camera, a mesh, a light, etc.
+ * User should inherit from this class to create custom objects. */
 class object
 {
 private:
@@ -40,12 +44,16 @@ protected:
 public:
   struct renderer_data
   {
-    bool                                visible;
-    bool                                ready;
-    glm::mat4                           transform;
-    std::shared_ptr<yc::graphics::node> node;
+    /** If true, object should be rendered */
+    bool visible {};
+    /** If true, object is ready to be rendered (on_ready called) */
+    bool ready {};
+    /** Transformation matrix of the object */
+    glm::mat4 transform = glm::mat4(1.0f);
+    /** Node to render */
+    std::shared_ptr<yc::graphics::node> node {};
 
-  } render = { false, false, glm::mat4(1.0f), nullptr };
+  } render;
 
   class logic_data
   {
@@ -63,9 +71,19 @@ public:
   : app(std::move(app)) {};
 
 protected:
+  /** This function is called every frame, so it can be used
+   * to update the object, process input, etc.
+   *
+   * Attention: This method is called from the logic thread. */
   virtual void update(yc::milliseconds delta) = 0;
 
 public:
+  /** This function is called when the object is ready to be rendered.
+   * It may be used to load assets, create render passes, etc.
+   * Note, that this may not be striclty synced with update calls
+   * (e.g. when on_ready called after the first update).
+   *
+   * Attention: This method is called from the rendering thread. */
   virtual void on_ready(const std::shared_ptr<asset_factory> & factory) = 0;
 
   void update()

@@ -144,12 +144,17 @@ public:
       set(prev_value);
     }
 
+    /* Warning: You should use shader by HAND */
     inline void set(T value)
     {
       prev_value = value;
       internal_set(ctx, location, value);
     }
   };
+
+private:
+   GLint get_uniform_location(const std::string & name, bool required = true);
+   GLint get_attribute_location(const std::string & name, bool required = true);
 
 protected:
   /* Shortcut for GL specific graphics */
@@ -174,10 +179,6 @@ public:
 
   yc::error load() override;
   void      unload() override;
-
-  /* GL specific sfuff */
-  GLint get_uniform_location(const std::string & name, bool required = true);
-  GLint get_attribute_location(const std::string & name, bool required = true);
 
   inline void use()
   {

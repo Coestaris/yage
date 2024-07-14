@@ -42,11 +42,11 @@ protected:
 
 public:
   ~trivial_render_pass() override = default;
-   trivial_render_pass(
-         std::string                                     name,
-         yc::graphics::pass_type                         type,
-         std::shared_ptr<shader>                         shader,
-         const std::shared_ptr<yc::graphics::graphics> & graphics)
+  trivial_render_pass(
+        std::string                                     name,
+        yc::graphics::pass_type                         type,
+        std::shared_ptr<shader>                         shader,
+        const std::shared_ptr<yc::graphics::graphics> & graphics)
   : render_pass(std::move(name), type)
   , program(std::move(shader))
   , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics)) {};
@@ -66,11 +66,18 @@ protected:
           std::move(shader),
           std::move(graphics)) {};
 
-  void on_node(const yc::app::object::renderer_data & object) override {
+  bool on_node(const yc::app::object::renderer_data & object) override
+  {
     /* Has no sense for current pass. */
+    return false;
   };
-  void on_mesh(std::shared_ptr<yc::graphics::material> material) override {
+
+  bool on_mesh(
+        const yc::graphics::mesh_buffer &               mesh,
+        const std::shared_ptr<yc::graphics::material> & material) override
+  {
     /* Has no sense for current pass. */
+    return false;
   };
 };
 
@@ -107,11 +114,18 @@ public:
           std::move(shader),
           std::move(graphics)) {};
 
-  void on_node(const yc::app::object::renderer_data & object) override {
+  bool on_node(const yc::app::object::renderer_data & object) override
+  {
     /* Has no sense for current pass. */
+    return false;
   };
-  void on_mesh(std::shared_ptr<yc::graphics::material> material) override {
+
+  bool on_mesh(
+        const yc::graphics::mesh_buffer &               mesh,
+        const std::shared_ptr<yc::graphics::material> & material) override
+  {
     /* Has no sense for current pass. */
+    return false;
   };
 };
 
@@ -165,13 +179,17 @@ public:
     u_view->set(view);
   }
 
-  void on_mesh(std::shared_ptr<yc::graphics::material> material) override
+  bool on_mesh(
+        const yc::graphics::mesh_buffer &               mesh,
+        const std::shared_ptr<yc::graphics::material> & material) override
   {
+    return true;
   }
 
-  void on_node(const yc::app::object::renderer_data & object) override
+  bool on_node(const yc::app::object::renderer_data & object) override
   {
     u_model->set(object.transform);
+    return true;
   }
 
   void end() override

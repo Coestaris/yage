@@ -261,7 +261,8 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
   glShadeModel(GL_SMOOTH); // Enable Smooth Shading
   glEnable(GL_DEPTH_TEST); // Enables Depth Testing
   glDepthFunc(GL_LEQUAL);  // The Type Of Depth Testing To Do
-  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+   glEnable(GL_MULTISAMPLE);
+   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
   return yc::error::OK;
 }
