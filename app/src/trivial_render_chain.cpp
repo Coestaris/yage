@@ -174,7 +174,7 @@ public:
     u_proj->set(proj);
   }
 
-  void begin() override
+  void on_begin() override
   {
     program->use();
     u_view->set(view);
@@ -193,7 +193,7 @@ public:
     return true;
   }
 
-  void end() override
+  void on_end() override
   {
   }
 };
@@ -228,7 +228,7 @@ public:
     u_color->set(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
   }
 
-  void begin() override
+  void on_begin() override
   {
     program->use();
     u_view->set(view);
@@ -249,7 +249,7 @@ public:
     return false;
   }
 
-  void end() override
+  void on_end() override
   {
   }
 };

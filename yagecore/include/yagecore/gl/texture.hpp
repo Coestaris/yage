@@ -14,7 +14,7 @@
 #include "GL/gl.h"
 #include "yagecore/graphics/texture.hpp"
 #include "yagecore/gl/graphics.hpp"
-#include "glplatform.hpp"
+#include "yagecore/gl/util.hpp"
 
 namespace yc::gl
 {

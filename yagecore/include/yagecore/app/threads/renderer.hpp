@@ -35,40 +35,10 @@ private:
 
   std::shared_ptr<yc::graphics::graphics> graphics {}; /* cache */
 
-#if COLLECT_DRAW_STATISTICS
-  /** Amount of drawables that CPU wants us to draw */
-  size_t drawables_cpu = 0;
-  /** Amount of drawables that actually was drawn (at previous frame) */
-  size_t drawables_gpu = 0;
-  /** Amount of meshes drawn (at previous frame) */
-  size_t drawn_meshes = 0;
-  /** Amount of triangles drawn (at previous frame) */
-  size_t drawn_triangles = 0;
-#endif
-
 public:
   yc::signal_event_listener stop_signal_listener;
 
   void run() override;
-
-#if COLLECT_DRAW_STATISTICS
-  size_t get_drawables_cpu() const
-  {
-    return drawables_cpu;
-  }
-  size_t get_drawables_gpu() const
-  {
-    return drawables_gpu;
-  }
-  size_t get_drawn_meshes() const
-  {
-    return drawn_meshes;
-  }
-  size_t get_drawn_triangles() const
-  {
-    return drawn_triangles;
-  }
-#endif
 
   yc::milliseconds get_draw_time() const
   {

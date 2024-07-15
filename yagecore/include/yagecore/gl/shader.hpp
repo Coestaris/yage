@@ -22,7 +22,7 @@
 
 #include "yagecore/graphics/shader.hpp"
 #include "yagecore/gl/graphics.hpp"
-#include "glplatform.hpp"
+#include "yagecore/gl/util.hpp"
 #include "yagecore/gl/glfuncs.hpp"
 
 namespace yc::gl

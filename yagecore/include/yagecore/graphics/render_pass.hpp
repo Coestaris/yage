@@ -33,23 +33,30 @@ private:
   pass_type   type;
   bool        skip = false;
 
+#if COLLECT_DRAW_STATISTICS
+  yc::milliseconds draw_time {}, start_time {};
+  size_t           drawn_meshes {}, drawn_meshes_imm {};
+  size_t           drawn_triangles {}, drawn_triangles_imm {};
+#endif
+
 public:
-  render_pass(std::string name, pass_type type)
+  virtual ~render_pass() = default;
+           render_pass(std::string name, pass_type type)
   : name(std::move(name))
   , type(type)
   {
   }
 
-  virtual ~render_pass() = default;
-
-  /** Called once before rendering loop */
-  virtual void before_loop() = 0;
-
+protected:
   /** Called before rendering all objects */
-  virtual void end() = 0;
+  virtual void on_end() = 0;
 
   /** Called after rendering all objects */
-  virtual void begin() = 0;
+  virtual void on_begin() = 0;
+
+public:
+  /** Called once before rendering loop */
+  virtual void before_loop() = 0;
 
   /** Called before rendering single object.
    * If returns false, object will be skipped */
@@ -82,6 +89,53 @@ public:
   {
     return this->type;
   }
+
+  /* Wrappers for on_begin and on_end */
+  void begin()
+  {
+#if COLLECT_DRAW_STATISTICS
+    drawn_meshes_imm    = 0;
+    drawn_triangles_imm = 0;
+    start_time          = yc::get_ms();
+#endif
+
+    on_begin();
+  }
+
+  void end()
+  {
+    on_end();
+
+#if COLLECT_DRAW_STATISTICS
+    draw_time       = yc::get_ms() - start_time;
+    drawn_meshes    = drawn_meshes_imm;
+    drawn_triangles = drawn_triangles_imm;
+#endif
+  }
+
+#if COLLECT_DRAW_STATISTICS
+  yc::milliseconds get_draw_time() const
+  {
+    return draw_time;
+  }
+  size_t get_drawn_meshes() const
+  {
+    return drawn_meshes;
+  }
+  size_t get_drawn_triangles() const
+  {
+    return drawn_triangles;
+  }
+
+  void record_result(const yc::graphics::draw_result & result)
+  {
+    drawn_meshes_imm += result.get_drawn_meshes();
+    drawn_triangles_imm += result.get_drawn_triangles();
+  }
+
+#else
+  void record_result(const yc::graphics::draw_result & result) {};
+#endif
 };
 
 /* Variables ================================================================ */

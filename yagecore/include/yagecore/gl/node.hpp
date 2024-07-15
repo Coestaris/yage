@@ -15,7 +15,6 @@
 #include "yagecore/graphics/render_pass.hpp"
 #include "yagecore/gl/graphics.hpp"
 #include "yagecore/gl/mesh_buffer.hpp"
-#include "glplatform.hpp"
 
 /* Hack to not include all the GLTF parser.
  * This will require making all GLTF includes public. */

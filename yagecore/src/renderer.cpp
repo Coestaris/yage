@@ -47,7 +47,7 @@ void yc::app::threads::renderer::run()
   }
 
   auto passes = trivial_render_chain(graphics, app->render_data.asset_factory);
-  for (auto & pass : passes)
+  for (const auto & pass : passes)
   {
     pass->before_loop();
   }
@@ -76,22 +76,12 @@ void yc::app::threads::renderer::run()
     profiler->passed(PROF_POINT_RENDERER_DRAW_START);
     graphics->clear();
 
-#if COLLECT_DRAW_STATISTICS
-    yc::graphics::draw_result draw_result {};
-    size_t                    drawn_nodes = 0;
-#endif
-
-    for (const auto & pass : passes)
+    for (auto & pass : passes)
     {
       if (pass->get_skip())
       {
         continue;
       }
-
-#if COLLECT_DRAW_STATISTICS
-      draw_result = {};
-      drawn_nodes = 0;
-#endif
 
       pass->begin();
       if (pass->get_type() == yc::graphics::pass_type::OBJECT_PASS)
@@ -105,24 +95,12 @@ void yc::app::threads::renderer::run()
             continue;
           }
 
-#if COLLECT_DRAW_STATISTICS
-          draw_result += object.node->draw(pass);
-          drawn_nodes += 1;
-#else
-          object.node->draw(pass);
-#endif
+          pass->record_result(object.node->draw(pass));
         }
       }
       pass->end();
     }
     // graphics->flush();
-
-#if COLLECT_DRAW_STATISTICS
-    drawables_cpu   = app->render_data.objects.size();
-    drawables_gpu   = drawn_nodes;
-    drawn_meshes    = draw_result.get_drawn_meshes();
-    drawn_triangles = draw_result.get_drawn_triangles();
-#endif
 
     /* Stage 3: Sync with updater after frame */
     profiler->passed(PROF_POINT_RENDERER_DRAW_END);

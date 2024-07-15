@@ -14,8 +14,9 @@
 #include "yagecore/graphics/mesh_buffer.hpp"
 #include "yagecore/graphics/material.hpp"
 #include "yagecore/gl/graphics.hpp"
-#include "yagecore/gl/glplatform.hpp"
+#include "yagecore/gl/util.hpp"
 #include "yagecore/gl/glfuncs.hpp"
+#include "yagecore/graphics/render_pass.hpp"
 
 namespace yc::gl
 {
@@ -45,8 +46,6 @@ public:
   };
 
 private:
-  friend node;
-
   /* Shortcut for GL specific graphics */
   std::shared_ptr<yc::gl::graphics>       ctx;
   std::shared_ptr<yc::graphics::material> material;
@@ -80,10 +79,10 @@ public:
   inline yc::graphics::draw_result
   draw(const std::shared_ptr<yc::graphics::render_pass> & pass) override
   {
-    // if (pass && !pass->on_mesh(*this, material))
-    // {
-    //   return yc::graphics::draw_result();
-    // }
+    if (pass && !pass->on_mesh(*this, material))
+    {
+      return yc::graphics::draw_result();
+    }
 
     yc::gl::glBindVertexArray(vertices.vao);
     yc::gl::glDrawElements(

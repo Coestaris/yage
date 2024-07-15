@@ -3,7 +3,7 @@
  */
  
 #include "yagecore/gl/glfuncs.hpp"
-#include "yagecore/gl/glplatform.hpp"
+#include "yagecore/gl/util.hpp"
 
 
 #if GL_AS_STD_FUNC

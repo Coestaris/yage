@@ -87,12 +87,9 @@ public:
 #if COLLECT_DRAW_STATISTICS
       logging(
             LOG_INFO,
-            "CPU: %" PRIuPTR " (%" PRIuPTR "), GPU: %" PRIuPTR " %" PRIuPTR
-            ", %" PRIuPTR ". FPS: %2.2f (%.1f, %.1f). Logic: "
+            "CPU: %" PRIuPTR ". FPS: %2.2f (%.1f, %.1f). Logic: "
             "%.1f, %.1f, %.1f, %.1f, %.1f",
-            renderer->get_drawables_cpu(), logic->get_instances_count(),
-            renderer->get_drawables_gpu(), renderer->get_drawn_meshes(),
-            renderer->get_drawn_triangles(), renderer->get_keeper_cps(),
+            logic->get_instances_count(), renderer->get_keeper_cps(),
             draw_time_ms, copy_time_ms, update_time_ms, particles_time_ms,
             physics_time_ms, ai_time_ms, sound_time_ms);
 #else

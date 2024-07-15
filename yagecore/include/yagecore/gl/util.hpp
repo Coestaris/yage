@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file glplatform.hpp
+ * @file util.hpp
  * @date 15-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *

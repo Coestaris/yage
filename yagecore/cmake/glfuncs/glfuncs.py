@@ -18,7 +18,7 @@ CPP_HEADER = """/*
  */
  
 #include "yagecore/gl/glfuncs.hpp"
-#include "yagecore/gl/glplatform.hpp"
+#include "yagecore/gl/util.hpp"
 """
 
 HPP_HEADER = """/*

@@ -18,7 +18,6 @@
 
 #include "yagecore/log.hpp"
 #include "yagecore/gl/graphics.hpp"
-#include "yagecore/gl/glplatform.hpp"
 #include "yagecore/gl/shader.hpp"
 #include "yagecore/gl/texture.hpp"
 #include "yagecore/gl/glfuncs.hpp"
