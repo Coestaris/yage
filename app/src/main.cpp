@@ -57,7 +57,12 @@ int main(int argc, char * argv[])
   auto events = std::make_shared<yc::os_events>();
 
   yc::stdout_logger logger;
+#if USE_DEBUG
   logger.set_level(LOG_DEBUG);
+#else
+  logger.set_level(LOG_WARN);
+#endif
+
   set_global_logger(&logger);
 
   yc::graphics::settings settings {

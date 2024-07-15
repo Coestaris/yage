@@ -22,7 +22,7 @@ set(cxx_flags
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(${PROJECT_NAME} PRIVATE -g3 -O0 -DUSE_DEBUG ${cxx_flags})
 else ()
-    target_compile_options(${PROJECT_NAME} PRIVATE -O3 ${cxx_flags})
+    target_compile_options(${PROJECT_NAME} PRIVATE -O2 ${cxx_flags})
 endif ()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE yagecore yagepack)

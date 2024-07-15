@@ -165,6 +165,7 @@ public:
           glm::radians(45.0f),
           geometry.width / static_cast<float>(geometry.height), 0.1f, 100.0f);
 
+    program->use();
     u_proj  = program->get_uniform<glm::mat4>("projection");
     u_view  = program->get_uniform<glm::mat4>("view");
     u_model = program->get_uniform<glm::mat4>("model");

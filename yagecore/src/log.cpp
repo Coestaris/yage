@@ -17,6 +17,7 @@
 #include <csignal>
 
 /* Defines ================================================================== */
+#if USE_DEBUG
 #define COLOR_BLUE     "\033[34m"
 #define COLOR_GREEN    "\033[32m"
 #define COLOR_BOLD     "\033[1m"
@@ -27,15 +28,26 @@
 #define COLOR_BLACK_FG "\033[30m"
 #define COLOR_RED_BG   "\033[41m"
 #define COLOR_RESET    "\033[0m"
-
+#else
+#define COLOR_BLUE     ""
+#define COLOR_GREEN    ""
+#define COLOR_BOLD     ""
+#define COLOR_MAGENTA  ""
+#define COLOR_CYAN     ""
+#define COLOR_RED      ""
+#define COLOR_YELLOW   ""
+#define COLOR_BLACK_FG ""
+#define COLOR_RED_BG   ""
+#define COLOR_RESET    ""
+#endif
 /* Macros =================================================================== */
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 static const char * level_specifiers[]
-      = { COLOR_BOLD COLOR_MAGENTA "debug" COLOR_RESET,
-          COLOR_BOLD COLOR_CYAN " info" COLOR_RESET,
-          COLOR_BOLD COLOR_YELLOW " warn" COLOR_RESET,
-          COLOR_BOLD COLOR_RED "error" COLOR_RESET,
+      = { COLOR_BOLD              COLOR_MAGENTA "debug" COLOR_RESET,
+          COLOR_BOLD              COLOR_CYAN " info" COLOR_RESET,
+          COLOR_BOLD              COLOR_YELLOW " warn" COLOR_RESET,
+          COLOR_BOLD              COLOR_RED "error" COLOR_RESET,
           COLOR_BOLD COLOR_RED_BG COLOR_BLACK_FG "fatal" COLOR_RESET };
 
 /* Static functions ========================================================= */
@@ -48,13 +60,13 @@ static struct
 /* Shared functions ========================================================= */
 /* Default formatter */
 void yc::logger::format(
-      char *                dst,
-      size_t                size,
-      const char *          fmt,
+      char *        dst,
+      size_t        size,
+      const char *  fmt,
       yc::log_level level,
-      const char *          file,
-      int                   line,
-      va_list               args)
+      const char *  file,
+      int           line,
+      va_list       args)
 {
   /* Get time in format MM-DD-YYYY HH:MM:SS.MS */
   char      time_str[32];
@@ -81,19 +93,15 @@ void yc::logger::format(
         format, sizeof(format),
         "[" COLOR_GREEN "%s.%3d" COLOR_RESET "][" COLOR_YELLOW
         "%d:%10s" COLOR_RESET "][%s] %s [" COLOR_CYAN "%s:%d" COLOR_RESET "] ",
-        time_str, static_cast<int>(yc::get_ms()) % 1000, pid,
-        task_name.c_str(), level_specifiers[level], fmt, file, line);
+        time_str, static_cast<int>(yc::get_ms()) % 1000, pid, task_name.c_str(),
+        level_specifiers[level], fmt, file, line);
 
   /* Format the message */
   vsnprintf(dst, size, format, args);
 }
 
 void yc::logger::_log(
-      yc::log_level level,
-      const char *          fmt,
-      const char *          file,
-      int                   line,
-      ...)
+      yc::log_level level, const char * fmt, const char * file, int line, ...)
 {
   if (level < this->min_level)
     return;
