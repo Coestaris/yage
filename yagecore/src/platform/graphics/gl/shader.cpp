@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 #include "yagecore/gl/shader.hpp"
+#include "yagecore/gl/glfuncs.hpp"
 #include "yagecore/log.hpp"
 #include "yagecore/error.hpp"
 

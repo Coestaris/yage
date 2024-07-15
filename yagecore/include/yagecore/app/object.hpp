@@ -63,7 +63,7 @@ public:
   class
   {
   private:
-    renderable renderable;
+    object::renderable renderable;
 
     friend class object;
     friend class application;

@@ -206,6 +206,7 @@ class draw_aabb_pass : public primitive_pass,
   yc::gl::uniform_mat4 u_proj;
   yc::gl::uniform_mat4 u_view;
   yc::gl::uniform_mat4 u_model;
+  yc::gl::uniform_vec4 u_color;
 
 public:
   draw_aabb_pass(
@@ -220,9 +221,11 @@ public:
     u_model = program->get_uniform<glm::mat4>("model");
     u_proj  = program->get_uniform<glm::mat4>("projection");
     u_view  = program->get_uniform<glm::mat4>("view");
+    u_color = program->get_uniform<glm::vec4>("color");
 
     program->use();
     u_proj->set(proj);
+    u_color->set(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
   }
 
   void begin() override

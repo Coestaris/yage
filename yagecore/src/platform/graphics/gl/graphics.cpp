@@ -21,6 +21,7 @@
 #include "yagecore/gl/glplatform.hpp"
 #include "yagecore/gl/shader.hpp"
 #include "yagecore/gl/texture.hpp"
+#include "yagecore/gl/glfuncs.hpp"
 #include "yagecore/gl/node.hpp"
 
 /* Defines ================================================================== */
