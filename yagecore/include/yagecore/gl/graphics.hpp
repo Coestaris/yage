@@ -14,7 +14,8 @@
 
 #include "GL/gl.h"
 #include "GL/glext.h"
-#include "yagecore/graphics/graphics.hpp"
+#include "yagecore/gl/mesh_buffer.hpp"
+#include <yagecore/graphics/graphics.hpp>
 
 namespace yc::gl
 {

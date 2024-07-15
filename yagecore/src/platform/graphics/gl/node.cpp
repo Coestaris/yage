@@ -572,8 +572,7 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
   /* Upload data to GPU */
   yc::gl::glBindVertexArray(vao);
   yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  yc::gl::glBufferData(
-        GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+  yc::gl::glBufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
 
   /* Upload indices to GPU */
   yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -588,6 +587,8 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
           attr.location, attr.size, attr.type, GL_FALSE, stride,
           reinterpret_cast<void *>(attr.offset));
   }
+
+  yc::gl::glBindVertexArray(0);
 
   logging(
         LOG_DEBUG, "Loaded %" PRIuPTR " vertices/%" PRIuPTR " indices",
@@ -605,6 +606,7 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
   yc::gl::mesh_buffer::vertices_info vertices = {
     .vbo   = vbo,
     .vao   = vao,
+    .type = GL_TRIANGLES,
     .count = static_cast<GLsizei>(indices.size()),
     .aabb  = aabb,
   };

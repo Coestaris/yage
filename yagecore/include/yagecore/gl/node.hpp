@@ -14,6 +14,7 @@
 #include "yagecore/graphics/node.hpp"
 #include "yagecore/graphics/render_pass.hpp"
 #include "yagecore/gl/graphics.hpp"
+#include "yagecore/gl/mesh_buffer.hpp"
 #include "glplatform.hpp"
 
 /* Hack to not include all the GLTF parser.
@@ -29,82 +30,6 @@ namespace yc::gl
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class node;
-
-class mesh_buffer : public yc::graphics::mesh_buffer
-{
-public:
-  struct indicies_info
-  {
-    GLuint ebo;
-    GLenum type;
-
-    /* Attention: Offset already in bytes! */
-    void * offset;
-  };
-
-  struct vertices_info
-  {
-    GLuint             vbo, vao;
-    GLsizei            count;
-    yc::graphics::aabb aabb;
-  };
-
-private:
-  friend node;
-
-  /* Shortcut for GL specific graphics */
-  std::shared_ptr<yc::gl::graphics>       ctx;
-  std::shared_ptr<yc::graphics::material> material;
-
-  vertices_info vertices;
-  indicies_info indicies;
-
-public:
-  mesh_buffer(
-        const std::shared_ptr<yc::gl::graphics> &       graphics,
-        vertices_info                                   vertices,
-        indicies_info                                   indicies,
-        const std::shared_ptr<yc::graphics::material> & material)
-  : ctx(graphics)
-  , material(material)
-  , vertices(std::move(vertices))
-  , indicies(std::move(indicies))
-  {
-  }
-
-  void unload() override
-  {
-    if (vertices.vao)
-      yc::gl::glDeleteVertexArrays(1, &vertices.vao);
-    if (vertices.vbo)
-      yc::gl::glDeleteBuffers(1, &vertices.vbo);
-    if (indicies.ebo)
-      yc::gl::glDeleteBuffers(1, &indicies.ebo);
-  }
-
-  inline yc::graphics::draw_result
-  draw(const std::shared_ptr<yc::graphics::render_pass> & pass) override
-  {
-    if (!pass->on_mesh(*this, material))
-    {
-      return yc::graphics::draw_result();
-    }
-
-    yc::gl::glBindVertexArray(vertices.vao);
-    yc::gl::glDrawElements(
-          GL_TRIANGLES, vertices.count, indicies.type, indicies.offset);
-    yc::gl::glBindVertexArray(0);
-
-    return yc::graphics::draw_result(1, vertices.count);
-  }
-
-  yc::graphics::aabb get_aabb() const override
-  {
-    return vertices.aabb;
-  }
-};
-
 class node : public yc::graphics::node
 {
 public:

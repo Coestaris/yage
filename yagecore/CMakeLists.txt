@@ -76,7 +76,7 @@ set(cxx_flags
         -Wno-unused-const-variable -Wno-unused-value -Wno-unused-local-typedefs -Werror=old-style-cast
 )
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(${PROJECT_NAME} PRIVATE -g3 -O0 -DUSE_DEBUG -DCOLLECT_DRAW_STATISTICS=1 ${cxx_flags})
+    target_compile_options(${PROJECT_NAME} PRIVATE -g3 -O0 -DUSE_DEBUG -DCOLLECT_DRAW_STATISTICS=1 -DDEEP_GL_DEBUG=1 ${cxx_flags})
 else ()
     target_compile_options(${PROJECT_NAME} PRIVATE -O3 ${cxx_flags})
 endif ()

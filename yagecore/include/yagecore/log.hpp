@@ -20,11 +20,11 @@ namespace yc
 #if 1
 #if __USE_SHORT_FILE__
 #define logging(__level, __fmt, ...)                                           \
-  yc::get_global_logger()->_log(                                       \
+  yc::get_global_logger()->_log(                                               \
         __level, __fmt, __SHORT_FILE__, __LINE__, ##__VA_ARGS__)
 #else
 #define logging(__level, __fmt, ...)                                           \
-  yc::get_global_logger()->_log(                                       \
+  yc::get_global_logger()->_log(                                               \
         __level, __fmt, __FILE__, __LINE__, ##__VA_ARGS__)
 #endif
 #else
@@ -59,13 +59,13 @@ private:
   virtual void print(const char * msg) = 0;
 
   virtual void format(
-        char *                dst,
-        std::size_t           size,
-        const char *          fmt,
+        char *        dst,
+        std::size_t   size,
+        const char *  fmt,
         yc::log_level level,
-        const char *          file,
-        int                   line,
-        va_list               args);
+        const char *  file,
+        int           line,
+        va_list       args);
 
 public:
   virtual ~logger() = default;
@@ -84,6 +84,7 @@ private:
   void print(const char * msg) override
   {
     printf("%s\n\r", msg);
+    fflush(stdout);
   }
 
 public:

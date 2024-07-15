@@ -237,8 +237,8 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
 
   if (has_extension("GL_KHR_debug"))
   {
-    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-    glDebugMessageCallback(GLDebugMessageCallback, nullptr);
+    yc::gl::glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    yc::gl::glDebugMessageCallback(GLDebugMessageCallback, nullptr);
   }
   else
   {

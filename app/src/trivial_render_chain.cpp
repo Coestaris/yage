@@ -197,21 +197,10 @@ public:
   }
 };
 
-class draw_aabb_pass : public primitive_pass
+class draw_aabb_pass : public primitive_pass,
+                       public std::enable_shared_from_this<draw_aabb_pass>
 {
-  /* Box mesh */
-  // Cube 1x1x1, centered on origin
-  static constexpr GLfloat vertices[] = {
-    -0.5, -0.5, -0.5, 1.0,  0.5, -0.5, -0.5, 1.0, 0.5, 0.5, -0.5,
-    1.0,  -0.5, 0.5,  -0.5, 1.0, -0.5, -0.5, 0.5, 1.0, 0.5, -0.5,
-    0.5,  1.0,  0.5,  0.5,  0.5, 1.0,  -0.5, 0.5, 0.5, 1.0,
-  };
-
-  static constexpr GLushort elements[]
-        = { 0, 1, 2, 3, 4, 5, 6, 7, 0, 4, 1, 5, 2, 6, 3, 7 };
-
-  GLuint vbo_vertices;
-  GLuint ibo_elements;
+  std::shared_ptr<yc::gl::mesh_buffer> cube;
 
   yc::gl::uniform_mat4 u_proj;
   yc::gl::uniform_mat4 u_view;
@@ -225,28 +214,7 @@ public:
 
   void before_loop() override
   {
-    yc::gl::glGenBuffers(1, &vbo_vertices);
-    yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices);
-    yc::gl::glBufferData(
-          GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    yc::gl::glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    yc::gl::glGenBuffers(1, &ibo_elements);
-    yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_elements);
-    yc::gl::glBufferData(
-          GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
-    yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices);
-    yc::gl::glEnableVertexAttribArray(0);
-    yc::gl::glVertexAttribPointer(
-          0,        // attribute
-          4,        // number of elements per vertex, here (x,y,z,w)
-          GL_FLOAT, // the type of each element
-          GL_FALSE, // take our values as-is
-          0,        // no extra data between each position
-          0         // offset of first element
-    );
+    cube = yc::gl::gl_cube(ctx);
 
     u_model = program->get_uniform<glm::mat4>("model");
     u_proj  = program->get_uniform<glm::mat4>("projection");
@@ -271,18 +239,8 @@ public:
 
   bool on_node(const yc::app::object::renderable & object) override
   {
-
     u_model->set(object.aabb_transform);
-
-    yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_elements);
-    yc::gl::glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, 0);
-    yc::gl::glDrawElements(
-          GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT,
-          reinterpret_cast<GLvoid *>(4 * sizeof(GLushort)));
-    yc::gl::glDrawElements(
-          GL_LINES, 8, GL_UNSIGNED_SHORT,
-          reinterpret_cast<GLvoid *>(8 * sizeof(GLushort)));
-    yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    cube->draw(shared_from_this());
 
     return false;
   }
