@@ -89,9 +89,8 @@ protected:
     glm::vec2    bearing;
     unsigned int advance;
   };
-  std::vector<char_cache> cache;
 
-protected:
+  std::vector<char_cache>                 cache;
   std::shared_ptr<yc::graphics::graphics> graphics;
   data                                    sources;
 
@@ -116,24 +115,34 @@ public:
     }
   }
 
-  virtual void
-  draw(const char      c,
-       const glm::vec2 pos,
-       const glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f },
-       const glm::vec2 scale = { 1.0f, 1.0f })
-  {
-    draw(cache[c], pos, color, scale);
-  }
-
   void
-  draw(std::string     text,
-       glm::vec2       pos,
-       const glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f },
-       const glm::vec2 scale = { 1.0f, 1.0f })
+  draww(const std::string & text,
+        glm::vec2           pos,
+        const glm::vec4     color = { 1.0f, 1.0f, 1.0f, 1.0f },
+        const glm::vec2     scale = { 1.0f, 1.0f })
   {
-    for (auto c : text)
+    if (!loaded)
     {
-      auto & cache = this->cache[c];
+      return;
+    }
+
+    for (const auto c : text)
+    {
+      if (c > sources.get_parameters().get_end_char()
+          || c < sources.get_parameters().get_start_char())
+      {
+        logging(LOG_ERROR, "Character %c is out of font range", c);
+        return;
+      }
+
+      size_t index = c - sources.get_parameters().get_start_char();
+      if (index >= cache.size())
+      {
+        logging(LOG_ERROR, "Character %c is out of font range", c);
+        return;
+      }
+
+      auto & cache = this->cache[index];
       draw(cache, pos, color, scale);
       pos.x += cache.advance * scale.x;
     }

@@ -29,7 +29,7 @@ namespace yc::gl
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class node : public yc::graphics::node
+class node final : public yc::graphics::node
 {
 public:
   class attr_layout_item

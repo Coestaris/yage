@@ -8,6 +8,8 @@ set(PROJECT_DIR ${CMAKE_CURRENT_LIST_DIR})
 # For now, build static for Windows
 if (WIN32)
     set(YAGEPACK_STATIC ON)
+else ()
+    set(YAGEPACK_STATIC OFF)
 endif()
 
 if (YAGEPACK_STATIC)
@@ -36,7 +38,7 @@ set(cxx_flags
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(${PROJECT_NAME} PRIVATE -g3 -O0 -DUSE_DEBUG ${cxx_flags})
 else ()
-    target_compile_options(${PROJECT_NAME} PRIVATE -O2 ${cxx_flags})
+    target_compile_options(${PROJECT_NAME} PRIVATE -g0 -Os ${cxx_flags})
 endif ()
 
 target_sources(${PROJECT_NAME} PRIVATE

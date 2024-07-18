@@ -30,7 +30,7 @@ namespace yc::gl
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class shader : public yc::graphics::shader,
+class shader final : public yc::graphics::shader,
                public std::enable_shared_from_this<shader>
 {
 private:

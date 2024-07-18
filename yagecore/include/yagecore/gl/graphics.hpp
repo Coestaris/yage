@@ -23,7 +23,7 @@ namespace yc::gl
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class graphics : public yc::graphics::graphics
+class graphics final : public yc::graphics::graphics
 {
 private:
   std::vector<std::string> extensions;

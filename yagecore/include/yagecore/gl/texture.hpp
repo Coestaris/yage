@@ -21,7 +21,7 @@ namespace yc::gl
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class texture : public yc::graphics::texture
+class texture final : public yc::graphics::texture
 {
 private:
   /* Shortcut for GL specific graphics */
@@ -30,7 +30,7 @@ private:
   GLuint id {};
 
 public:
-  ~texture() override = default;
+  ~        texture() override = default;
   explicit texture(
         std::string                                     name,
         std::shared_ptr<yc::app::asset_cacher>          cacher,

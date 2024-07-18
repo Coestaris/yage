@@ -21,13 +21,19 @@ namespace yc::gl
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class font : public yc::graphics::font
+class font final : public yc::graphics::font
 {
 private:
   /* Shortcut for GL specific graphics */
   std::shared_ptr<yc::gl::graphics> ctx;
 
   GLuint id {};
+
+  void
+  draw(const char_cache & c,
+       glm::vec2          pos,
+       glm::vec4          color,
+       glm::vec2          scale) override;
 
 public:
   ~font() override = default;
@@ -42,11 +48,6 @@ public:
 
   yc::error load() override;
   void      unload() override;
-  void
-  draw(const char_cache & c,
-       glm::vec2          pos,
-       glm::vec4          color,
-       glm::vec2          scale) override;
 };
 
 /* Variables ================================================================ */

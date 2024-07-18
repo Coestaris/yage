@@ -25,6 +25,9 @@ yc::error yc::gl::font::load()
   live = true;
 
   /* TODO: LOAD */
+  cache.resize(
+        sources.get_parameters().get_end_char()
+        - sources.get_parameters().get_start_char() + 1);
 
   loaded = true;
 
@@ -39,6 +42,7 @@ void yc::gl::font::unload()
   }
 
   /* TODO: UNLOAD */
+  cache.clear();
 
   loaded = false;
 }

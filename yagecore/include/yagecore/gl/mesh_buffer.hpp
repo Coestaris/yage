@@ -25,7 +25,7 @@ namespace yc::gl
 /* Types ==================================================================== */
 class node;
 
-class mesh_buffer : public yc::graphics::mesh_buffer
+class mesh_buffer final : public yc::graphics::mesh_buffer
 {
 public:
   struct indicies_info

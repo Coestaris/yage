@@ -16,10 +16,13 @@
 #include "app.hpp"
 #include "yagecore/graphics/render_pass.hpp"
 #include "yagecore/app/asset_factory.hpp"
-#include "yagecore/gl/shader.hpp"
 #include "yagecore/platform.hpp"
+
+#include "yagecore/gl/shader.hpp"
 #include "yagecore/gl/texture.hpp"
 #include "yagecore/gl/node.hpp"
+#include "yagecore/gl/font.hpp"
+
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 
@@ -31,6 +34,7 @@ using graphics = yc::gl::graphics;
 using texture  = yc::gl::texture;
 using shader   = yc::gl::shader;
 using node     = yc::gl::node;
+using font     = yc::gl::font;
 
 /* Base class for all render passes. */
 class trivial_render_pass : public yc::graphics::render_pass
@@ -263,6 +267,36 @@ public:
   }
 };
 
+class draw_hud_pass : public final_pass,
+                      public std::enable_shared_from_this<draw_hud_pass>
+{
+  std::shared_ptr<font> f;
+
+public:
+  draw_hud_pass(
+        std::shared_ptr<shader>                 shader,
+        std::shared_ptr<yc::app::application>   app,
+        std::shared_ptr<font>                   font,
+        std::shared_ptr<yc::graphics::graphics> graphics)
+  : final_pass(
+          "draw_hud", std::move(app), std::move(shader), std::move(graphics))
+  , f(std::move(font)) {};
+
+  void before_loop() override
+  {
+  }
+
+  void on_begin() override
+  {
+    program->use();
+    f->draww("Hello world", glm::vec2(10.0f, 10.0f));
+  }
+
+  void on_end() override
+  {
+  }
+};
+
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
@@ -285,6 +319,9 @@ app::application::create_render_chain(
     std::make_shared<draw_aabb_pass>(
           asset_factory->load_asset<shader>("line"), shared_from_this(),
           graphics),
+    std::make_shared<draw_hud_pass>(
+          asset_factory->load_asset<shader>("line"), shared_from_this(),
+          asset_factory->load_asset<font>("raleway"), graphics),
   };
 
   return passes;
