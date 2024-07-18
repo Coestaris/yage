@@ -5,6 +5,7 @@
 #pragma once
 
 #include <GL/gl.h>
+#include <GL/glext.h>
 #include <functional>
 
 #if __has_include("cust_glfuncs.h")
