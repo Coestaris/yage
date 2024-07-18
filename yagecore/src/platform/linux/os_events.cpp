@@ -13,6 +13,8 @@
 #include "yagecore/os_events.hpp"
 #include "yagecore/log.hpp"
 
+#include <cstring>
+
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
@@ -38,11 +40,11 @@ void handler(int signal, siginfo_t * info, void * context)
     instance->on_ill_signal.push(signal);
   }
 
-  struct sigaction action;
-  action.sa_handler   = SIG_DFL;
-  action.sa_sigaction = NULL;
-  action.sa_flags     = 0;
-  action.sa_restorer  = NULL;
+  struct sigaction action = {};
+  action.sa_handler       = SIG_DFL;
+  action.sa_sigaction     = NULL;
+  action.sa_flags         = 0;
+  action.sa_restorer      = NULL;
 
   fprintf(stderr, "Fault address: %p\n", info->si_addr);
   switch (info->si_code)

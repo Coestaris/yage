@@ -126,7 +126,7 @@ void yc::gl::gl_update_cache()
         return glGetShaderInfoLog_addr(std::forward<decltype(args)>(args)...);
     };
     static auto glDeleteShader_addr = reinterpret_cast<PFNGLDELETESHADERPROC>(yc::gl::gl_lookup("glDeleteShader", true));
-    yc::gl::glDeleteShader = [](auto&&... args) -> yc::gl::c_style_function<decltype(glDeleteShader_addr)>::cpp_style::result_type
+    yc::gl::glDeleteShader = [](auto&&... args) -> yc::gl::c_style_functionaaa<decltype(glDeleteShader_addr)>::cpp_style::result_type
     {
         return glDeleteShader_addr(std::forward<decltype(args)>(args)...);
     };

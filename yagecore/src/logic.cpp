@@ -63,7 +63,7 @@ void yc::app::threads::logic::run()
             app->logic_data.object_to_add.end());
       app->logic_data.object_to_add.clear();
     }
-    instances_count = app->common_data.objects.size();
+    size_t instances_count = app->common_data.objects.size();
 
     /* Stage 4: Update particles */
     profiler->passed(PROF_POINT_LOGIC_UPDATE_PARTICLES);
@@ -84,6 +84,26 @@ void yc::app::threads::logic::run()
     /* Stage 8: Sync with renderer after frame */
     profiler->passed(PROF_POINT_LOGIC_POST_FRAME);
     app->common_data.post_frame_sync.wait();
+
+    /* We have nothing to do here, so process statistics */
+#if COLLECT_DRAW_STATISTICS
+    app->stats.log_instances_count(instances_count);
+    app->stats.log_update_time(profiler->get_diff(
+          yc::app::profiler_points::PROF_POINT_LOGIC_INPUT,
+          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PARTICLES));
+    app->stats.log_particles_time(profiler->get_diff(
+          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PARTICLES,
+          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PHYSICS));
+    app->stats.log_physics_time(profiler->get_diff(
+          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PHYSICS,
+          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_AI));
+    app->stats.log_ai_time(profiler->get_diff(
+          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_AI,
+          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_SOUND));
+    app->stats.log_sound_time(profiler->get_diff(
+          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_SOUND,
+          yc::app::profiler_points::PROF_POINT_LOGIC_POST_FRAME));
+#endif
   }
 }
 

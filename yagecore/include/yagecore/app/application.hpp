@@ -19,6 +19,7 @@
 #include "yagecore/graphics/window.hpp"
 #include "yagecore/app/object.hpp"
 #include "yagecore/app/input_manager.hpp"
+#include "yagecore/app/statistics.hpp"
 #include "yagecore/app/asset_factory.hpp"
 
 namespace yc::app
@@ -99,6 +100,8 @@ public:
     : asset_factory(std::move(asset_factory))
     , window(std::move(window)) {};
   } render_data;
+
+  yc::app::statistics stats;
 
   application(
         std::shared_ptr<yc::app::asset_factory>       asset_factory,

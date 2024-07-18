@@ -47,9 +47,18 @@ void yc::app::threads::renderer::run()
   }
 
   auto passes = trivial_render_chain(graphics, app->render_data.asset_factory);
+
+#if COLLECT_DRAW_STATISTICS
+  std::vector<size_t> statistcs_passes;
+  statistcs_passes.reserve(passes.size());
+#endif
+
   for (const auto & pass : passes)
   {
     pass->before_loop();
+#if COLLECT_DRAW_STATISTICS
+    statistcs_passes.push_back(app->stats.register_pass(pass->get_name()));
+#endif
   }
 
   while (true)
@@ -128,12 +137,31 @@ void yc::app::threads::renderer::run()
       }
     }
 
+    /* TODO: WHAT IS THIS? */
     after_render();
 
     /* Stage 4.3: Poll assets. This will check, if there are newer
      * versions of assets, and if so - reload them. This is
      * important to call from rendering thread too. */
     app->render_data.asset_factory->poll_assets();
+
+#if COLLECT_DRAW_STATISTICS
+    app->stats.log_draw_time(profiler->get_diff(
+          yc::app::profiler_points::PROF_POINT_RENDERER_DRAW_START,
+          yc::app::profiler_points::PROF_POINT_RENDERER_DRAW_END));
+    app->stats.log_draw_time(profiler->get_diff(
+          yc::app::profiler_points::PROF_POINT_RENDERER_DRAW_END,
+          yc::app::profiler_points::PROF_POINT_RENDERER_UPDATE_START));
+    app->stats.log_fps(keeper.get_cps());
+    for (size_t i = 0; i < passes.size(); i++)
+    {
+      yc::app::statistics::pass_info pass_info
+            = { .draw_time       = passes[i]->get_draw_time(),
+                .drawn_meshes    = passes[i]->get_drawn_meshes(),
+                .drawn_triangles = passes[i]->get_drawn_triangles() };
+      app->stats.log_pass(statistcs_passes[i], pass_info);
+    }
+#endif
 
     /* Stage 5: Wait for vsync */
     profiler->passed(PROF_POINT_RENDERER_UPDATE_START);

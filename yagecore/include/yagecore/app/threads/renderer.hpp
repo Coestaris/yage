@@ -40,25 +40,6 @@ public:
 
   void run() override;
 
-  yc::milliseconds get_draw_time() const
-  {
-    return profiler->get_diff(
-          yc::app::profiler_points::PROF_POINT_RENDERER_DRAW_START,
-          yc::app::profiler_points::PROF_POINT_RENDERER_DRAW_END);
-  }
-
-  yc::milliseconds get_copy_time() const
-  {
-    return profiler->get_diff(
-          yc::app::profiler_points::PROF_POINT_RENDERER_DRAW_END,
-          yc::app::profiler_points::PROF_POINT_RENDERER_UPDATE_START);
-  }
-
-  float get_keeper_cps() const
-  {
-    return keeper.get_cps();
-  }
-
 public:
   renderer(
         std::shared_ptr<yc::app::application> app,

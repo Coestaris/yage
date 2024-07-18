@@ -10,7 +10,6 @@
 #include "yagecore/app/application.hpp"
 #include "yagecore/app/threads/renderer.hpp"
 #include "yagecore/app/threads/logic.hpp"
-#include "yagecore/app/threads/statistics.hpp"
 #include "yagecore/util/sync_point.hpp"
 #include "yagecore/util/profiler.hpp"
 #include "yagecore/error.hpp"
@@ -35,13 +34,10 @@ yc::error yc::app::application::start()
   auto logic_profiler = std::make_shared<yc::util::simple_profiler>();
   auto logic_thread = std::make_shared<yc::app::threads::logic>(shared_from_this(), logic_profiler);
 
-  auto statistics_thread = std::make_shared<yc::app::threads::statistics>(logic_thread, renderer_thread);
-
   os_events->on_stop_signal.add_listener(&renderer_thread->stop_signal_listener);
 
   logic_thread->start();
   renderer_thread->start();
-  statistics_thread->start();
 
   renderer_thread->join();
   logging(LOG_INFO, "Renderer thread has finished");
@@ -53,10 +49,7 @@ yc::error yc::app::application::start()
 
   /* Ask logic/statistics thread to politely close */
   logic_thread->close();
-  statistics_thread->close();
-
   logic_thread->join();
-  statistics_thread->join();
 
   logging(LOG_INFO, "Logic thread has finished");
 

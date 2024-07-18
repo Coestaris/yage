@@ -42,6 +42,8 @@ public:
 
   void update(yc::milliseconds delta) override
   {
+       logging(LOG_INFO, "FPS=%f", 1000.0f / app->stats.get_fps());
+
     if (app->get_input()->key_pressed(yc::key::ESCAPE))
     {
       app->stop();

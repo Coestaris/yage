@@ -47,7 +47,7 @@ public:
   {
   }
 
-protected:
+public:
   /** Called before rendering all objects */
   virtual void on_end() = 0;
 
@@ -91,7 +91,7 @@ public:
   }
 
   /* Wrappers for on_begin and on_end */
-  void begin()
+  inline void begin()
   {
 #if COLLECT_DRAW_STATISTICS
     drawn_meshes_imm    = 0;
@@ -114,15 +114,17 @@ public:
   }
 
 #if COLLECT_DRAW_STATISTICS
-  yc::milliseconds get_draw_time() const
+  [[nodiscard]] yc::milliseconds get_draw_time() const
   {
     return draw_time;
   }
-  size_t get_drawn_meshes() const
+
+  [[nodiscard]] size_t get_drawn_meshes() const
   {
     return drawn_meshes;
   }
-  size_t get_drawn_triangles() const
+
+  [[nodiscard]] size_t get_drawn_triangles() const
   {
     return drawn_triangles;
   }
