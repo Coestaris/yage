@@ -23,6 +23,7 @@ class shader;
 class window;
 class texture;
 class node;
+class font;
 class asset_cacher;
 
 class graphics
@@ -51,6 +52,11 @@ public:
         std::shared_ptr<yc::graphics::graphics> graphics)
         = 0;
   virtual std::shared_ptr<yc::graphics::texture> create_texture(
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics)
+        = 0;
+  virtual std::shared_ptr<yc::graphics::font> create_font(
         std::string                             name,
         std::shared_ptr<yc::app::asset_cacher>  cacher,
         std::shared_ptr<yc::graphics::graphics> graphics)

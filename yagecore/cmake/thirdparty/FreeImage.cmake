@@ -1,3 +1,7 @@
+if (NOT YAGECORE_STATIC)
+    set(BUILD_SHARED_LIBS ON)
+endif()
+
 add_definitions(-DFREEIMAGE_LIB)
 add_subdirectory(${PROJECT_DIR}/thirdparty/FreeImage)
 

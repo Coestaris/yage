@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.16)
 set(PROJECT_NAME app)
 set(PROJECT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-add_executable(${PROJECT_NAME}
-        src/main.cpp
-        src/trivial_render_chain.cpp
-        src/objects/suzanne.hpp
-        src/objects/control.hpp
+add_executable(${PROJECT_NAME})
+
+set(SRC_FILES
+    ${PROJECT_DIR}/src/objects/*.cpp
+    ${PROJECT_DIR}/src/*.cpp
 )
 
 # Setup compiler
@@ -26,6 +26,13 @@ else ()
 endif ()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE yagecore yagepack)
+
+foreach (src_file ${SRC_FILES})
+    file(GLOB src_files ${src_file})
+    list(APPEND PLAIN_SRC_FILES ${src_files})
+endforeach ()
+target_sources(${PROJECT_NAME} PRIVATE ${PLAIN_SRC_FILES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_DIR}/src)
 
 file(GLOB_RECURSE ___src *.cpp *.hpp)
 foreach (file ${___src})

@@ -40,7 +40,7 @@ yc::error yc::gl::texture::load()
   auto parameters = sources.get_parameters();
   auto uris       = sources.get_uris();
 
-  switch (parameters.type)
+  switch (parameters.get_type())
   {
     case yc::graphics::tex_type::TEXTURE_2D:
     {
@@ -61,8 +61,7 @@ yc::error yc::gl::texture::load()
       }
 
       GLuint int_format;
-      GLuint level = 0;
-      switch (parameters.format)
+      switch (parameters.get_format())
       {
         case yc::graphics::tex_pixel_format::RED:
           int_format = GL_RED;
@@ -88,7 +87,7 @@ yc::error yc::gl::texture::load()
         default:
           logging(
                 LOG_ERROR, "Unsupported texture format: %s",
-                yc::graphics::to_string(parameters.format).c_str());
+                yc::graphics::to_string(parameters.get_format()).c_str());
           return yc::INVALID_ARGUMENT;
       }
 
@@ -102,8 +101,8 @@ yc::error yc::gl::texture::load()
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
       glTexImage2D(
-            GL_TEXTURE_2D, level, int_format, image_width, image_height, 0,
-            GL_RGBA, GL_UNSIGNED_BYTE, image_data.data());
+            GL_TEXTURE_2D, 0, int_format, image_width, image_height, 0, GL_RGBA,
+            GL_UNSIGNED_BYTE, image_data.data());
       yc::gl::glGenerateMipmap(GL_TEXTURE_2D);
 
       id     = texture;
@@ -118,7 +117,7 @@ yc::error yc::gl::texture::load()
     default:
       logging(
             LOG_ERROR, "Unsupported texture type: %s",
-            yc::graphics::to_string(parameters.type).c_str());
+            yc::graphics::to_string(parameters.get_type()).c_str());
       return yc::INVALID_ARGUMENT;
   }
 

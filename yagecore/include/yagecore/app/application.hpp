@@ -103,16 +103,23 @@ public:
 
   yc::app::statistics stats;
 
-  application(
-        std::shared_ptr<yc::app::asset_factory>       asset_factory,
-        const std::shared_ptr<yc::graphics::window> & window,
-        std::shared_ptr<yc::os_events>                os_events)
+  virtual ~application() = default;
+           application(
+                 std::shared_ptr<yc::app::asset_factory>       asset_factory,
+                 const std::shared_ptr<yc::graphics::window> & window,
+                 std::shared_ptr<yc::os_events>                os_events)
   : os_events(std::move(os_events))
   , window(window)
   , render_data(std::move(asset_factory), window)
   {
     input_mgr = std::make_shared<input_manager>(this->window);
   }
+
+  virtual std::vector<std::shared_ptr<yc::graphics::render_pass>>
+  create_render_chain(
+        const std::shared_ptr<yc::graphics::graphics> & graphics,
+        const std::shared_ptr<yc::app::asset_factory> & asset_factory)
+        = 0;
 
   yc::error start();
 

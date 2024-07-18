@@ -65,6 +65,7 @@ endif ()
 include(cmake/thirdparty/FreeImage.cmake)
 include(cmake/thirdparty/glm.cmake)
 include(cmake/thirdparty/fastgltf.cmake)
+include(cmake/thirdparty/freetype.cmake)
 include(cmake/glfuncs/glfuncs.cmake)
 
 # Setup compiler

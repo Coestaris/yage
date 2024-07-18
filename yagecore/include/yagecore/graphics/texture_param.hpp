@@ -71,8 +71,9 @@ enum class tex_wrap
   MAX_WRAP_TYPES
 };
 
-struct texture_param
+class texture_param
 {
+private:
   tex_type         type;
   tex_pixel_format format;
   glm::vec4        border_color;
@@ -81,6 +82,34 @@ struct texture_param
   tex_wrap         wrap_s;
   tex_wrap         wrap_t;
   tex_wrap         wrap_r;
+
+public:
+  texture_param() = default;
+
+  void set_type(std::string type);
+  void set_type(tex_type type);
+  void set_format(std::string format);
+  void set_format(tex_pixel_format format);
+  void set_border_color(const glm::vec4 & color);
+  void set_min_filter(std::string filter);
+  void set_min_filter(tex_filter filter);
+  void set_mag_filter(std::string filter);
+  void set_mag_filter(tex_filter filter);
+  void set_wrap_s(std::string wrap);
+  void set_wrap_s(tex_wrap wrap);
+  void set_wrap_t(std::string wrap);
+  void set_wrap_t(tex_wrap wrap);
+  void set_wrap_r(std::string wrap);
+  void set_wrap_r(tex_wrap wrap);
+
+  [[nodiscard]] tex_type         get_type() const;
+  [[nodiscard]] tex_pixel_format get_format() const;
+  [[nodiscard]] glm::vec4        get_border_color() const;
+  [[nodiscard]] tex_filter       get_min_filter() const;
+  [[nodiscard]] tex_filter       get_mag_filter() const;
+  [[nodiscard]] tex_wrap         get_wrap_s() const;
+  [[nodiscard]] tex_wrap         get_wrap_t() const;
+  [[nodiscard]] tex_wrap         get_wrap_r() const;
 
   bool operator==(const texture_param & other) const
   {

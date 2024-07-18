@@ -19,6 +19,7 @@
 #include "yagecore/log.hpp"
 #include "yagecore/gl/graphics.hpp"
 #include "yagecore/gl/shader.hpp"
+#include "yagecore/gl/font.hpp"
 #include "yagecore/gl/texture.hpp"
 #include "yagecore/gl/glfuncs.hpp"
 #include "yagecore/gl/node.hpp"
@@ -158,6 +159,13 @@ std::shared_ptr<yc::graphics::texture> yc::gl::graphics::create_texture(
       std::shared_ptr<yc::graphics::graphics> graphics)
 {
   return std::make_shared<yc::gl::texture>(std::move(name), cacher, graphics);
+}
+std::shared_ptr<yc::graphics::font> yc::gl::graphics::create_font(
+      std::string                             name,
+      std::shared_ptr<yc::app::asset_cacher>  cacher,
+      std::shared_ptr<yc::graphics::graphics> graphics)
+{
+  return std::make_shared<yc::gl::font>(std::move(name), cacher, graphics);
 }
 
 std::shared_ptr<yc::graphics::node> yc::gl::graphics::create_node(

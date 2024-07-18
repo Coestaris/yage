@@ -46,7 +46,7 @@ void yc::app::threads::renderer::run()
     return;
   }
 
-  auto passes = trivial_render_chain(graphics, app->render_data.asset_factory);
+  auto passes = app->create_render_chain(graphics, app->render_data.asset_factory);
 
 #if COLLECT_DRAW_STATISTICS
   std::vector<size_t> statistcs_passes;
@@ -136,9 +136,6 @@ void yc::app::threads::renderer::run()
         app->render_data.objects.push_back(object->renderer_data.renderable);
       }
     }
-
-    /* TODO: WHAT IS THIS? */
-    after_render();
 
     /* Stage 4.3: Poll assets. This will check, if there are newer
      * versions of assets, and if so - reload them. This is

@@ -1,3 +1,7 @@
+if (NOT YAGEPACK_STATIC)
+    set(BUILD_SHARED_LIBS ON)
+endif()
+
 # Apply git patches for windows compatibility
 if (WIN32)
     execute_process(

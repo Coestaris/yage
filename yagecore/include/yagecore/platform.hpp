@@ -24,9 +24,4 @@ namespace yc
 std::shared_ptr<yc::graphics::window>
 create_window(yc::graphics::settings & settings);
 
-std::vector<std::shared_ptr<yc::graphics::render_pass>> trivial_render_chain(
-      const std::shared_ptr<yc::graphics::graphics>& graphics,
-      const std::shared_ptr<yc::app::asset_factory>& asset_factory);
-void after_render(void);
-
 }

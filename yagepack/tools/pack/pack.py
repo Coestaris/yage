@@ -159,6 +159,40 @@ class PackHandler:
             logging.info(f"Added shader '{basename}'")
             return True
 
+    class TTFProcessor(GroupExtensionProcessor):
+        def __init__(self):
+            super().__init__([".ttf", ".meta"])
+
+        def process(self, dst_dir: str, work_dir: str, group: List[str]) -> bool:
+            meta = None
+            ttf = None
+            for file in group:
+                if file.endswith(".meta"):
+                    meta = file
+                elif file.endswith(".ttf"):
+                    ttf = file
+
+            basename = os.path.basename(file)
+            basename = os.path.splitext(basename)[0]
+            if not meta:
+                with open(os.path.join(dst_dir, f"{basename}.meta"), "w") as meta:
+                    meta_content = {
+                        "type": "font",
+                        "font_type": "TTF",
+                        "uri": os.path.basename(ttf),
+                        "size": 12,
+                        "start_char": 32,
+                        "end_char": 127,
+                    }
+                    meta.write(json.dumps(meta_content))
+            else:
+                fast_copy(meta, dst_dir)
+
+            fast_copy(ttf, dst_dir)
+
+            logging.info(f"Added font '{basename}'")
+            return True
+
     class ImageProcessor(GroupExtensionProcessor):
         def __init__(self):
             super().__init__([".png", ".jpeg", ".jpg", ".bmp", ".meta"])
@@ -245,6 +279,7 @@ class PackHandler:
         # We don't know what these binary files are, so copy them
         JustCopyProcessor([".bin"]),
 
+        TTFProcessor(),
         ShaderProcessor(),
         ImageProcessor(),
         GLTFProcessor()

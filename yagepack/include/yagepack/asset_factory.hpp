@@ -18,10 +18,10 @@
 #include "yagecore/util/named_thread.hpp"
 #include "yagecore/fs.hpp"
 
-#include "yagecore/graphics/texture_param.hpp"
 #include "yagecore/graphics/shader.hpp"
 #include "yagecore/graphics/texture.hpp"
 #include "yagecore/graphics/node.hpp"
+#include "yagecore/graphics/font.hpp"
 
 #include "yagecore/app/asset_factory.hpp"
 #include "yagecore/app/asset_cacher.hpp"
@@ -49,10 +49,13 @@ private:
           const std::string &, const yc::graphics::texture::data &)>;
     using on_gltf_callback    = std::function<void(
           const std::string &, const yc::graphics::node::data &)>;
+    using on_font_callback    = std::function<void(
+          const std::string &, const yc::graphics::font::data &)>;
 
     on_shader_callback  on_shader_cb;
     on_texture_callback on_texture_cb;
     on_gltf_callback    on_gltf_cb;
+    on_font_callback    on_font_cb;
 
     yc::graphics::shader::data
     parse_shader_sources(const std::string & dir, const Json::Value & root);
@@ -60,6 +63,8 @@ private:
     parse_texture_sources(const std::string & dir, const Json::Value & root);
     yc::graphics::node::data
     parse_gltf_sources(const std::string & dir, const Json::Value & root);
+    yc::graphics::font::data
+    parse_font_sources(const std::string & dir, const Json::Value & root);
 
   public:
     pack_parser * on_shader(on_shader_callback cb)
@@ -77,6 +82,12 @@ private:
     pack_parser * on_gltf(on_gltf_callback cb)
     {
       on_gltf_cb = std::move(cb);
+      return this;
+    }
+
+    pack_parser * on_font(on_font_callback cb)
+    {
+      on_font_cb = std::move(cb);
       return this;
     }
 

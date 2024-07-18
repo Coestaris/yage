@@ -13,6 +13,7 @@
 
 #include "GL/gl.h"
 
+#include "app.hpp"
 #include "yagecore/graphics/render_pass.hpp"
 #include "yagecore/app/asset_factory.hpp"
 #include "yagecore/gl/shader.hpp"
@@ -21,8 +22,6 @@
 #include "yagecore/gl/node.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
-
-#include <yagecore/app/object.hpp>
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -37,18 +36,21 @@ using node     = yc::gl::node;
 class trivial_render_pass : public yc::graphics::render_pass
 {
 protected:
-  std::shared_ptr<shader>   program;
-  std::shared_ptr<graphics> ctx;
+  std::shared_ptr<shader>           program;
+  std::shared_ptr<app::application> app;
+  std::shared_ptr<graphics>         ctx;
 
 public:
   ~trivial_render_pass() override = default;
    trivial_render_pass(
          std::string                                     name,
          yc::graphics::pass_type                         type,
+         std::shared_ptr<yc::app::application>           app,
          std::shared_ptr<shader>                         shader,
          const std::shared_ptr<yc::graphics::graphics> & graphics)
   : render_pass(std::move(name), type)
   , program(std::move(shader))
+  , app(std::reinterpret_pointer_cast<app::application>(app))
   , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics)) {};
 };
 
@@ -58,11 +60,13 @@ class framebuffers_pass : public trivial_render_pass
 protected:
   framebuffers_pass(
         std::string                             name,
+        std::shared_ptr<yc::app::application>   app,
         std::shared_ptr<shader>                 shader,
         std::shared_ptr<yc::graphics::graphics> graphics)
   : trivial_render_pass(
           std::move(name),
           yc::graphics::pass_type::VIRTUAL_PASS,
+          std::move(app),
           std::move(shader),
           std::move(graphics)) {};
 
@@ -90,11 +94,13 @@ class primitive_pass : public trivial_render_pass
 protected:
   primitive_pass(
         std::string                             name,
+        std::shared_ptr<yc::app::application>   app,
         std::shared_ptr<shader>                 shader,
         std::shared_ptr<yc::graphics::graphics> graphics)
   : trivial_render_pass(
           std::move(name),
           yc::graphics::pass_type::OBJECT_PASS,
+          std::move(app),
           std::move(shader),
           std::move(graphics)) {};
 };
@@ -106,11 +112,13 @@ class final_pass : public trivial_render_pass
 public:
   final_pass(
         std::string                             name,
+        std::shared_ptr<yc::app::application>   app,
         std::shared_ptr<shader>                 shader,
         std::shared_ptr<yc::graphics::graphics> graphics)
   : trivial_render_pass(
           std::move(name),
           yc::graphics::pass_type::VIRTUAL_PASS,
+          std::move(app),
           std::move(shader),
           std::move(graphics)) {};
 
@@ -130,15 +138,6 @@ public:
 };
 
 /* Custom Passes ============================================================ */
-static glm::mat4 view = glm::mat4(1.0f);
-static glm::mat4 proj;
-glm::mat4        app_view;
-
-void yc::after_render(void)
-{
-  view = app_view;
-}
-
 class basic_geometry_pass : public primitive_pass
 {
   yc::gl::uniform_mat4 u_proj;
@@ -150,8 +149,13 @@ class basic_geometry_pass : public primitive_pass
 public:
   basic_geometry_pass(
         std::shared_ptr<shader>                 shader,
+        std::shared_ptr<yc::app::application>   app,
         std::shared_ptr<yc::graphics::graphics> graphics)
-  : primitive_pass("basic_geometry", std::move(shader), std::move(graphics)) {};
+  : primitive_pass(
+          "basic_geometry",
+          std::move(app),
+          std::move(shader),
+          std::move(graphics)) {};
 
   void before_loop() override
   {
@@ -161,7 +165,7 @@ public:
       window->get_geometry(geometry);
     }
 
-    proj = glm::perspective(
+    app->proj_matrix = glm::perspective(
           glm::radians(45.0f),
           geometry.width / static_cast<float>(geometry.height), 0.1f, 100.0f);
 
@@ -171,13 +175,13 @@ public:
     u_model = program->get_uniform<glm::mat4>("model");
 
     program->use();
-    u_proj->set(proj);
+    u_proj->set(app->proj_matrix);
   }
 
   void on_begin() override
   {
     program->use();
-    u_view->set(view);
+    u_view->set(app->view_matrix);
   }
 
   bool on_mesh(
@@ -211,8 +215,13 @@ class draw_aabb_pass : public primitive_pass,
 public:
   draw_aabb_pass(
         std::shared_ptr<shader>                 shader,
+        std::shared_ptr<yc::app::application>   app,
         std::shared_ptr<yc::graphics::graphics> graphics)
-  : primitive_pass("draw_aabb", std::move(shader), std::move(graphics)) {};
+  : primitive_pass(
+          "draw_aabb",
+          std::move(app),
+          std::move(shader),
+          std::move(graphics)) {};
 
   void before_loop() override
   {
@@ -224,14 +233,14 @@ public:
     u_color = program->get_uniform<glm::vec4>("color");
 
     program->use();
-    u_proj->set(proj);
+    u_proj->set(app->proj_matrix);
     u_color->set(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
   }
 
   void on_begin() override
   {
     program->use();
-    u_view->set(view);
+    u_view->set(app->view_matrix);
   }
 
   bool on_mesh(
@@ -258,7 +267,7 @@ public:
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
 std::vector<std::shared_ptr<yc::graphics::render_pass>>
-yc::trivial_render_chain(
+app::application::create_render_chain(
       const std::shared_ptr<yc::graphics::graphics> & graphics,
       const std::shared_ptr<yc::app::asset_factory> & asset_factory)
 {
@@ -271,9 +280,11 @@ yc::trivial_render_chain(
 
   std::vector<std::shared_ptr<yc::graphics::render_pass>> passes = {
     std::make_shared<basic_geometry_pass>(
-          asset_factory->load_asset<shader>("basic_geometry"), graphics),
+          asset_factory->load_asset<shader>("basic_geometry"),
+          shared_from_this(), graphics),
     std::make_shared<draw_aabb_pass>(
-          asset_factory->load_asset<shader>("line"), graphics),
+          asset_factory->load_asset<shader>("line"), shared_from_this(),
+          graphics),
   };
 
   return passes;

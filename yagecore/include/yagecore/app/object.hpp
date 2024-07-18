@@ -91,7 +91,13 @@ protected:
    * to update the object, process input, etc.
    *
    * Attention: This method is called from the logic thread. */
-  virtual void update(yc::milliseconds delta) = 0;
+  virtual void on_update(yc::milliseconds delta) {};
+
+  /** This function is called every frame, so it can be used
+   * to render the object.
+   *
+   * Attention: This method is called from the rendering thread. */
+  virtual void on_render() {};
 
   void set_visible(bool visible)
   {
@@ -121,7 +127,7 @@ public:
    * (e.g. when on_ready called after the first update).
    *
    * Attention: This method is called from the rendering thread. */
-  virtual void on_ready(const std::shared_ptr<asset_factory> & factory) = 0;
+  virtual void on_ready(const std::shared_ptr<asset_factory> & factory) {};
 
   void update()
   {
@@ -138,7 +144,7 @@ public:
       last_update = time;
     }
 
-    update(delta);
+    on_update(delta);
   }
 };
 

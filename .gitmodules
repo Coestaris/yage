@@ -17,3 +17,6 @@
 [submodule "thirdparty/fastgltf"]
 	path = yagecore/thirdparty/fastgltf
 	url = https://github.com/spnda/fastgltf.git
+[submodule "yagecore/thirdparty/freetype"]
+	path = yagecore/thirdparty/freetype
+	url = https://github.com/freetype/freetype

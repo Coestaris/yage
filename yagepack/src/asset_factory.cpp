@@ -124,6 +124,24 @@ yc::error yagepack::asset_factory::pack_parser::parse(
       if (on_gltf_cb)
         on_gltf_cb(basename, sources);
     }
+    else if (t.asString() == "font")
+    {
+      auto sources = parse_font_sources(dir, root);
+      if (sources.empty())
+      {
+        logging(
+              LOG_ERROR, "Failed to parse font sources from meta file: %s",
+              file.c_str());
+        if (fail_on_error)
+        {
+          return yc::INVALID_STATE;
+        }
+        continue;
+      }
+
+      if (on_font_cb)
+        on_font_cb(basename, sources);
+    }
     else
     {
       logging(
@@ -162,19 +180,16 @@ yagepack::asset_factory::pack_parser::parse_texture_sources(
   yc::graphics::texture::data sources;
   yc::graphics::texture_param param {};
 
-  param.type = yc::graphics::tex_type_from_string(root["tex_type"].asString());
-  param.format
-        = yc::graphics::tex_pixel_format_from_string(root["format"].asString());
-  param.min_filter
-        = yc::graphics::tex_filter_from_string(root["min_filter"].asString());
-  param.mag_filter
-        = yc::graphics::tex_filter_from_string(root["mag_filter"].asString());
-  param.wrap_s = yc::graphics::tex_wrap_from_string(root["wrap_s"].asString());
-  param.wrap_t = yc::graphics::tex_wrap_from_string(root["wrap_t"].asString());
-  param.wrap_r = yc::graphics::tex_wrap_from_string(root["wrap_r"].asString());
-  param.border_color = glm::vec4(
+  param.set_type(root["tex_type"].asString());
+  param.set_format(root["format"].asString());
+  param.set_min_filter(root["min_filter"].asString());
+  param.set_mag_filter(root["mag_filter"].asString());
+  param.set_wrap_s(root["wrap_s"].asString());
+  param.set_wrap_t(root["wrap_t"].asString());
+  param.set_wrap_r(root["wrap_r"].asString());
+  param.set_border_color(glm::vec4(
         root["border_color"][0].asFloat(), root["border_color"][1].asFloat(),
-        root["border_color"][2].asFloat(), root["border_color"][3].asFloat());
+        root["border_color"][2].asFloat(), root["border_color"][3].asFloat()));
   sources.set_work_dir(dir);
   sources.set_parameters(param);
 
@@ -261,6 +276,44 @@ yagepack::asset_factory::pack_parser::parse_gltf_sources(
   return sources;
 }
 
+yc::graphics::font::data
+yagepack::asset_factory::pack_parser::parse_font_sources(
+      const std::string & dir, const Json::Value & root)
+{
+  auto model_type = root["font_type"];
+  if (model_type.isNull())
+  {
+    logging(LOG_ERROR, "Font type is not specified in meta file");
+    return {};
+  }
+
+  if (model_type.asString() != "TTF" && model_type.asString() != "OTF")
+  {
+    logging(
+          LOG_ERROR, "Unsupported font type: %s",
+          model_type.asString().c_str());
+    return {};
+  }
+
+  yc::graphics::font::data sources;
+  auto                     uri = root["uri"];
+  if (uri.isNull())
+  {
+    logging(LOG_ERROR, "URI is not specified in meta file");
+    return {};
+  }
+
+  yc::graphics::font_param param;
+  param.set_size(root["size"].asInt());
+  param.set_start_char(root["start_char"].asInt());
+  param.set_end_char(root["end_char"].asInt());
+
+  sources.set_work_dir(dir);
+  sources.set_uri(resolve_uri(dir, uri.asString()));
+  sources.set_parameters(param);
+  return sources;
+}
+
 yc::error yagepack::asset_factory::read_assets(
       std::shared_ptr<yc::graphics::graphics> graphics)
 {
@@ -310,6 +363,13 @@ yc::error yagepack::asset_factory::read_assets(
     auto node = graphics->create_node(basename, cacher, graphics);
     node->set_sources(sources);
     assets[basename] = node;
+  });
+  parser.on_font([this, graphics, cacher](
+                       const std::string &              basename,
+                       const yc::graphics::font::data & sources) {
+    auto font = graphics->create_font(basename, cacher, graphics);
+    font->set_sources(sources);
+    assets[basename] = font;
   });
 
   if (parser.parse(extract_path, meta_files) != yc::error::OK)
@@ -462,7 +522,6 @@ void yagepack::asset_factory::pack_watchdog::run()
 
       texture->set_sources(sources);
     });
-
     parser.on_gltf([this,
                     p](const std::string &              basename,
                        const yc::graphics::node::data & sources) {
@@ -483,6 +542,27 @@ void yagepack::asset_factory::pack_watchdog::run()
       }
 
       node->set_sources(sources);
+    });
+    parser.on_font([this,
+                    p](const std::string &              basename,
+                       const yc::graphics::font::data & sources) {
+      if (factory->assets.find(basename) == factory->assets.end())
+      {
+        logging(
+              LOG_WARN, "New font: %s. Please rerun the application",
+              basename.c_str());
+      }
+
+      auto font = std::dynamic_pointer_cast<yc::graphics::font>(
+            factory->assets[basename]);
+      if (!font)
+      {
+        logging(
+              LOG_ERROR, "Failed to cast asset to font: %s", basename.c_str());
+        return;
+      }
+
+      font->set_sources(sources);
     });
 
     if (parser.parse(p, meta_files, false) != yc::error::OK)

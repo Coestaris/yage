@@ -51,6 +51,10 @@ public:
         std::string                             name,
         std::shared_ptr<yc::app::asset_cacher>  cacher,
         std::shared_ptr<yc::graphics::graphics> graphics) override;
+  std::shared_ptr<yc::graphics::font> create_font(
+        std::string                             name,
+        std::shared_ptr<yc::app::asset_cacher>  cacher,
+        std::shared_ptr<yc::graphics::graphics> graphics) override;
 
   bool supports_shader_language(const std::string & language) override
   {

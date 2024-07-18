@@ -74,8 +74,7 @@ yc::graphics::tex_type_from_string(const std::string & type)
   return yc::graphics::tex_type::UNKNOWN;
 }
 
-std::string
-yc::graphics::to_string(yc::graphics::tex_filter filter)
+std::string yc::graphics::to_string(yc::graphics::tex_filter filter)
 {
   for (const auto & [key, value] : tex_filter_map)
   {
@@ -99,8 +98,7 @@ yc::graphics::tex_filter_from_string(const std::string & filter)
   return yc::graphics::tex_filter::UNKNOWN;
 }
 
-std::string yc::graphics::to_string(
-      yc::graphics::tex_pixel_format format)
+std::string yc::graphics::to_string(yc::graphics::tex_pixel_format format)
 {
   for (const auto & [key, value] : tex_pixel_format_map)
   {
@@ -147,4 +145,126 @@ yc::graphics::tex_wrap_from_string(const std::string & wrap)
   }
 
   return yc::graphics::tex_wrap::UNKNOWN;
+}
+
+void yc::graphics::texture_param::set_type(std::string type)
+{
+  set_type(tex_type_from_string(type));
+}
+
+void yc::graphics::texture_param::set_type(tex_type _type)
+{
+  type = _type;
+}
+
+void yc::graphics::texture_param::set_format(std::string format)
+{
+  set_format(tex_pixel_format_from_string(format));
+}
+
+void yc::graphics::texture_param::set_format(tex_pixel_format _format)
+{
+  format = _format;
+}
+
+void yc::graphics::texture_param::set_border_color(const glm::vec4 & _color)
+{
+  border_color = _color;
+}
+
+void yc::graphics::texture_param::set_min_filter(std::string filter)
+{
+  set_min_filter(tex_filter_from_string(filter));
+}
+
+void yc::graphics::texture_param::set_min_filter(tex_filter filter)
+{
+  min_filter = filter;
+}
+
+void yc::graphics::texture_param::set_mag_filter(std::string filter)
+{
+  set_mag_filter(tex_filter_from_string(filter));
+}
+
+void yc::graphics::texture_param::set_mag_filter(tex_filter filter)
+{
+  mag_filter = filter;
+}
+
+void yc::graphics::texture_param::set_wrap_s(std::string wrap)
+{
+  set_wrap_s(tex_wrap_from_string(wrap));
+}
+
+void yc::graphics::texture_param::set_wrap_s(tex_wrap wrap)
+{
+  wrap_s = wrap;
+}
+
+void yc::graphics::texture_param::set_wrap_t(std::string wrap)
+{
+  set_wrap_t(tex_wrap_from_string(wrap));
+}
+
+void yc::graphics::texture_param::set_wrap_t(tex_wrap wrap)
+{
+  wrap_t = wrap;
+}
+
+void yc::graphics::texture_param::set_wrap_r(std::string wrap)
+{
+  set_wrap_r(tex_wrap_from_string(wrap));
+}
+
+void yc::graphics::texture_param::set_wrap_r(tex_wrap wrap)
+{
+  wrap_r = wrap;
+}
+
+[[nodiscard]] yc::graphics::tex_type
+yc::graphics::texture_param::get_type() const
+{
+  return type;
+}
+
+[[nodiscard]] yc::graphics::tex_pixel_format
+yc::graphics::texture_param::get_format() const
+{
+  return format;
+}
+
+[[nodiscard]] glm::vec4 yc::graphics::texture_param::get_border_color() const
+{
+  return border_color;
+}
+
+[[nodiscard]] yc::graphics::tex_filter
+yc::graphics::texture_param::get_min_filter() const
+{
+  return min_filter;
+}
+
+[[nodiscard]] yc::graphics::tex_filter
+yc::graphics::texture_param::get_mag_filter() const
+{
+  return mag_filter;
+}
+
+[[nodiscard]] yc::graphics::tex_wrap
+yc::graphics::texture_param::get_wrap_s() const
+{
+  return wrap_s;
+}
+
+[[nodiscard]] yc::graphics::tex_wrap
+yc::graphics::texture_param::get_wrap_t() const
+{
+  return wrap_t;
+}
+
+[[nodiscard]] yc::graphics::tex_wrap
+yc::graphics::texture_param::get_wrap_r() const
+{
+  return wrap_r;
 }
