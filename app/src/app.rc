@@ -1,0 +1,35 @@
+// Include the necessary headers
+#include <windows.h>
+
+// Define the application icon
+IDI_APP_ICON ICON "icon.ico"
+
+
+// Define the version information
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 0,0,1,0
+PRODUCTVERSION 0,0,1,0
+FILEFLAGSMASK 0x3fL
+FILEFLAGS 0x0L
+FILEOS VOS__WINDOWS32
+FILETYPE VFT_APP
+FILESUBTYPE 0x0L
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904b0"
+        {
+            VALUE "CompanyName", "Kurylko Maxim <vk_vm@ukr.net>"
+            VALUE "FileDescription", "YAGE Demo Application"
+            VALUE "FileVersion", "0.0.1.0"
+            VALUE "InternalName", "app"
+            VALUE "OriginalFilename", "app.exe"
+            VALUE "ProductName", "YAGE Demo Application"
+            VALUE "ProductVersion", "0.0.1.0"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0409, 1200
+    }
+}
