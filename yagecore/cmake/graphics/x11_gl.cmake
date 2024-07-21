@@ -9,8 +9,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
 
 set(SRC_FILES ${SRC_FILES}
-        src/platform/graphics/x11/*.cpp
-        src/platform/graphics/gl/*.cpp
+        src/x11/*.cpp
+        src/gl/*.cpp
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DYAGE_PLATFORM_X11)

@@ -73,7 +73,10 @@ target_link_options(${PROJECT_NAME} PRIVATE ${YAGE_CXX_LINK_FLAGS})
 # Setup common source files
 set(SRC_FILES
     src/*.cpp
+    src/app/*.cpp
+    src/app/threads/*.cpp
     src/graphics/*.cpp
+    src/util/*.cpp
 )
 
 # Add platform specific files

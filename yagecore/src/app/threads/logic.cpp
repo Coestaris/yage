@@ -9,8 +9,8 @@
 /* Includes ================================================================= */
 #include <vector>
 #include <mutex>
-#include "yagecore/app/threads/logic.hpp"
-#include "yagecore/app/application.hpp"
+#include "../../../include/yagecore/app/threads/logic.hpp"
+#include "../../../include/yagecore/app/application.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */

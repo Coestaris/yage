@@ -7,12 +7,12 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "yagecore/app/application.hpp"
-#include "yagecore/app/threads/renderer.hpp"
-#include "yagecore/app/threads/logic.hpp"
-#include "yagecore/util/sync_point.hpp"
-#include "yagecore/util/profiler.hpp"
-#include "yagecore/error.hpp"
+#include "../../include/yagecore/app/application.hpp"
+#include "../../include/yagecore/app/threads/renderer.hpp"
+#include "../../include/yagecore/app/threads/logic.hpp"
+#include "../../include/yagecore/util/sync_point.hpp"
+#include "../../include/yagecore/util/profiler.hpp"
+#include "../../include/yagecore/error.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
