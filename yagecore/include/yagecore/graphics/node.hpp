@@ -43,40 +43,18 @@ public:
 
   class data
   {
-  private:
     yc::util::uri uri {};
     std::string   work_dir {};
 
   public:
-    void set_work_dir(const std::string & _work_dir)
-    {
-      work_dir = _work_dir;
-    }
+    void set_work_dir(const std::string & work_dir);
+    void set_uri(yc::util::uri uri);
 
-    void set_uri(yc::util::uri _uri)
-    {
-      uri = _uri;
-    }
+    [[nodiscard]] yc::util::uri get_uri() const;
+    [[nodiscard]] std::string get_work_dir() const;
 
-    yc::util::uri get_uri() const
-    {
-      return uri;
-    }
-
-    std::string get_work_dir() const
-    {
-      return work_dir;
-    }
-
-    bool operator==(const data & other) const
-    {
-      return uri == other.uri;
-    }
-
-    bool empty() const
-    {
-      return uri.empty();
-    }
+    bool operator==(const data & other) const;
+    bool empty() const;
   };
 
 protected:
@@ -100,60 +78,16 @@ protected:
    * root node to the current one. */
   glm::mat4 transform;
 
-protected:
   node(std::string                             name,
        std::shared_ptr<yc::app::asset_cacher>  cacher,
        std::shared_ptr<yc::graphics::graphics> graphics,
-       type                                    type = type::TOPLEVEL)
-  : asset(std::move(name), std::move(cacher))
-  , graphics(std::move(graphics))
-  , type_(type)
-  {
-    if (type != type::TOPLEVEL)
-    {
-      live   = true;
-      loaded = true;
-    }
-  }
+       type                                    type = type::TOPLEVEL);
 
 public:
-  void set_sources(const data & _sources)
-  {
-    if (!(sources == _sources))
-    {
-      logging(LOG_INFO, "Node %s marked to reload", name.c_str());
-      sources = _sources;
-      live    = false;
-    }
-  }
+  void set_sources(const data & _sources);
 
-  type get_type() const
-  {
-    return type_;
-  }
-
-  draw_result draw(const std::shared_ptr<yc::graphics::render_pass> & pass)
-  {
-#if USE_DEBUG
-    if (!live)
-    {
-      return draw_result();
-    }
-#endif
-
-    draw_result result {};
-    if (mesh)
-    {
-      result += mesh->draw(pass);
-    }
-
-    for (auto & child : children)
-    {
-      result += child->draw(pass);
-    }
-
-    return result;
-  }
+  type get_type() const;
+  draw_result draw(const std::shared_ptr<yc::graphics::render_pass> & pass);
 
   virtual yc::graphics::aabb get_aabb() const = 0;
 };

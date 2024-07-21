@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file trivial_render_chain.cpp
+ * @file render_chain.cpp
  * @date 28-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
@@ -48,7 +48,7 @@ public:
   ~trivial_render_pass() override = default;
    trivial_render_pass(
          std::string                                     name,
-         yc::graphics::pass_type                         type,
+         yc::graphics::render_pass::type                 type,
          std::shared_ptr<yc::app::application>           app,
          std::shared_ptr<shader>                         shader,
          const std::shared_ptr<yc::graphics::graphics> & graphics)
@@ -69,7 +69,7 @@ protected:
         std::shared_ptr<yc::graphics::graphics> graphics)
   : trivial_render_pass(
           std::move(name),
-          yc::graphics::pass_type::VIRTUAL_PASS,
+          type::VIRTUAL_PASS,
           std::move(app),
           std::move(shader),
           std::move(graphics)) {};
@@ -103,7 +103,7 @@ protected:
         std::shared_ptr<yc::graphics::graphics> graphics)
   : trivial_render_pass(
           std::move(name),
-          yc::graphics::pass_type::OBJECT_PASS,
+          type::OBJECT_PASS,
           std::move(app),
           std::move(shader),
           std::move(graphics)) {};
@@ -121,7 +121,7 @@ public:
         std::shared_ptr<yc::graphics::graphics> graphics)
   : trivial_render_pass(
           std::move(name),
-          yc::graphics::pass_type::VIRTUAL_PASS,
+          type::VIRTUAL_PASS,
           std::move(app),
           std::move(shader),
           std::move(graphics)) {};

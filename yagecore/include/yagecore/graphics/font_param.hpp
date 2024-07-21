@@ -24,48 +24,17 @@ class font_param
 
 public:
   font_param() = default;
-  font_param(int size, int start_char, int end_char)
-  : size(size)
-  , start_char(start_char)
-  , end_char(end_char)
-  {
-  }
+  font_param(int size, int start_char, int end_char);
 
-  void set_size(int _size)
-  {
-    size = _size;
-  }
+  void set_size(int size);
+  void set_start_char(int start_char);
+  void set_end_char(int end_char);
 
-  void set_start_char(int _start_char)
-  {
-    start_char = _start_char;
-  }
+  [[nodiscard]] int get_size() const;
+  [[nodiscard]] int get_start_char() const;
+  [[nodiscard]] int get_end_char() const;
 
-  void set_end_char(int _end_char)
-  {
-    end_char = _end_char;
-  }
-
-  int get_size() const
-  {
-    return size;
-  }
-
-  int get_start_char() const
-  {
-    return start_char;
-  }
-
-  int get_end_char() const
-  {
-    return end_char;
-  }
-
-  bool operator==(const font_param & other) const
-  {
-    return size == other.size && start_char == other.start_char
-           && end_char == other.end_char;
-  }
+  bool operator==(const font_param & other) const;
 };
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */

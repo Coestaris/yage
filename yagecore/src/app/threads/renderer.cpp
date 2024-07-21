@@ -114,7 +114,7 @@ void yc::app::threads::renderer::run()
       }
 
       pass->begin();
-      if (pass->get_type() == yc::graphics::pass_type::OBJECT_PASS)
+      if (pass->get_type() == yc::graphics::render_pass::type::OBJECT_PASS)
       {
         for (const auto & object : app->render_data.objects)
         {

@@ -23,10 +23,10 @@ __attribute__((constructor(101))) static void init()
 
 /* Shared functions ========================================================= */
 bool yc::graphics::texture::load_image(
-      const yc::util::uri & uri,
-      std::vector<uint8_t> &        out_data,
-      size_t &                      out_w,
-      size_t &                      out_h)
+      const yc::util::uri &  uri,
+      std::vector<uint8_t> & out_data,
+      size_t &               out_w,
+      size_t &               out_h)
 {
   FreeImage_SetOutputMessage([](FREE_IMAGE_FORMAT, const char * message) {
     logging(LOG_ERROR, "FreeImage: %s", message);
@@ -76,4 +76,66 @@ bool yc::graphics::texture::load_image(
 
   FreeImage_Unload(bitmap);
   return true;
+}
+
+void yc::graphics::texture::data::add_uri(yc::util::uri uri)
+{
+  uris.push_back(uri);
+}
+
+void yc::graphics::texture::data::set_parameters(
+      const texture_param & _parameters)
+{
+  parameters = _parameters;
+}
+
+void yc::graphics::texture::data::set_work_dir(const std::string & dir)
+{
+  work_dir = dir;
+}
+
+bool yc::graphics::texture::data::operator==(const data & other) const
+{
+  return uris == other.uris && parameters == other.parameters;
+}
+
+bool yc::graphics::texture::data::empty() const
+{
+  return uris.empty();
+}
+
+std::vector<yc::util::uri> yc::graphics::texture::data::get_uris() const
+{
+  return uris;
+}
+
+std::string yc::graphics::texture::data::get_work_dir() const
+{
+  return work_dir;
+}
+
+yc::graphics::texture_param yc::graphics::texture::data::get_parameters() const
+{
+  return parameters;
+}
+
+yc::graphics::texture::texture(
+      std::string                             name,
+      std::shared_ptr<yc::app::asset_cacher>  cacher,
+      std::shared_ptr<yc::graphics::graphics> graphics)
+: asset(std::move(name), std::move(cacher))
+, graphics(std::move(graphics))
+{
+}
+
+void yc::graphics::texture::set_sources(const data & _sources)
+{
+  /* TODO: check if sources are different */
+  if (sources.empty())
+  //    if (!(sources == _sources))
+  {
+    logging(LOG_INFO, "Texture %s marked to reload", name.c_str());
+    sources = _sources;
+    live    = false;
+  }
 }

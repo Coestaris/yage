@@ -30,51 +30,23 @@ class texture : public yc::app::asset
 public:
   class data
   {
-  private:
     std::vector<yc::util::uri> uris {};
     std::string                work_dir {};
     texture_param              parameters {};
 
   public:
-    void add_uri(yc::util::uri uri)
-    {
-      uris.push_back(uri);
-    }
+    void add_uri(yc::util::uri uri);
 
-    void set_parameters(const texture_param & _parameters)
-    {
-      parameters = _parameters;
-    }
+    void set_parameters(const texture_param & parameters);
+    void set_work_dir(const std::string & dir);
 
-    void set_work_dir(const std::string & dir)
-    {
-      work_dir = dir;
-    }
+    bool operator==(const data & other) const;
 
-    bool operator==(const data & other) const
-    {
-      return uris == other.uris && parameters == other.parameters;
-    }
+    [[nodiscard]] std::vector<yc::util::uri> get_uris() const;
+    [[nodiscard]] std::string                get_work_dir() const;
+    [[nodiscard]] texture_param              get_parameters() const;
 
-    bool empty() const
-    {
-      return uris.empty();
-    }
-
-    std::vector<yc::util::uri> get_uris() const
-    {
-      return uris;
-    }
-
-    std::string get_work_dir() const
-    {
-      return work_dir;
-    }
-
-    texture_param get_parameters() const
-    {
-      return parameters;
-    }
+    bool empty() const;
   };
 
 protected:
@@ -92,24 +64,10 @@ protected:
   texture(
         std::string                             name,
         std::shared_ptr<yc::app::asset_cacher>  cacher,
-        std::shared_ptr<yc::graphics::graphics> graphics)
-  : asset(std::move(name), std::move(cacher))
-  , graphics(std::move(graphics))
-  {
-  }
+        std::shared_ptr<yc::graphics::graphics> graphics);
 
 public:
-  void set_sources(const data & _sources)
-  {
-    /* TODO: check if sources are different */
-    if (sources.empty())
-    //    if (!(sources == _sources))
-    {
-      logging(LOG_INFO, "Texture %s marked to reload", name.c_str());
-      sources = _sources;
-      live    = false;
-    }
-  }
+  void set_sources(const data & sources);
 };
 
 /* Variables ================================================================ */

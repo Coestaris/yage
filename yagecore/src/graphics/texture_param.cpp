@@ -268,3 +268,12 @@ yc::graphics::texture_param::get_wrap_r() const
 {
   return wrap_r;
 }
+
+bool yc::graphics::texture_param::operator==(const texture_param & other) const
+{
+  return type == other.type && format == other.format
+         && border_color == other.border_color
+         && min_filter == other.min_filter && mag_filter == other.mag_filter
+         && wrap_s == other.wrap_s && wrap_t == other.wrap_t
+         && wrap_r == other.wrap_r;
+}

@@ -36,49 +36,17 @@ private:
   void set_port_name();
 
 public:
+  static std::string
+  get_thread_name(std::thread::id id = std::this_thread::get_id());
+
   virtual ~named_thread() = default;
-  static inline std::string
-  get_thread_name(std::thread::id id = std::this_thread::get_id())
-  {
-    auto it = named_thread::thread_names.find(id);
-    if (it != named_thread::thread_names.end())
-    {
-      return it->second;
-    }
-    return "unknown";
-  }
+           named_thread(std::string name);
 
-  named_thread(std::string name)
-  : name(std::move(name))
-  {
-  }
+  [[nodiscard]] std::string get_name() const;
 
-  std::string get_name() const
-  {
-    return name;
-  }
-
-  void start()
-  {
-    thread = std::make_unique<std::thread>(&named_thread::start_inplace, this);
-    set_port_name();
-  }
-
-  void start_inplace()
-  {
-    named_thread::thread_names[std::this_thread::get_id()] = name;
-    logging(LOG_INFO, "Thread '%s' started", name.c_str());
-    run();
-    logging(LOG_INFO, "Thread '%s' finished", name.c_str());
-  }
-
-  void join()
-  {
-    if (thread && thread->joinable())
-    {
-      thread->join();
-    }
-  }
+  void start();
+  void start_inplace();
+  void join();
 };
 
 /* Variables ================================================================ */

@@ -13,6 +13,7 @@
 #include <glm/common.hpp>
 
 #include "GL/gl.h"
+#include "glm/vec3.hpp"
 #include "yagecore/app/asset.hpp"
 #include "yagecore/graphics/graphics.hpp"
 
@@ -53,26 +54,13 @@ public:
   material(
         std::string                             name,
         std::shared_ptr<yc::app::asset_cacher>  cacher,
-        std::shared_ptr<yc::graphics::graphics> graphics)
-  : yc::app::asset(std::move(name), std::move(cacher))
-  , graphics(std::move(graphics)) {};
+        std::shared_ptr<yc::graphics::graphics> graphics);
 
-  virtual yc::error load() override { return OK;};
-  virtual void      unload() override {};
+  yc::error load() override;
+  void      unload() override;
 
   /* Better than nothing material */
-  static std::shared_ptr<yc::graphics::material> basic_material()
-  {
-    auto mat = std::make_shared<yc::graphics::material>(
-          "default", nullptr, nullptr);
-    mat->pbr.base_color_factor = glm::vec3(1.0f);
-    mat->pbr.metallic_factor   = 0.0f;
-    mat->pbr.roughness_factor  = 1.0f;
-    mat->emissive_factor       = glm::vec3(0.0f);
-    mat->alpha_cutoff          = 0.5f;
-
-    return mat;
-  }
+  static std::shared_ptr<yc::graphics::material> basic_material();
 };
 
 /* Variables ================================================================ */

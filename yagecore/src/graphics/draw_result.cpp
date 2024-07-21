@@ -24,7 +24,7 @@ yc::graphics::draw_result::draw_result(
       {};
 #endif
 
-yc::graphics::draw_result::draw_result
+yc::graphics::draw_result
 yc::graphics::draw_result::operator+=(const draw_result & other)
 {
 #if COLLECT_DRAW_STATISTICS
