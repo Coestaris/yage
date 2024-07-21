@@ -33,8 +33,10 @@
 std::string app::application::lookup_asset_path()
 {
   std::vector<std::string> variants = {
-    "../../../app/assets", "../../app/assets", "../app/assets", "assets",           "../assets",
-    "../../assets",     "assets/assets", "../assets/assets",
+    "../../../app/assets", "../../app/assets",
+    "../app/assets",       "assets",
+    "../assets",           "../../assets",
+    "assets/assets",       "../assets/assets",
   };
   std::vector<std::string> extensions = { ".pack", ".zip" };
 

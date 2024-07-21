@@ -30,7 +30,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/asset_factory.cpp
     include/yagepack/asset_factory.hpp
 )
-if (WIN32)
+
+if (WIN32 AND NOT SINGLEBIN)
     enable_language(RC)
     target_sources(${PROJECT_NAME} PRIVATE src/yagepack.rc)
 endif ()

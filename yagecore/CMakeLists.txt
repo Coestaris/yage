@@ -113,7 +113,7 @@ endforeach ()
 target_include_directories(${PROJECT_NAME} PUBLIC
         include
 )
-if (WIN32)
+if (WIN32 AND NOT SINGLEBIN)
     enable_language(RC)
     target_sources(${PROJECT_NAME} PRIVATE src/yagecore.rc)
 endif ()
