@@ -83,8 +83,7 @@ public:
   } logic_data;
 
   virtual ~object() = default;
-  explicit object(std::shared_ptr<yc::app::application> app)
-  : app(std::move(app)) {};
+  explicit object(std::shared_ptr<yc::app::application> app);
 
 protected:
   /** This function is called every frame, so it can be used
@@ -99,26 +98,9 @@ protected:
    * Attention: This method is called from the rendering thread. */
   virtual void on_render() {};
 
-  void set_visible(bool visible)
-  {
-    renderer_data.renderable.visible = visible;
-  }
-
-  void set_node(std::shared_ptr<yc::graphics::node> node)
-  {
-    renderer_data.renderable.node = std::move(node);
-  }
-
-  void set_transform(const glm::mat4 & transform)
-  {
-    renderer_data.renderable.transform = transform;
-    if (renderer_data.renderable.node)
-    {
-      renderer_data.renderable.aabb_transform
-            = transform
-              * renderer_data.renderable.node->get_aabb().get_transform();
-    }
-  }
+  void set_visible(bool visible);
+  void set_node(std::shared_ptr<yc::graphics::node> node);
+  void set_transform(const glm::mat4 & transform);
 
 public:
   /** This function is called when the object is ready to be rendered.
@@ -129,23 +111,7 @@ public:
    * Attention: This method is called from the rendering thread. */
   virtual void on_ready(const std::shared_ptr<asset_factory> & factory) {};
 
-  void update()
-  {
-    yc::milliseconds delta;
-    yc::milliseconds time = yc::get_ms();
-    if (last_update == 0)
-    {
-      last_update = time;
-      delta       = 0;
-    }
-    else
-    {
-      delta       = time - last_update;
-      last_update = time;
-    }
-
-    on_update(delta);
-  }
+  void update();
 };
 
 /* Variables ================================================================ */

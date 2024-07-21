@@ -145,6 +145,9 @@ void APIENTRY GLDebugMessageCallback(
 #endif
 
 /* Shared functions ========================================================= */
+yc::gl::graphics::graphics(const std::shared_ptr<yc::graphics::window> & window)
+: yc::graphics::graphics(window) {};
+
 std::shared_ptr<yc::graphics::shader> yc::gl::graphics::create_shader(
       std::string                             name,
       std::shared_ptr<yc::app::asset_cacher>  cacher,
@@ -174,6 +177,12 @@ std::shared_ptr<yc::graphics::node> yc::gl::graphics::create_node(
       std::shared_ptr<yc::graphics::graphics> graphics)
 {
   return std::make_shared<yc::gl::node>(std::move(name), cacher, graphics);
+}
+
+bool yc::gl::graphics::supports_shader_language(
+      const std::string & language)
+{
+  return language == "GLSL";
 }
 
 void yc::gl::graphics::cache_extensions()
@@ -245,7 +254,8 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
 
   if (has_extension("GL_KHR_debug"))
   {
-    yc::gl::glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    yc::gl::glDebugMessageControl(
+          GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     yc::gl::glDebugMessageCallback(GLDebugMessageCallback, nullptr);
   }
   else
@@ -269,8 +279,8 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
   glShadeModel(GL_SMOOTH); // Enable Smooth Shading
   glEnable(GL_DEPTH_TEST); // Enables Depth Testing
   glDepthFunc(GL_LEQUAL);  // The Type Of Depth Testing To Do
-   glEnable(GL_MULTISAMPLE);
-   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+  glEnable(GL_MULTISAMPLE);
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
   return yc::error::OK;
 }

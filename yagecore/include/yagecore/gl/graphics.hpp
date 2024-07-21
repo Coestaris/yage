@@ -25,7 +25,6 @@ namespace yc::gl
 /* Types ==================================================================== */
 class graphics final : public yc::graphics::graphics
 {
-private:
   std::vector<std::string> extensions;
 
   void cache_extensions();
@@ -33,9 +32,8 @@ private:
   bool has_extension(const std::string & extension);
 
 public:
-  explicit graphics(const std::shared_ptr<yc::graphics::window> & window)
-  : yc::graphics::graphics(window) {};
-  ~graphics() override = default;
+  ~        graphics() override = default;
+  explicit graphics(const std::shared_ptr<yc::graphics::window> & window);
 
   yc::error init(int bits_per_pixel, int width, int height);
 
@@ -56,10 +54,7 @@ public:
         std::shared_ptr<yc::app::asset_cacher>  cacher,
         std::shared_ptr<yc::graphics::graphics> graphics) override;
 
-  bool supports_shader_language(const std::string & language) override
-  {
-    return language == "GLSL";
-  }
+  bool supports_shader_language(const std::string & language) override;
 
   yc::error clear() override;
   yc::error flush() override;

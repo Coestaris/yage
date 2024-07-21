@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file shader_compiler.hpp
+ * @file shader.hpp
  * @date 06-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
@@ -31,84 +31,27 @@ namespace yc::gl
 /* Macros =================================================================== */
 /* Types ==================================================================== */
 class shader final : public yc::graphics::shader,
-               public std::enable_shared_from_this<shader>
+                     public std::enable_shared_from_this<shader>
 {
-private:
+  static inline void internal_set(GLint location, int value);
+  static inline void internal_set(GLint location, float value);
+  static inline void internal_set(GLint location, glm::vec2 value);
+  static inline void internal_set(GLint location, glm::vec3 value);
+  static inline void internal_set(GLint location, glm::vec4 value);
+  static inline void internal_set(GLint location, glm::mat2 value);
+  static inline void internal_set(GLint location, glm::mat3 value);
+  static inline void internal_set(GLint location, glm::mat4 value);
+
   class reloadable
   {
   public:
-    virtual ~reloadable() = default;
-    virtual void reload() = 0;
+    virtual ~    reloadable() = default;
+    virtual void reload()     = 0;
   };
 
 public:
   template <typename T> class uniform : public reloadable
   {
-  private:
-    static inline void internal_set(
-          const std::shared_ptr<yc::gl::graphics> & ctx,
-          GLint                                     location,
-          int                                       value)
-    {
-      yc::gl::glUniform1i(location, value);
-    }
-
-    static inline void internal_set(
-          const std::shared_ptr<yc::gl::graphics> & ctx,
-          GLint                                     location,
-          float                                     value)
-    {
-      yc::gl::glUniform1f(location, value);
-    }
-
-    static inline void internal_set(
-          const std::shared_ptr<yc::gl::graphics> & ctx,
-          GLint                                     location,
-          glm::vec2                                 value)
-    {
-      yc::gl::glUniform2f(location, value.x, value.y);
-    }
-
-    static inline void internal_set(
-          const std::shared_ptr<yc::gl::graphics> & ctx,
-          GLint                                     location,
-          glm::vec3                                 value)
-    {
-      yc::gl::glUniform3f(location, value.x, value.y, value.z);
-    }
-
-    static inline void internal_set(
-          const std::shared_ptr<yc::gl::graphics> & ctx,
-          GLint                                     location,
-          glm::vec4                                 value)
-    {
-      yc::gl::glUniform4f(location, value.x, value.y, value.z, value.w);
-    }
-
-    static inline void internal_set(
-          const std::shared_ptr<yc::gl::graphics> & ctx,
-          GLint                                     location,
-          glm::mat2                                 value)
-    {
-      yc::gl::glUniformMatrix2fv(location, 1, GL_FALSE, &value[0][0]);
-    }
-
-    static inline void internal_set(
-          const std::shared_ptr<yc::gl::graphics> & ctx,
-          GLint                                     location,
-          glm::mat3                                 value)
-    {
-      yc::gl::glUniformMatrix3fv(location, 1, GL_FALSE, &value[0][0]);
-    }
-
-    static inline void internal_set(
-          const std::shared_ptr<yc::gl::graphics> & ctx,
-          GLint                                     location,
-          glm::mat4                                 value)
-    {
-      yc::gl::glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
-    }
-
   protected:
     std::shared_ptr<yc::gl::graphics> ctx;
     std::weak_ptr<yc::gl::shader>     shader;
@@ -123,39 +66,17 @@ public:
     uniform(
           std::string                       name,
           std::shared_ptr<yc::gl::shader>   shader,
-          std::shared_ptr<yc::gl::graphics> ctx)
-    : ctx(std::move(ctx))
-    , shader(std::move(shader))
-    , name(std::move(name))
-    {
-      location = this->shader.lock()->get_uniform_location(this->name);
-    }
+          std::shared_ptr<yc::gl::graphics> ctx);
 
-    void reload() override
-    {
-      int old_loc = location;
-      int new_loc = shader.lock()->get_uniform_location(name);
-
-      logging(
-            LOG_INFO, "Reloading uniform %s. %d->%d", name.c_str(), old_loc,
-            new_loc);
-
-      location = new_loc;
-
-      set(prev_value);
-    }
+    void reload() override;
 
     /* Warning: You should use shader by HAND */
-    inline void set(T value)
-    {
-      prev_value = value;
-      internal_set(ctx, location, value);
-    }
+    void set(T value);
   };
 
 private:
-   GLint get_uniform_location(const std::string & name, bool required = true);
-   GLint get_attribute_location(const std::string & name, bool required = true);
+  GLint get_uniform_location(const std::string & name, bool required = true);
+  GLint get_attribute_location(const std::string & name, bool required = true);
 
 protected:
   /* Shortcut for GL specific graphics */
@@ -168,32 +89,19 @@ protected:
   yc::error compile_binary(std::vector<uint8_t> & binary);
 
 public:
-  ~shader() override = default;
+  ~        shader() override = default;
   explicit shader(
         std::string                                     name,
         std::shared_ptr<yc::app::asset_cacher>          cacher,
-        const std::shared_ptr<yc::graphics::graphics> & graphics)
-  : yc::graphics::shader(std::move(name), std::move(cacher), graphics)
-  , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics))
-  {
-  }
+        const std::shared_ptr<yc::graphics::graphics> & graphics);
 
   yc::error load() override;
   void      unload() override;
 
-  inline void use()
-  {
-    yc::gl::glUseProgram(id);
-  }
+  void use() const;
 
   template <typename T>
-  std::shared_ptr<uniform<T>> get_uniform(std::string name)
-  {
-    auto u = std::make_shared<uniform<T>>(
-          std::move(name), shared_from_this(), ctx);
-    uniforms.push_back(u);
-    return u;
-  }
+  std::shared_ptr<uniform<T>> get_uniform(std::string name);
 };
 
 using uniform_int   = std::shared_ptr<shader::uniform<int>>;

@@ -22,6 +22,77 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
+void yc::gl::shader::internal_set(GLint location, int value)
+{
+  yc::gl::glUniform1i(location, value);
+}
+
+void yc::gl::shader::internal_set(GLint location, float value)
+{
+  yc::gl::glUniform1f(location, value);
+}
+
+void yc::gl::shader::internal_set(GLint location, glm::vec2 value)
+{
+  yc::gl::glUniform2f(location, value.x, value.y);
+}
+
+void yc::gl::shader::internal_set(GLint location, glm::vec3 value)
+{
+  yc::gl::glUniform3f(location, value.x, value.y, value.z);
+}
+
+void yc::gl::shader::internal_set(GLint location, glm::vec4 value)
+{
+  yc::gl::glUniform4f(location, value.x, value.y, value.z, value.w);
+}
+
+void yc::gl::shader::internal_set(GLint location, glm::mat2 value)
+{
+  yc::gl::glUniformMatrix2fv(location, 1, GL_FALSE, &value[0][0]);
+}
+
+void yc::gl::shader::internal_set(GLint location, glm::mat3 value)
+{
+  yc::gl::glUniformMatrix3fv(location, 1, GL_FALSE, &value[0][0]);
+}
+
+void yc::gl::shader::internal_set(GLint location, glm::mat4 value)
+{
+  yc::gl::glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
+}
+
+template <typename T> yc::gl::shader::uniform<T>::uniform(
+      std::string                       name,
+      std::shared_ptr<yc::gl::shader>   shader,
+      std::shared_ptr<yc::gl::graphics> ctx)
+: ctx(std::move(ctx))
+, shader(std::move(shader))
+, name(std::move(name))
+{
+  location = this->shader.lock()->get_uniform_location(this->name);
+}
+
+template <typename T> void yc::gl::shader::uniform<T>::reload()
+{
+  int old_loc = location;
+  int new_loc = shader.lock()->get_uniform_location(name);
+
+  logging(
+        LOG_INFO, "Reloading uniform %s. %d->%d", name.c_str(), old_loc,
+        new_loc);
+
+  location = new_loc;
+
+  set(prev_value);
+}
+
+template <typename T> void yc::gl::shader::uniform<T>::set(T value)
+{
+  prev_value = value;
+  internal_set(location, value);
+}
+
 yc::error yc::gl::shader::load()
 {
   if (loaded)
@@ -287,3 +358,44 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
 
   return yc::error::OK;
 }
+
+yc::gl::shader::shader(
+      std::string                                     name,
+      std::shared_ptr<yc::app::asset_cacher>          cacher,
+      const std::shared_ptr<yc::graphics::graphics> & graphics)
+: yc::graphics::shader(std::move(name), std::move(cacher), graphics)
+, ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics))
+{
+}
+
+void yc::gl::shader::use() const
+{
+  yc::gl::glUseProgram(id);
+}
+
+template <typename T> std::shared_ptr<yc::gl::shader::uniform<T>>
+yc::gl::shader::get_uniform(std::string name)
+{
+  auto u = std::make_shared<uniform<T>>(
+        std::move(name), shared_from_this(), ctx);
+  uniforms.push_back(u);
+  return u;
+}
+
+/* Explicit instantiation */
+template std::shared_ptr<yc::gl::shader::uniform<int>>
+yc::gl::shader::get_uniform<int>(std::string name);
+template std::shared_ptr<yc::gl::shader::uniform<float>>
+yc::gl::shader::get_uniform<float>(std::string name);
+template std::shared_ptr<yc::gl::shader::uniform<glm::vec2>>
+yc::gl::shader::get_uniform<glm::vec2>(std::string name);
+template std::shared_ptr<yc::gl::shader::uniform<glm::vec3>>
+yc::gl::shader::get_uniform<glm::vec3>(std::string name);
+template std::shared_ptr<yc::gl::shader::uniform<glm::vec4>>
+yc::gl::shader::get_uniform<glm::vec4>(std::string name);
+template std::shared_ptr<yc::gl::shader::uniform<glm::mat2>>
+yc::gl::shader::get_uniform<glm::mat2>(std::string name);
+template std::shared_ptr<yc::gl::shader::uniform<glm::mat3>>
+yc::gl::shader::get_uniform<glm::mat3>(std::string name);
+template std::shared_ptr<yc::gl::shader::uniform<glm::mat4>>
+yc::gl::shader::get_uniform<glm::mat4>(std::string name);

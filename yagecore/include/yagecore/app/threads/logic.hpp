@@ -28,19 +28,13 @@ namespace yc::app::threads
 /* Prototypes =============================================================== */
 class logic final : public yc::util::named_thread
 {
-private:
   std::shared_ptr<yc::app::application> app;
   std::shared_ptr<yc::util::profiler>   profiler;
-  bool                                  should_close    = false;
+  bool                                  should_close = false;
 
 public:
   logic(std::shared_ptr<yc::app::application> app,
-        std::shared_ptr<yc::util::profiler>   profiler)
-  : yc::util::named_thread("logic")
-  , app(std::move(app))
-  , profiler(std::move(profiler))
-  {
-  }
+        std::shared_ptr<yc::util::profiler>   profiler);
 
   void run() override;
   void close();

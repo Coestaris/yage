@@ -20,9 +20,29 @@
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
+enum profiler_points
+{
+  PROF_POINT_RENDERER_PRE_FRAME = 0,
+  PROF_POINT_RENDERER_DRAW_START,
+  PROF_POINT_RENDERER_DRAW_END,
+  PROF_POINT_RENDERER_UPDATE_START,
+};
+
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
+yc::app::threads::renderer::renderer(
+      std::shared_ptr<yc::app::application> app,
+      std::shared_ptr<yc::util::profiler>   profiler)
+: yc::util::named_thread("renderer")
+, app(app)
+, profiler(std::move(profiler))
+{
+  int max_fps = 0;
+  app->render_data.window->get_max_fps(max_fps);
+  keeper = yc::app::frequency_keeper(max_fps);
+}
+
 void yc::app::threads::renderer::run()
 {
   if (app->render_data.window->open() != yc::OK)
@@ -46,7 +66,8 @@ void yc::app::threads::renderer::run()
     return;
   }
 
-  auto passes = app->create_render_chain(graphics, app->render_data.asset_factory);
+  auto passes
+        = app->create_render_chain(graphics, app->render_data.asset_factory);
 
 #if COLLECT_DRAW_STATISTICS
   std::vector<size_t> statistcs_passes;
@@ -144,11 +165,9 @@ void yc::app::threads::renderer::run()
 
 #if COLLECT_DRAW_STATISTICS
     app->stats.log_draw_time(profiler->get_diff(
-          yc::app::profiler_points::PROF_POINT_RENDERER_DRAW_START,
-          yc::app::profiler_points::PROF_POINT_RENDERER_DRAW_END));
+          PROF_POINT_RENDERER_DRAW_START, PROF_POINT_RENDERER_DRAW_END));
     app->stats.log_draw_time(profiler->get_diff(
-          yc::app::profiler_points::PROF_POINT_RENDERER_DRAW_END,
-          yc::app::profiler_points::PROF_POINT_RENDERER_UPDATE_START));
+          PROF_POINT_RENDERER_DRAW_END, PROF_POINT_RENDERER_UPDATE_START));
     app->stats.log_fps(keeper.get_cps());
     for (size_t i = 0; i < passes.size(); i++)
     {

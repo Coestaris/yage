@@ -23,7 +23,6 @@ namespace yc::gl
 /* Types ==================================================================== */
 class texture final : public yc::graphics::texture
 {
-private:
   /* Shortcut for GL specific graphics */
   std::shared_ptr<yc::gl::graphics> ctx;
 
@@ -34,20 +33,12 @@ public:
   explicit texture(
         std::string                                     name,
         std::shared_ptr<yc::app::asset_cacher>          cacher,
-        const std::shared_ptr<yc::graphics::graphics> & graphics)
-  : yc::graphics::texture(std::move(name), std::move(cacher), graphics)
-  , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics))
-  {
-  }
+        const std::shared_ptr<yc::graphics::graphics> & graphics);
 
   yc::error load() override;
   void      unload() override;
 
-  inline void use(GLenum texture_unit)
-  {
-    yc::gl::glActiveTexture(texture_unit);
-    yc::gl::glBindTexture(GL_TEXTURE_2D, id);
-  }
+  inline void use(GLenum texture_unit);
 };
 
 /* Variables ================================================================ */

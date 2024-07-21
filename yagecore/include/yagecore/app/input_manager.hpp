@@ -24,7 +24,6 @@ namespace yc::app
 /* Types ==================================================================== */
 class input_manager
 {
-private:
   std::shared_ptr<yc::graphics::window> window;
 
   bool key_states[static_cast<size_t>(yc::key::MAX_KEYS)]        = { false };

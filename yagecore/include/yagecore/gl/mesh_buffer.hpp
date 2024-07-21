@@ -58,44 +58,12 @@ public:
         const std::shared_ptr<yc::gl::graphics> &       graphics,
         vertices_info                                   vertices,
         indicies_info                                   indicies,
-        const std::shared_ptr<yc::graphics::material> & material)
-  : ctx(graphics)
-  , material(material)
-  , vertices(std::move(vertices))
-  , indicies(std::move(indicies))
-  {
-  }
+        const std::shared_ptr<yc::graphics::material> & material);
+  void unload() override;
+  yc::graphics::draw_result
+  draw(const std::shared_ptr<yc::graphics::render_pass> & pass) override;
 
-  void unload() override
-  {
-    if (vertices.vao)
-      yc::gl::glDeleteVertexArrays(1, &vertices.vao);
-    if (vertices.vbo)
-      yc::gl::glDeleteBuffers(1, &vertices.vbo);
-    if (indicies.ebo)
-      yc::gl::glDeleteBuffers(1, &indicies.ebo);
-  }
-
-  inline yc::graphics::draw_result
-  draw(const std::shared_ptr<yc::graphics::render_pass> & pass) override
-  {
-    if (pass && !pass->on_mesh(*this, material))
-    {
-      return yc::graphics::draw_result();
-    }
-
-    yc::gl::glBindVertexArray(vertices.vao);
-    yc::gl::glDrawElements(
-          vertices.type, vertices.count, indicies.type, indicies.offset);
-    yc::gl::glBindVertexArray(0);
-
-    return yc::graphics::draw_result(1, vertices.count);
-  }
-
-  yc::graphics::aabb get_aabb() const override
-  {
-    return vertices.aabb;
-  }
+  [[nodiscard]] yc::graphics::aabb get_aabb() const override;
 };
 
 /* Variables ================================================================ */

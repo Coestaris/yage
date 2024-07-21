@@ -32,7 +32,6 @@ class shader;
  * like archives, databases, etc. */
 class asset_factory
 {
-private:
   std::vector<std::shared_ptr<yc::app::asset>> loaded_assets;
 
 protected:
@@ -64,39 +63,14 @@ public:
 
   /** Checks if there newer versions of assets in the asset storage.
    * If so - reloads them. May be useful for debugging purposes. */
-  void poll_assets()
-  {
-#if USE_DEBUG
-    for (const auto & asset : loaded_assets)
-    {
-      asset->poll();
-    }
-#endif
-  }
+  void poll_assets();
 
   /** Finds and loads an asset by its name.
    * @param name Name of the asset to load.
    * @return Returns a pointer to the asset if it is found and loaded,
    *         otherwise nullptr. */
   std::shared_ptr<yc::app::asset>
-  load_asset(const std::string & name, bool required = true)
-  {
-    auto asset = get_asset(name);
-    if (asset)
-    {
-      if (asset->load() != yc::OK)
-      {
-        logging(LOG_ERROR, "Failed to load asset %s", name.c_str());
-
-        if (required)
-        {
-          throw std::runtime_error("Failed to load asset " + name);
-        }
-      }
-      loaded_assets.push_back(asset);
-    }
-    return asset;
-  }
+  load_asset(const std::string & name, bool required = true);
 
   /** Same as get_asset, but casts the result to the specified type.
    * @note This will return nullptr if the asset is not of the specified type.
@@ -115,27 +89,10 @@ public:
 
   /** Unloads an asset by its name.
    * @param name Name of the asset to unload. */
-  void unload_asset(const std::string & name)
-  {
-    for (const auto & asset : loaded_assets)
-    {
-      if (asset->get_name() == name)
-      {
-        asset->unload();
-        return;
-      }
-    }
-  }
+  void unload_asset(const std::string & name);
 
   /** Unloads all loaded assets. */
-  void unload_assets()
-  {
-    for (const auto & asset : loaded_assets)
-    {
-      asset->unload();
-    }
-    loaded_assets.clear();
-  }
+  void unload_assets();
 };
 
 }

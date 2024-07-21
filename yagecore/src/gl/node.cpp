@@ -29,11 +29,128 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 yc::gl::node::attr_layout yc::gl::node::layout;
-// std::shared_ptr<yc::gl::node::material_factory>
-// yc::gl::node::material_factory_;
 
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
+yc::gl::node::attr_layout_item::attr_layout_item(
+      type _type, GLint _location, bool _required)
+: type_(_type)
+, location(_location)
+, required(_required)
+{
+}
+
+yc::gl::node::attr_layout_item::type
+yc::gl::node::attr_layout_item::get_type() const
+{
+  return type_;
+}
+
+GLint yc::gl::node::attr_layout_item::get_location() const
+{
+  return location;
+}
+
+bool yc::gl::node::attr_layout_item::get_required() const
+{
+  return required;
+}
+
+size_t yc::gl::node::attr_layout_item::get_size() const
+{
+  switch (type_)
+  {
+    case POSITION:
+    case NORMAL:
+    case TANGENT:
+      return 3 * sizeof(GLfloat);
+    case TEXCOORD:
+      return 2 * sizeof(GLfloat);
+    case COLOR:
+      return 4 * sizeof(GLfloat);
+    case JOINTS:
+      return 4 * sizeof(GLint);
+    case WEIGHTS:
+      return 4 * sizeof(GLfloat);
+  }
+  return 0;
+}
+
+std::optional<yc::gl::node::attr_layout_item>
+yc::gl::node::attr_layout::get(attr_layout_item::type type_) const
+{
+  for (auto & item : items)
+  {
+    if (item.get_type() == type_)
+    {
+      return item;
+    }
+  }
+  return std::nullopt;
+}
+
+yc::gl::node::attr_layout::attr_layout(
+      const std::vector<attr_layout_item> & layout_)
+: items(layout_) {};
+
+bool yc::gl::node::attr_layout::need_type(
+      yc::gl::node::attr_layout_item::type type_) const
+{
+  return get(type_).has_value();
+}
+
+bool yc::gl::node::attr_layout::required(
+      yc::gl::node::attr_layout_item::type type_) const
+{
+  if (auto item = get(type_))
+  {
+    return item->get_required();
+  }
+  return false;
+}
+
+GLint yc::gl::node::attr_layout::location(
+      yc::gl::node::attr_layout_item::type type_) const
+{
+  if (auto item = get(type_))
+  {
+    return item->get_location();
+  }
+  return -1;
+}
+
+std::vector<yc::gl::node::attr_layout_item>::const_iterator
+yc::gl::node::attr_layout::begin() const
+{
+  return items.begin();
+}
+
+std::vector<yc::gl::node::attr_layout_item>::const_iterator
+yc::gl::node::attr_layout::end() const
+{
+  return items.end();
+}
+
+void yc::gl::node::set_layout(const std::vector<attr_layout_item> & layout_)
+{
+  layout = layout_;
+}
+
+yc::gl::node::node(
+      std::string                                     name,
+      std::shared_ptr<yc::app::asset_cacher>          cacher,
+      const std::shared_ptr<yc::graphics::graphics> & graphics,
+      type                                            type)
+: yc::graphics::node(std::move(name), std::move(cacher), graphics, type)
+, ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics))
+{
+}
+
+yc::graphics::aabb yc::gl::node::get_aabb() const
+{
+  return aabb;
+}
+
 yc::error yc::gl::node::load()
 {
   if (loaded)
@@ -572,7 +689,8 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
   /* Upload data to GPU */
   yc::gl::glBindVertexArray(vao);
   yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  yc::gl::glBufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+  yc::gl::glBufferData(
+        GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
 
   /* Upload indices to GPU */
   yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -606,7 +724,7 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
   yc::gl::mesh_buffer::vertices_info vertices = {
     .vbo   = vbo,
     .vao   = vao,
-    .type = GL_TRIANGLES,
+    .type  = GL_TRIANGLES,
     .count = static_cast<GLsizei>(indices.size()),
     .aabb  = aabb,
   };

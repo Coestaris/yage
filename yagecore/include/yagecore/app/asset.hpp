@@ -35,43 +35,25 @@ protected:
   bool loaded {};
 
 public:
-  asset(std::string name, std::shared_ptr<yc::app::asset_cacher> cacher)
-  : name(std::move(name))
-  , cacher(std::move(cacher))
-  {
-  }
-
   virtual ~asset() = default;
+
+  asset(std::string name, std::shared_ptr<yc::app::asset_cacher> cacher);
 
   /** Loads asset data into memory allocating necessary resources. */
   virtual yc::error load() = 0;
+
   /** Unloads asset data from memory freeing allocated resources. */
   virtual void unload() = 0;
 
   /** True if asset data is loaded into memory. */
-  bool is_loaded() const
-  {
-    return loaded;
-  }
+  bool is_loaded() const;
 
-#if USE_DEBUG
   /** False is data in asset store different from loaded data into memory.
    * In that case, asset should be reloaded. */
-  void poll()
-  {
-    if (!live)
-    {
-      unload();
-      load();
-    }
-  }
-#endif
+  void poll();
 
   /** Returns the name of the asset. */
-  [[nodiscard]] const std::string & get_name() const
-  {
-    return name;
-  }
+  [[nodiscard]] const std::string & get_name() const;
 };
 
 /* Variables ================================================================ */

@@ -15,9 +15,28 @@
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
+enum profiler_points
+{
+  PROF_POINT_LOGIC_PRE_FRAME,
+  PROF_POINT_LOGIC_INPUT,
+  PROF_POINT_LOGIC_UPDATE_OBJECTS,
+  PROF_POINT_LOGIC_UPDATE_PARTICLES,
+  PROF_POINT_LOGIC_UPDATE_PHYSICS,
+  PROF_POINT_LOGIC_UPDATE_AI,
+  PROF_POINT_LOGIC_UPDATE_SOUND,
+  PROF_POINT_LOGIC_POST_FRAME,
+};
+
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
+yc::app::threads::logic::logic(
+      std::shared_ptr<yc::app::application> app,
+      std::shared_ptr<yc::util::profiler>   profiler)
+: yc::util::named_thread("logic")
+, app(std::move(app))
+, profiler(std::move(profiler)) {};
+
 void yc::app::threads::logic::run()
 {
   while (true)
@@ -89,20 +108,15 @@ void yc::app::threads::logic::run()
 #if COLLECT_DRAW_STATISTICS
     app->stats.log_instances_count(instances_count);
     app->stats.log_update_time(profiler->get_diff(
-          yc::app::profiler_points::PROF_POINT_LOGIC_INPUT,
-          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PARTICLES));
+          PROF_POINT_LOGIC_INPUT, PROF_POINT_LOGIC_UPDATE_PARTICLES));
     app->stats.log_particles_time(profiler->get_diff(
-          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PARTICLES,
-          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PHYSICS));
+          PROF_POINT_LOGIC_UPDATE_PARTICLES, PROF_POINT_LOGIC_UPDATE_PHYSICS));
     app->stats.log_physics_time(profiler->get_diff(
-          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_PHYSICS,
-          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_AI));
+          PROF_POINT_LOGIC_UPDATE_PHYSICS, PROF_POINT_LOGIC_UPDATE_AI));
     app->stats.log_ai_time(profiler->get_diff(
-          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_AI,
-          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_SOUND));
+          PROF_POINT_LOGIC_UPDATE_AI, PROF_POINT_LOGIC_UPDATE_SOUND));
     app->stats.log_sound_time(profiler->get_diff(
-          yc::app::profiler_points::PROF_POINT_LOGIC_UPDATE_SOUND,
-          yc::app::profiler_points::PROF_POINT_LOGIC_POST_FRAME));
+          PROF_POINT_LOGIC_UPDATE_SOUND, PROF_POINT_LOGIC_POST_FRAME));
 #endif
   }
 }

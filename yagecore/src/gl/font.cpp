@@ -15,6 +15,13 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
+yc::gl::font::font(
+      std::string                                     name,
+      std::shared_ptr<yc::app::asset_cacher>          cacher,
+      const std::shared_ptr<yc::graphics::graphics> & graphics)
+: yc::graphics::font(std::move(name), std::move(cacher), graphics)
+, ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics)) {};
+
 yc::error yc::gl::font::load()
 {
   if (loaded)

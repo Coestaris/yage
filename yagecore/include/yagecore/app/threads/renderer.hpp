@@ -28,7 +28,6 @@ namespace yc::app::threads
 /* Types ==================================================================== */
 class renderer final : public yc::util::named_thread
 {
-private:
   std::shared_ptr<yc::app::application> app;
   std::shared_ptr<yc::util::profiler>   profiler;
   yc::app::frequency_keeper             keeper;
@@ -38,20 +37,11 @@ private:
 public:
   yc::signal_event_listener stop_signal_listener;
 
-  void run() override;
-
-public:
   renderer(
         std::shared_ptr<yc::app::application> app,
-        std::shared_ptr<yc::util::profiler>   profiler)
-  : yc::util::named_thread("renderer")
-  , app(app)
-  , profiler(std::move(profiler))
-  {
-    int max_fps = 0;
-    app->render_data.window->get_max_fps(max_fps);
-    keeper = yc::app::frequency_keeper(max_fps);
-  }
+        std::shared_ptr<yc::util::profiler>   profiler);
+
+  void run() override;
 };
 
 /* Variables ================================================================ */

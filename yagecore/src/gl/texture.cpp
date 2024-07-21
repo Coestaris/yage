@@ -135,3 +135,16 @@ void yc::gl::texture::unload()
 
   loaded = false;
 }
+
+yc::gl::texture::texture(
+      std::string                                     name,
+      std::shared_ptr<yc::app::asset_cacher>          cacher,
+      const std::shared_ptr<yc::graphics::graphics> & graphics)
+: yc::graphics::texture(std::move(name), std::move(cacher), graphics)
+, ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics)) {};
+
+inline void yc::gl::texture::use(GLenum texture_unit)
+{
+  yc::gl::glActiveTexture(texture_unit);
+  yc::gl::glBindTexture(GL_TEXTURE_2D, id);
+}

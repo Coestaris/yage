@@ -52,47 +52,12 @@ public:
     bool  required;
 
   public:
-    attr_layout_item(type _type, GLint _location, bool _required = true)
-    : type_(_type)
-    , location(_location)
-    , required(_required)
-    {
-    }
+    attr_layout_item(type type, GLint location, bool required = true);
 
-    inline type get_type() const
-    {
-      return type_;
-    }
-
-    inline GLint get_location() const
-    {
-      return location;
-    }
-
-    inline bool get_required() const
-    {
-      return required;
-    }
-
-    size_t get_size() const
-    {
-      switch (type_)
-      {
-        case POSITION:
-        case NORMAL:
-        case TANGENT:
-          return 3 * sizeof(GLfloat);
-        case TEXCOORD:
-          return 2 * sizeof(GLfloat);
-        case COLOR:
-          return 4 * sizeof(GLfloat);
-        case JOINTS:
-          return 4 * sizeof(GLint);
-        case WEIGHTS:
-          return 4 * sizeof(GLfloat);
-      }
-      return 0;
-    }
+    [[nodiscard]] type   get_type() const;
+    [[nodiscard]] GLint  get_location() const;
+    [[nodiscard]] bool   get_required() const;
+    [[nodiscard]] size_t get_size() const;
   };
 
 private:
@@ -109,69 +74,28 @@ private:
 
   class attr_layout
   {
-  private:
     std::vector<attr_layout_item> items;
 
     [[nodiscard]] std::optional<attr_layout_item>
-    get(attr_layout_item::type type_) const
-    {
-      for (auto & item : items)
-      {
-        if (item.get_type() == type_)
-        {
-          return item;
-        }
-      }
-      return std::nullopt;
-    }
+    get(attr_layout_item::type type_) const;
 
   public:
     attr_layout() = default;
-    attr_layout(const std::vector<attr_layout_item> & layout_)
-    : items(layout_) {};
+    attr_layout(const std::vector<attr_layout_item> & layout);
 
-    [[nodiscard]] bool need_type(attr_layout_item::type type_) const
-    {
-      return get(type_).has_value();
-    }
-
-    [[nodiscard]] bool required(attr_layout_item::type type_) const
-    {
-      if (auto item = get(type_))
-      {
-        return item->get_required();
-      }
-      return false;
-    }
-
-    [[nodiscard]] GLint location(attr_layout_item::type type_) const
-    {
-      if (auto item = get(type_))
-      {
-        return item->get_location();
-      }
-      return -1;
-    }
+    [[nodiscard]] bool  need_type(attr_layout_item::type type) const;
+    [[nodiscard]] bool  required(attr_layout_item::type type) const;
+    [[nodiscard]] GLint location(attr_layout_item::type type) const;
 
     /* Implement iterator */
-    [[nodiscard]] std::vector<attr_layout_item>::const_iterator begin() const
-    {
-      return items.begin();
-    }
-
-    [[nodiscard]] std::vector<attr_layout_item>::const_iterator end() const
-    {
-      return items.end();
-    }
+    [[nodiscard]] std::vector<attr_layout_item>::const_iterator begin() const;
+    [[nodiscard]] std::vector<attr_layout_item>::const_iterator end() const;
   };
 
   static attr_layout layout;
 
 public:
-  static void set_layout(const std::vector<attr_layout_item> & layout_)
-  {
-    layout = layout_;
-  }
+  static void set_layout(const std::vector<attr_layout_item> & layout);
 
 private:
   /* Shortcut for GL specific graphics */
@@ -232,19 +156,12 @@ public:
   node(std::string                                     name,
        std::shared_ptr<yc::app::asset_cacher>          cacher,
        const std::shared_ptr<yc::graphics::graphics> & graphics,
-       type                                            type = type::TOPLEVEL)
-  : yc::graphics::node(std::move(name), std::move(cacher), graphics, type)
-  , ctx(std::dynamic_pointer_cast<yc::gl::graphics>(graphics))
-  {
-  }
+       type                                            type = type::TOPLEVEL);
 
   yc::error load() override;
   void      unload() override;
 
-  yc::graphics::aabb get_aabb() const
-  {
-    return aabb;
-  }
+  [[nodiscard]] yc::graphics::aabb get_aabb() const override;
 };
 
 /* Variables ================================================================ */
