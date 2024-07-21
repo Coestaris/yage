@@ -22,7 +22,6 @@ namespace yc::util
 /* Types ==================================================================== */
 class named_thread
 {
-private:
   static std::unordered_map<std::thread::id, std::string> thread_names;
 
   std::unique_ptr<std::thread> thread;

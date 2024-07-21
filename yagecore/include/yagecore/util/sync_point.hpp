@@ -24,49 +24,17 @@ class sync_point
 private:
   std::mutex              m;
   std::condition_variable cv;
-  int                     counter;
-  int                     waiting;
+  int                     counter = 0;
+  int                     waiting = 0;
   int                     thread_count;
 
   bool closed = false;
 
 public:
-  sync_point(int count)
-  : counter(0)
-  , waiting(0)
-  , thread_count(count)
-  {
-  }
+  sync_point(int count);
 
-  void wait()
-  {
-    if (closed)
-    {
-      return;
-    }
-
-    // fence mechanism
-    std::unique_lock<std::mutex> lk(m);
-    ++counter;
-    ++waiting;
-    cv.wait(lk, [&] { return counter >= thread_count; });
-    cv.notify_one();
-    --waiting;
-    if (waiting == 0)
-    {
-      // reset barrier
-      counter = 0;
-    }
-    lk.unlock();
-  }
-
-  void shutdown()
-  {
-    cv.notify_all();
-    counter = thread_count;
-    waiting = 0;
-    closed = true;
-  }
+  void wait();
+  void shutdown();
 };
 
 /* Variables ================================================================ */
