@@ -1,26 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 
-option(YAGEPACK_STATIC "Build yagepack as a static library" OFF)
-
 set(PROJECT_NAME yagepack)
 set(PROJECT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-# For now, build static for Windows
-if (WIN32)
-    set(YAGEPACK_STATIC ON)
+if (SINGLEBIN)
+    set(BUILD_SHARED_LIBS OFF)
 else ()
-    set(YAGEPACK_STATIC OFF)
-endif()
-
-if (YAGEPACK_STATIC)
-    add_library(${PROJECT_NAME} STATIC
-            ${sources}
-    )
-else()
-    add_library(yagepack SHARED
-            ${sources}
-    )
-endif()
+    set(BUILD_SHARED_LIBS ON)
+endif ()
+add_library(${PROJECT_NAME} ${sources})
 
 # Here, to not affect the build process by our options
 include(cmake/jsoncpp.cmake)
@@ -35,18 +23,18 @@ set(cxx_flags
     -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-private-field
     -Wno-unused-const-variable -Wno-unused-value -Wno-unused-local-typedefs -Werror=old-style-cast
 )
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(${PROJECT_NAME} PRIVATE -g3 -O0 -DUSE_DEBUG ${cxx_flags})
-    target_link_options(${PROJECT_NAME} PRIVATE -g3 -O0)
-else ()
-    target_compile_options(${PROJECT_NAME} PRIVATE -g0 -O2 -s ${cxx_flags})
-    target_link_options(${PROJECT_NAME} PRIVATE -g0 -O2 -s)
-endif ()
+target_compile_options(${PROJECT_NAME} PRIVATE ${YAGE_CXX_COMPILE_FLAGS} ${cxx_flags})
+target_link_options(${PROJECT_NAME} PRIVATE ${YAGE_CXX_LINK_FLAGS})
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/asset_factory.cpp
     include/yagepack/asset_factory.hpp
 )
+if (WIN32)
+    enable_language(RC)
+    target_sources(${PROJECT_NAME} PRIVATE src/yagepack.rc)
+endif ()
+
 target_include_directories(${PROJECT_NAME} PUBLIC
     include
 )

@@ -1,19 +1,32 @@
-if (NOT YAGECORE_STATIC)
-    set(BUILD_SHARED_LIBS ON)
+set(REPO_PATH ${PROJECT_DIR}/thirdparty/fastgltf)
+set(REPO_URL "https://github.com/spnda/fastgltf.git")
+set(REPO_COMMIT "4d5c3688059cd2b10d01d6e90ee7196e76b089f1")
+
+if (NOT EXISTS ${REPO_PATH})
+    message(STATUS "fastgltf not found. Clone it.")
+    execute_process(COMMAND git clone ${REPO_URL} ${REPO_PATH} --depth 1
+            COMMAND_ERROR_IS_FATAL ANY
+            WORKING_DIRECTORY ${REPO_PATH}/../)
+    execute_process(COMMAND git checkout --force ${REPO_COMMIT}
+            COMMAND_ERROR_IS_FATAL ANY
+            WORKING_DIRECTORY ${REPO_PATH})
 endif()
 
-add_subdirectory(${PROJECT_DIR}/thirdparty/fastgltf)
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_DIR}/thirdparty/fastgltf/include)
-target_link_libraries(${PROJECT_NAME} PRIVATE fastgltf)
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(fastgltf PRIVATE -g3 -O0)
-    target_link_options(fastgltf PRIVATE -g3 -O0)
+if (SINGLEBIN)
+    set(BUILD_SHARED_LIBS OFF)
 else ()
-    target_compile_options(fastgltf PRIVATE -g0 -O2 -s)
-    target_link_options(fastgltf PRIVATE -g0 -O2 -s)
+    set(BUILD_SHARED_LIBS ON)
 endif ()
 
-if (NOT YAGECORE_STATIC)
+set(MESSAGE_QUIET ON)
+add_subdirectory(${REPO_PATH})
+set(MESSAGE_QUIET OFF)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${REPO_PATH}/include)
+target_link_libraries(${PROJECT_NAME} PRIVATE fastgltf)
+
+target_compile_options(fastgltf PRIVATE ${YAGE_CXX_COMPILE_FLAGS})
+target_link_options(fastgltf PRIVATE ${YAGE_CXX_LINK_FLAGS})
+if (NOT SINGLEBIN)
     target_compile_options(fastgltf PRIVATE -fPIC)
 endif()

@@ -43,7 +43,13 @@ void yc::file_watcher::start_watching()
   ctx->dir_handle = CreateFile(
         dir.c_str(), FILE_LIST_DIRECTORY,
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
-        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+        nullptr);
+  if (ctx->dir_handle == INVALID_HANDLE_VALUE)
+  {
+    logging(LOG_ERROR, "Failed to open directory: %lu", GetLastError());
+    return;
+  }
 }
 
 bool yc::file_watcher::wait_for_changes(uint32_t timeout_ms)
@@ -59,11 +65,31 @@ bool yc::file_watcher::wait_for_changes(uint32_t timeout_ms)
   FILE_NOTIFY_INFORMATION notify_info[1024];
   DWORD                   bytes_returned = 0;
 
+  OVERLAPPED overlapped;
   if (!ReadDirectoryChangesW(
             ctx->dir_handle, notify_info, sizeof(notify_info), TRUE,
-            FILE_NOTIFY_CHANGE_LAST_WRITE, &bytes_returned, nullptr, nullptr))
+            FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME
+                  | FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE
+                  | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_SECURITY,
+            &bytes_returned, &overlapped, nullptr))
   {
-    logging(LOG_ERROR, "Failed to read directory changes");
+    logging(LOG_ERROR, "Failed to read directory changes: %lu", GetLastError());
+    return false;
+  }
+
+  /* Wait for events */
+  if (WaitForSingleObject(ctx->dir_handle, timeout_ms) != WAIT_OBJECT_0)
+  {
+    /* Silently ignore timeout */
+    return false;
+  }
+
+  /* Get the changes */
+  bytes_returned = 0;
+  if (!GetOverlappedResult(
+            ctx->dir_handle, &overlapped, &bytes_returned, FALSE))
+  {
+    logging(LOG_ERROR, "Failed to get overlapped result: %lu", GetLastError());
     return false;
   }
 

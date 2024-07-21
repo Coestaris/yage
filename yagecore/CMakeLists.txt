@@ -8,23 +8,13 @@ option(YAGECORE_BACKEND_WAYLAND_GL OFF)
 option(YAGECORE_BACKEND_DARWIN OFF)
 option(YAGECORE_BACKEND_WIN_GL OFF)
 option(YAGECORE_BACKEND_WIN_DX OFF)
-option(YAGECORE_STATIC "Build yagepack as a static library" OFF)
 
-# For now, build static for Windows
-if (WIN32)
-    set(YAGECORE_STATIC ON)
-endif()
-
-if (YAGECORE_STATIC)
-    add_library(${PROJECT_NAME} STATIC
-            ${sources}
-    )
-else()
-    add_library(${PROJECT_NAME} SHARED
-            ${sources}
-    )
-    target_compile_options(${PROJECT_NAME} PRIVATE -fPIC)
-endif()
+if (SINGLEBIN)
+    set(BUILD_SHARED_LIBS OFF)
+else ()
+    set(BUILD_SHARED_LIBS ON)
+endif ()
+add_library(${PROJECT_NAME} ${sources})
 
 if (NOT BACKEND_X11_GL AND NOT BACKEND_WAYLAND_GL AND NOT BACKEND_DARWIN AND NOT BACKEND_WIN_GL AND NOT BACKEND_WIN_DX)
     message(STATUS "No platform specified, using auto-detection")
@@ -77,13 +67,8 @@ set(cxx_flags
         -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-private-field
         -Wno-unused-const-variable -Wno-unused-value -Wno-unused-local-typedefs -Werror=old-style-cast
 )
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(${PROJECT_NAME} PRIVATE -g3 -O0 -DCOLLECT_DRAW_STATISTICS=1 -DUSE_DEBUG ${cxx_flags})
-    target_link_options(${PROJECT_NAME} PRIVATE -g3 -O0)
-else ()
-    target_compile_options(${PROJECT_NAME} PRIVATE -g0 -O2 -s ${cxx_flags})
-    target_link_options(${PROJECT_NAME} PRIVATE -g0 -O2 -s)
-endif ()
+target_compile_options(${PROJECT_NAME} PRIVATE ${YAGE_CXX_COMPILE_FLAGS} ${cxx_flags})
+target_link_options(${PROJECT_NAME} PRIVATE ${YAGE_CXX_LINK_FLAGS})
 
 # Setup common source files
 set(SRC_FILES
@@ -125,7 +110,15 @@ endforeach ()
 target_include_directories(${PROJECT_NAME} PUBLIC
         include
 )
+if (WIN32)
+    enable_language(RC)
+    target_sources(${PROJECT_NAME} PRIVATE src/yagecore.rc)
+endif ()
 target_sources(${PROJECT_NAME} PRIVATE ${PLAIN_SRC_FILES})
+
+if (NOT SINGLEBIN)
+    target_compile_options(${PROJECT_NAME} PRIVATE -fPIC)
+endif()
 
 file(GLOB_RECURSE ___src *.cpp *.hpp)
 foreach (file ${___src})

@@ -36,4 +36,5 @@ venv/
 *.app
 
 cmake-build*/
+build/
 .idea/

@@ -36,6 +36,7 @@ private:
   void set_port_name();
 
 public:
+  virtual ~named_thread() = default;
   static inline std::string
   get_thread_name(std::thread::id id = std::this_thread::get_id())
   {

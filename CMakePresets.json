@@ -1,0 +1,56 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 19,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "debug",
+      "hidden": false,
+      "description": "Debug build (libs shared, no optimizations, debug symbols)",
+      "binaryDir": "build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "YAGE_CXX_COMPILE_FLAGS": "-g3 -O0 -DCOLLECT_DRAW_STATISTICS=1 -DUSE_DEBUG=1",
+        "YAGE_CXX_LINK_FLAGS": "-g3 -O0",
+        "REQUEST_LTO": "OFF",
+        "SINGLEBIN": "OFF"
+      }
+    },
+    {
+      "name": "release",
+      "hidden": false,
+      "description": "Release build (libs shared, optimizations, no debug symbols)",
+      "binaryDir": "build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "YAGE_CXX_COMPILE_FLAGS": "-g0 -O2 -s",
+        "YAGE_CXX_LINK_FLAGS": "-g3 -O0 -s",
+        "REQUEST_LTO": "ON",
+        "SINGLEBIN": "OFF"
+      }
+    },
+    {
+      "inherits": "debug",
+      "name": "debug-static",
+      "hidden": false,
+      "description": "Debug build (libs static, no optimizations, debug symbols)",
+      "binaryDir": "build/debug-static",
+      "cacheVariables": {
+        "SINGLEBIN": "ON"
+      }
+    },
+    {
+      "inherits": "release",
+      "name": "release-static",
+      "hidden": false,
+      "description": "Release build (libs static, optimizations, no debug symbols)",
+      "binaryDir": "build/release-static",
+      "cacheVariables": {
+        "SINGLEBIN": "ON"
+      }
+    }
+  ]
+}
