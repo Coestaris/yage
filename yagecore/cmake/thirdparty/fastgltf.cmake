@@ -1,4 +1,4 @@
-set(REPO_PATH ${PROJECT_DIR}/thirdparty/fastgltf)
+set(REPO_PATH ${THIRDPARTY_DIR}/fastgltf)
 set(REPO_URL "https://github.com/spnda/fastgltf.git")
 set(REPO_COMMIT "4d5c3688059cd2b10d01d6e90ee7196e76b089f1")
 
@@ -6,7 +6,7 @@ if (NOT EXISTS ${REPO_PATH})
     message(STATUS "fastgltf not found. Clone it.")
     execute_process(COMMAND git clone ${REPO_URL} ${REPO_PATH} --depth 1
             COMMAND_ERROR_IS_FATAL ANY
-            WORKING_DIRECTORY ${REPO_PATH}/../)
+            WORKING_DIRECTORY ${THIRDPARTY_DIR})
     execute_process(COMMAND git checkout --force ${REPO_COMMIT}
             COMMAND_ERROR_IS_FATAL ANY
             WORKING_DIRECTORY ${REPO_PATH})

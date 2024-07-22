@@ -1,4 +1,4 @@
-set(REPO_PATH ${PROJECT_DIR}/thirdparty/jsoncpp)
+set(REPO_PATH ${THIRDPARTY_DIR}/jsoncpp)
 set(REPO_URL "https://github.com/open-source-parsers/jsoncpp.git")
 set(REPO_COMMIT "69098a18b9af0c47549d9a271c054d13ca92b006")
 
@@ -6,7 +6,7 @@ if (NOT EXISTS ${REPO_PATH})
     message(STATUS "jsoncpp not found. Clone it.")
     execute_process(COMMAND git clone ${REPO_URL} ${REPO_PATH} --depth 1
             COMMAND_ERROR_IS_FATAL ANY
-            WORKING_DIRECTORY ${REPO_PATH}/../)
+            WORKING_DIRECTORY ${THIRDPARTY_DIR})
     execute_process(COMMAND git checkout --force ${REPO_COMMIT}
             COMMAND_ERROR_IS_FATAL ANY
             WORKING_DIRECTORY ${REPO_PATH})

@@ -10,6 +10,7 @@
 
 /* Includes ================================================================= */
 #include <cstdint>
+#include <cstddef>
 
 namespace yc::graphics
 {

@@ -9,18 +9,16 @@
 /* Includes ================================================================= */
 #include "yagecore/graphics/texture.hpp"
 #include "yagecore/log.hpp"
-#include "FreeImage.h"
+
+#include "libpng/png.h"
+
+#include <cstring>
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
-__attribute__((constructor(101))) static void init()
-{
-  FreeImage_Initialise();
-}
-
 /* Shared functions ========================================================= */
 bool yc::graphics::texture::load_image(
       const yc::util::uri &  uri,
@@ -28,12 +26,6 @@ bool yc::graphics::texture::load_image(
       size_t &               out_w,
       size_t &               out_h)
 {
-  FreeImage_SetOutputMessage([](FREE_IMAGE_FORMAT, const char * message) {
-    logging(LOG_ERROR, "FreeImage: %s", message);
-  });
-
-  FreeImage_GetFIFFromMime(uri.get_mime().c_str());
-
   std::vector<uint8_t> image_data;
   uri.read(image_data);
   if (image_data.empty())
@@ -44,37 +36,108 @@ bool yc::graphics::texture::load_image(
     return false;
   }
 
-  FIMEMORY * data = FreeImage_OpenMemory(image_data.data(), image_data.size());
-  FIBITMAP * bitmap = FreeImage_LoadFromMemory(
-        FreeImage_GetFIFFromMime(uri.get_mime().c_str()), data);
-  FreeImage_CloseMemory(data);
-
-  if (!bitmap)
+  png_structp png_ptr = png_create_read_struct(
+        PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+  if (!png_ptr)
   {
-    logging(LOG_ERROR, "Failed to parse image data: %s", uri.get_uri().c_str());
+    logging(LOG_ERROR, "Failed to create PNG read struct");
     return false;
   }
 
-  out_w = FreeImage_GetWidth(bitmap);
-  out_h = FreeImage_GetHeight(bitmap);
-
-  out_data.resize(out_w * out_h * 4);
-
-  for (unsigned int y = 0; y < out_h; ++y)
+  png_infop info_ptr = png_create_info_struct(png_ptr);
+  if (!info_ptr)
   {
-    for (unsigned int x = 0; x < out_w; ++x)
-    {
-      RGBQUAD color;
-      FreeImage_GetPixelColor(bitmap, x, y, &color);
-
-      out_data[4 * (y * out_w + x) + 0] = color.rgbRed;
-      out_data[4 * (y * out_w + x) + 1] = color.rgbGreen;
-      out_data[4 * (y * out_w + x) + 2] = color.rgbBlue;
-      out_data[4 * (y * out_w + x) + 3] = color.rgbReserved;
-    }
+    logging(LOG_ERROR, "Failed to create PNG info struct");
+    png_destroy_read_struct(&png_ptr, nullptr, nullptr);
+    return false;
   }
 
-  FreeImage_Unload(bitmap);
+  if (setjmp(png_jmpbuf(png_ptr)))
+  {
+    logging(LOG_ERROR, "Failed to set PNG jump buffer");
+    png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
+    return false;
+  }
+
+  /* Set up the input control */
+  struct ReadPngData
+  {
+    const std::vector<uint8_t> * data;
+    size_t                       offset;
+  };
+
+  auto read_png_data = [](png_structp png_ptr, png_bytep outBytes,
+                          png_size_t byteCountToRead) {
+    auto * readPngData = static_cast<ReadPngData *>(png_get_io_ptr(png_ptr));
+    if (readPngData->offset + byteCountToRead > readPngData->data->size())
+    {
+      png_error(png_ptr, "Read error");
+    }
+    memcpy(
+          outBytes, readPngData->data->data() + readPngData->offset,
+          byteCountToRead);
+    readPngData->offset += byteCountToRead;
+  };
+  ReadPngData readPngData = { &image_data, 0 };
+  png_set_read_fn(png_ptr, &readPngData, read_png_data);
+
+  // Read the PNG info
+  png_read_info(png_ptr, info_ptr);
+
+  // Get image information
+  png_uint_32 width      = png_get_image_width(png_ptr, info_ptr);
+  png_uint_32 height     = png_get_image_height(png_ptr, info_ptr);
+  png_byte    color_type = png_get_color_type(png_ptr, info_ptr);
+  png_byte    bit_depth  = png_get_bit_depth(png_ptr, info_ptr);
+
+  out_w = width;
+  out_h = height;
+
+  // Ensure the image is in RGBA format
+  if (color_type == PNG_COLOR_TYPE_PALETTE)
+  {
+    png_set_palette_to_rgb(png_ptr);
+  }
+  if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+  {
+    png_set_expand_gray_1_2_4_to_8(png_ptr);
+  }
+  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+  {
+    png_set_tRNS_to_alpha(png_ptr);
+  }
+  if (bit_depth == 16)
+  {
+    png_set_strip_16(png_ptr);
+  }
+  if (color_type == PNG_COLOR_TYPE_GRAY
+      || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+  {
+    png_set_gray_to_rgb(png_ptr);
+  }
+  if (color_type == PNG_COLOR_TYPE_RGB || color_type == PNG_COLOR_TYPE_GRAY
+      || color_type == PNG_COLOR_TYPE_PALETTE)
+  {
+    png_set_filler(png_ptr, 0xFF, PNG_FILLER_AFTER);
+  }
+
+  png_read_update_info(png_ptr, info_ptr);
+
+  // Allocate memory for the image data
+  out_data.resize(width * height * 4); // 4 bytes per pixel for RGBA
+  png_bytep * row_pointers = new png_bytep[height];
+  for (png_uint_32 y = 0; y < height; y++)
+  {
+    row_pointers[y] = out_data.data() + y * width * 4;
+  }
+
+  // Read the image data
+  png_read_image(png_ptr, row_pointers);
+
+  // Cleanup
+  delete[] row_pointers;
+  png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
+
   return true;
 }
 

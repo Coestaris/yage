@@ -1,4 +1,4 @@
-set(REPO_PATH ${PROJECT_DIR}/thirdparty/glm)
+set(REPO_PATH ${THIRDPARTY_DIR}/glm)
 set(REPO_URL "https://github.com/g-truc/glm.git")
 set(REPO_COMMIT "33b4a621a697a305bc3a7610d290677b96beb181")
 
@@ -6,7 +6,7 @@ if (NOT EXISTS ${REPO_PATH})
     message(STATUS "glm not found. Clone it.")
     execute_process(COMMAND git clone ${REPO_URL} ${REPO_PATH} --depth 1
             COMMAND_ERROR_IS_FATAL ANY
-            WORKING_DIRECTORY ${REPO_PATH}/../)
+            WORKING_DIRECTORY ${THIRDPARTY_DIR})
     execute_process(COMMAND git checkout --force ${REPO_COMMIT}
             COMMAND_ERROR_IS_FATAL ANY
             WORKING_DIRECTORY ${REPO_PATH})
@@ -23,10 +23,10 @@ set(GLM_ENABLE_CXX_11 ON)
 set(GLM_ENABLE_CXX_14 ON)
 set(GLM_ENABLE_CXX_17 ON)
 set(MESSAGE_QUIET ON)
-add_subdirectory(${PROJECT_DIR}/thirdparty/glm)
+add_subdirectory(${REPO_PATH})
 set(MESSAGE_QUIET OFF)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_DIR}/thirdparty/glm)
+target_include_directories(${PROJECT_NAME} PUBLIC ${THIRDPARTY_DIR}/glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm)
 
 target_compile_options(glm PRIVATE ${YAGE_CXX_COMPILE_FLAGS})

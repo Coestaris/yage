@@ -1,7 +1,7 @@
 # 	path = yagepack/thirdparty/elzip
 #	url = https://github.com/Sygmei/11Zip
 #	commit = 516e161d5c96aa8f2603fb30b10b7770a87332c2
-set(REPO_PATH ${PROJECT_DIR}/thirdparty/elzip)
+set(REPO_PATH ${THIRDPARTY_DIR}/elzip)
 set(REPO_URL "https://github.com/Sygmei/11Zip.git")
 set(REPO_COMMIT "516e161d5c96aa8f2603fb30b10b7770a87332c2")
 
@@ -9,7 +9,7 @@ if (NOT EXISTS ${REPO_PATH})
     message(STATUS "elzip not found. Clone it.")
     execute_process(COMMAND git clone ${REPO_URL} ${REPO_PATH} --depth 1
             COMMAND_ERROR_IS_FATAL ANY
-            WORKING_DIRECTORY ${REPO_PATH}/../)
+            WORKING_DIRECTORY ${THIRDPARTY_DIR})
     execute_process(COMMAND git checkout --force ${REPO_COMMIT}
             COMMAND_ERROR_IS_FATAL ANY
             WORKING_DIRECTORY ${REPO_PATH})

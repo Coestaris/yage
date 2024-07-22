@@ -1,5 +1,5 @@
 # To build static single binary, we need to build FreeType as a static library
-if (NOT SINGLEBIN)
+if (NOT SINGLEBIN AND NOT FORCE_BUILD_LIBRARIES)
     find_package(Freetype)
     if (FREETYPE_FOUND)
         message(STATUS "Freetype found. Using system library.")
@@ -10,7 +10,7 @@ endif()
 
 message(STATUS "Freetype not found. Building from source.")
 
-set(REPO_PATH ${PROJECT_DIR}/thirdparty/freetype)
+set(REPO_PATH ${THIRDPARTY_DIR}/freetype)
 set(REPO_URL "https://github.com/freetype/freetype.git")
 set(REPO_COMMIT "37cefe33b284d0bad4ec52bcccc1a8c2d8704340")
 
@@ -18,7 +18,7 @@ if (NOT EXISTS ${REPO_PATH})
     message(STATUS "freetype not found. Clone it.")
     execute_process(COMMAND git clone ${REPO_URL} ${REPO_PATH} --depth 1
             COMMAND_ERROR_IS_FATAL ANY
-            WORKING_DIRECTORY ${REPO_PATH}/../)
+            WORKING_DIRECTORY ${THIRDPARTY_DIR})
     execute_process(COMMAND git checkout --force ${REPO_COMMIT}
             COMMAND_ERROR_IS_FATAL ANY
             WORKING_DIRECTORY ${REPO_PATH})
@@ -31,7 +31,7 @@ else ()
 endif ()
 
 set(MESSAGE_QUIET ON)
-add_subdirectory(${PROJECT_DIR}/thirdparty/freetype)
+add_subdirectory(${THIRDPARTY_DIR}/freetype)
 set(MESSAGE_QUIET OFF)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${REPO_PATH}/include)

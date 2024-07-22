@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 set(PROJECT_NAME yagecore)
 set(PROJECT_DIR ${CMAKE_CURRENT_LIST_DIR})
+set(THIRDPARTY_DIR ${PROJECT_DIR}/thirdparty)
 
 option(YAGECORE_BACKEND_X11_GL OFF)
 option(YAGECORE_BACKEND_WAYLAND_GL OFF)
@@ -52,7 +53,7 @@ if ((BACKEND_WIN_GL OR BACKEND_WIN_DX) AND NOT WIN32)
 endif ()
 
 # Here, to not affect the build process by our options
-include(cmake/thirdparty/FreeImage.cmake)
+include(cmake/thirdparty/libpng.cmake)
 include(cmake/thirdparty/glm.cmake)
 include(cmake/thirdparty/fastgltf.cmake)
 include(cmake/thirdparty/freetype.cmake)
