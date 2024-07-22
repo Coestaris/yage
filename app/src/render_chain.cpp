@@ -169,9 +169,9 @@ public:
       window->get_geometry(geometry);
     }
 
-    app->proj_matrix = glm::perspective(
+    app->set_proj_matrix(glm::perspective(
           glm::radians(45.0f),
-          geometry.width / static_cast<float>(geometry.height), 0.1f, 100.0f);
+          geometry.width / static_cast<float>(geometry.height), 0.1f, 100.0f));
 
     program->use();
     u_proj  = program->get_uniform<glm::mat4>("projection");
@@ -179,13 +179,16 @@ public:
     u_model = program->get_uniform<glm::mat4>("model");
 
     program->use();
-    u_proj->set(app->proj_matrix);
+    u_proj->set(app->get_proj_matrix());
   }
 
   void on_begin() override
   {
+    /* Copy the view matrix from the main thread */
+    app->sync_view_matrix();
+
     program->use();
-    u_view->set(app->view_matrix);
+    u_view->set(app->get_view_matrix());
   }
 
   bool on_mesh(
@@ -237,14 +240,14 @@ public:
     u_color = program->get_uniform<glm::vec4>("color");
 
     program->use();
-    u_proj->set(app->proj_matrix);
+    u_proj->set(app->get_proj_matrix());
     u_color->set(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
   }
 
   void on_begin() override
   {
     program->use();
-    u_view->set(app->view_matrix);
+    u_view->set(app->get_view_matrix());
   }
 
   bool on_mesh(

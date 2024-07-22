@@ -105,3 +105,30 @@ int app::application::run()
   app->destroy_all_objects(true);
   return 0;
 }
+
+void app::application::set_view_matrix(const glm::mat4 & view)
+{
+  std::lock_guard lock(view_matrix_mutex);
+  view_matrix_logic = view;
+}
+
+void app::application::sync_view_matrix()
+{
+  std::lock_guard lock(view_matrix_mutex);
+  view_matrix_renderer = view_matrix_logic;
+}
+
+glm::mat4 app::application::get_view_matrix() const
+{
+  return view_matrix_renderer;
+}
+
+void app::application::set_proj_matrix(const glm::mat4 & proj)
+{
+  proj_matrix = proj;
+}
+
+glm::mat4 app::application::get_proj_matrix() const
+{
+  return proj_matrix;
+}

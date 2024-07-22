@@ -77,8 +77,8 @@ void app::objects::control::on_update(yc::milliseconds delta)
   if (!recalculate)
     return;
 
-  ctx->view_matrix = glm::lookAt(
-        camera_pos, camera_pos + camera_dir, glm::vec3(0.0f, 1.0f, 0.0f));
+  ctx->set_view_matrix(glm::lookAt(
+        camera_pos, camera_pos + camera_dir, glm::vec3(0.0f, 1.0f, 0.0f)));
 
   recalculate = false;
 }

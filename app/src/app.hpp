@@ -20,10 +20,12 @@ class application : public yc::app::application
 {
   static std::string lookup_asset_path();
 
-public:
-  glm::mat4 view_matrix;
-  glm::mat4 proj_matrix;
+  glm::mat4  view_matrix_logic {};    /* Freely modified by the logic thread */
+  glm::mat4  view_matrix_renderer {}; /* Copied by sync */
+  glm::mat4  proj_matrix {};
+  std::mutex view_matrix_mutex {};
 
+public:
   ~application() override = default;
    application(
          std::shared_ptr<yc::app::asset_factory>       asset_factory,
@@ -35,6 +37,17 @@ public:
   std::vector<std::shared_ptr<yc::graphics::render_pass>> create_render_chain(
         const std::shared_ptr<yc::graphics::graphics> & graphics,
         const std::shared_ptr<yc::app::asset_factory> & asset_factory) override;
+
+  /* Protected by mutex */
+  void set_view_matrix(const glm::mat4 & view);
+  /** Copies the view matrix from the main thread */
+  void      sync_view_matrix();
+  glm::mat4 get_view_matrix() const;
+
+  /* Non-protected, sicne it's only set once.
+   * Hoping for the best */
+  void      set_proj_matrix(const glm::mat4 & proj);
+  glm::mat4 get_proj_matrix() const;
 
   static int run();
 };
