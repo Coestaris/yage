@@ -48,14 +48,19 @@ public:
     bool empty() const;
   };
 
-protected:
+public:
   struct char_cache
   {
-    glm::vec2    size;
-    glm::vec2    bearing;
-    unsigned int advance;
+    unsigned int x_advance;
+    unsigned int x_bearing;
+
+    unsigned int y_advance;
+    unsigned int y_bearing;
+
+    size_t internal_index;
   };
 
+protected:
   std::vector<char_cache>                 cache;
   std::shared_ptr<yc::graphics::graphics> graphics;
   data                                    sources;
@@ -63,8 +68,11 @@ protected:
   font(std::string                             name,
        std::shared_ptr<yc::app::asset_cacher>  cacher,
        std::shared_ptr<yc::graphics::graphics> graphics);
+
+  virtual void draw_begin(glm::vec4 color) = 0;
+  virtual void draw_end()                  = 0;
   virtual void
-  draw(const char_cache & c, glm::vec2 pos, glm::vec4 color, glm::vec2 scale)
+  draw(const char_cache & c, glm::vec2 pos)
         = 0;
 
 public:
@@ -73,8 +81,7 @@ public:
   void
   draww(const std::string & text,
         glm::vec2           pos,
-        glm::vec4           color = { 1.0f, 1.0f, 1.0f, 1.0f },
-        glm::vec2           scale = { 1.0f, 1.0f });
+        glm::vec4           color = { 1.0f, 1.0f, 1.0f, 1.0f });
 };
 
 /* Variables ================================================================ */

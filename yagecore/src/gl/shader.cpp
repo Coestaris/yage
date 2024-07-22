@@ -192,7 +192,8 @@ GLint yc::gl::shader::get_uniform_location(
   GLint location = yc::gl::glGetUniformLocation(id, name.c_str());
   if (location == -1 && required)
   {
-    throw std::runtime_error("Failed to get uniform location: " + name);
+    throw std::runtime_error(
+          "Failed to get uniform location of " + name + " in " + this->name);
   }
 
   return location;

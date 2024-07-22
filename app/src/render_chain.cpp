@@ -270,6 +270,61 @@ public:
   }
 };
 
+class custom_char_render : public yc::gl::char_renderer
+{
+  std::shared_ptr<app::application> app;
+  std::shared_ptr<shader>           program;
+
+  yc::gl::uniform_mat4 u_proj;
+  yc::gl::uniform_mat4 u_model;
+  yc::gl::uniform_vec4 u_color;
+  yc::gl::uniform_int  u_atlas;
+
+public:
+  ~custom_char_render() override = default;
+   custom_char_render(
+         std::shared_ptr<app::application> app, std::shared_ptr<shader> shader)
+  : app(app)
+  , program(shader)
+  {
+    u_proj  = program->get_uniform<glm::mat4>("projection");
+    u_model = program->get_uniform<glm::mat4>("model");
+    u_color = program->get_uniform<glm::vec4>("color");
+    u_atlas = program->get_uniform<int>("atlas");
+
+    auto geometry = app->get_geometry();
+
+    shader->use();
+    u_proj->set(glm::ortho(
+          0.0f, static_cast<float>(geometry.width), 0.0f,
+          static_cast<float>(geometry.height)));
+    u_atlas->set(0);
+  };
+
+  void begin(GLuint vao, glm::vec4 color, GLuint atlas_id) override
+  {
+    program->use();
+    u_color->set(color);
+    yc::gl::glBindVertexArray(vao);
+    yc::gl::glBindTexture(GL_TEXTURE_2D, atlas_id);
+  }
+
+  void end() override
+  {
+    yc::gl::glBindVertexArray(0);
+    yc::gl::glBindTexture(GL_TEXTURE_2D, 0);
+  }
+
+  void
+  on_char(const yc::graphics::font::char_cache & c, glm::mat4 model) override
+  {
+    u_model->set(model);
+    yc::gl::glDrawElements(
+          GL_TRIANGLES, 6, GL_UNSIGNED_INT,
+          reinterpret_cast<void *>(c.internal_index));
+  }
+};
+
 class draw_hud_pass : public final_pass,
                       public std::enable_shared_from_this<draw_hud_pass>
 {
@@ -287,11 +342,11 @@ public:
 
   void before_loop() override
   {
+    f->set_char_renderer(std::make_shared<custom_char_render>(app, program));
   }
 
   void on_begin() override
   {
-    program->use();
     f->draww("Hello world", glm::vec2(10.0f, 10.0f));
   }
 
@@ -323,7 +378,7 @@ app::application::create_render_chain(
           asset_factory->load_asset<shader>("line"), shared_from_this(),
           graphics),
     std::make_shared<draw_hud_pass>(
-          asset_factory->load_asset<shader>("line"), shared_from_this(),
+          asset_factory->load_asset<shader>("text"), shared_from_this(),
           asset_factory->load_asset<font>("raleway"), graphics),
   };
 

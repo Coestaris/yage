@@ -74,34 +74,35 @@ void yc::graphics::font::set_sources(const data & _sources)
 }
 
 void yc::graphics::font::draww(
-      const std::string & text,
-      glm::vec2           pos,
-      const glm::vec4     color,
-      const glm::vec2     scale)
+      const std::string & text, glm::vec2 pos, const glm::vec4 color)
 {
   if (!loaded)
   {
     return;
   }
 
+  draw_begin(color);
   for (const auto c : text)
   {
     if (c > sources.get_parameters().get_end_char()
         || c < sources.get_parameters().get_start_char())
     {
       logging(LOG_ERROR, "Character %c is out of font range", c);
-      return;
+      goto exit;
     }
 
     size_t index = c - sources.get_parameters().get_start_char();
     if (index >= cache.size())
     {
       logging(LOG_ERROR, "Character %c is out of font range", c);
-      return;
+      goto exit;
     }
 
     auto & cache = this->cache[index];
-    draw(cache, pos, color, scale);
-    pos.x += cache.advance * scale.x;
+    draw(cache, pos);
+    pos.x += cache.x_advance;
   }
+
+exit:
+  draw_end();
 }
