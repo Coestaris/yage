@@ -56,6 +56,7 @@ if ((BACKEND_WIN_GL OR BACKEND_WIN_DX) AND NOT WIN32)
 endif ()
 
 # Here, to not affect the build process by our options
+include(cmake/thirdparty/zlib.cmake)
 include(cmake/thirdparty/libpng.cmake)
 include(cmake/thirdparty/glm.cmake)
 include(cmake/thirdparty/fastgltf.cmake)

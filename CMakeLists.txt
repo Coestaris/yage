@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
+cmake_policy(SET CMP0077 NEW)
+cmake_policy(SET CMP0074 NEW)
+
 separate_arguments(YAGE_CXX_COMPILE_FLAGS UNIX_COMMAND ${YAGE_CXX_COMPILE_FLAGS})
 separate_arguments(YAGE_CXX_LINK_FLAGS UNIX_COMMAND ${YAGE_CXX_LINK_FLAGS})
 

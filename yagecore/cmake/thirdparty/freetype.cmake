@@ -1,8 +1,8 @@
 # To build static single binary, we need to build FreeType as a static library
 if (NOT SINGLEBIN AND NOT FORCE_BUILD_LIBRARIES)
-    find_package(Freetype)
+    find_package(Freetype QUIET)
     if (FREETYPE_FOUND)
-        message(STATUS "Freetype found. Using system library.")
+        message(STATUS "Freetype found at ${FREETYPE_INCLUDE_DIRS}. Using system library.")
         target_link_libraries(${PROJECT_NAME} PRIVATE Freetype::Freetype)
         return()
     endif()

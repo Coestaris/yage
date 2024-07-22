@@ -1,12 +1,14 @@
 # To build static single binary, we need to build libpng as a static library
 if (NOT SINGLEBIN AND NOT FORCE_BUILD_LIBRARIES)
-    find_package(PNG)
+    find_package(PNG QUIET)
     if (PNG_FOUND)
-        message(STATUS "Libpng found. Using system library.")
+        message(STATUS "Libpng found at ${PNG_INCLUDE_DIRS}. Using system library.")
         target_link_libraries(${PROJECT_NAME} PRIVATE PNG::PNG)
         return()
     endif ()
 endif ()
+
+message(STATUS "Libpng not found. Building from source.")
 
 set(REPO_PATH ${THIRDPARTY_DIR}/libpng)
 set(REPO_URL "https://github.com/pnggroup/libpng")
@@ -32,6 +34,10 @@ endif ()
 set(PNG_TESTS OFF)
 set(PNG_TOOLS OFF)
 set(PNG_EXECUTABLES OFF)
+set(SKIP_INSTALL_ALL ON)
+if (FAKE_ZLIB_FOUND)
+    set(PNG_BUILD_ZLIB ON CACHE BOOL "Build zlib as part of libpng")
+endif ()
 
 set(MESSAGE_QUIET ON)
 add_subdirectory(${REPO_PATH})

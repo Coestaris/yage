@@ -1,6 +1,18 @@
+# Try to find JSONCPP
+if (NOT SINGLEBIN AND NOT FORCE_BUILD_LIBRARIES)
+    find_package(jsoncpp QUIET)
+    if (jsoncpp_FOUND)
+        message(STATUS "jsoncpp found at ${jsoncpp_INCLUDE_DIRS}. Using system library.")
+        target_link_libraries(${PROJECT_NAME} PRIVATE jsoncpp::jsoncpp)
+        return()
+    endif ()
+endif ()
+
 set(REPO_PATH ${THIRDPARTY_DIR}/jsoncpp)
 set(REPO_URL "https://github.com/open-source-parsers/jsoncpp.git")
 set(REPO_COMMIT "69098a18b9af0c47549d9a271c054d13ca92b006")
+
+message(STATUS "jsoncpp not found. Building from source.")
 
 if (NOT EXISTS ${REPO_PATH})
     message(STATUS "jsoncpp not found. Clone it.")

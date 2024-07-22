@@ -1,6 +1,18 @@
+# Try to find fastgltf
+if (NOT SINGLEBIN AND NOT FORCE_BUILD_LIBRARIES)
+    find_package(fastgltf QUIET)
+    if (fastgltf_FOUND)
+        message(STATUS "fastgltf found at ${fastgltf_INCLUDE_DIRS}. Using system library.")
+        target_link_libraries(${PROJECT_NAME} PRIVATE fastgltf::fastgltf)
+        return()
+    endif ()
+endif ()
+
 set(REPO_PATH ${THIRDPARTY_DIR}/fastgltf)
 set(REPO_URL "https://github.com/spnda/fastgltf.git")
 set(REPO_COMMIT "4d5c3688059cd2b10d01d6e90ee7196e76b089f1")
+
+message(STATUS "fastgltf not found. Building from source.")
 
 if (NOT EXISTS ${REPO_PATH})
     message(STATUS "fastgltf not found. Clone it.")

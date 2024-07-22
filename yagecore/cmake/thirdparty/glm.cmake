@@ -1,6 +1,18 @@
+# Try to find GLM
+if (NOT SINGLEBIN AND NOT FORCE_BUILD_LIBRARIES)
+    find_package(glm QUIET)
+    if (glm_FOUND)
+        message(STATUS "GLM found. Using system library.")
+        target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
+        return()
+    endif ()
+endif ()
+
 set(REPO_PATH ${THIRDPARTY_DIR}/glm)
 set(REPO_URL "https://github.com/g-truc/glm.git")
 set(REPO_COMMIT "33b4a621a697a305bc3a7610d290677b96beb181")
+
+message(STATUS "GLM not found. Building from source.")
 
 if (NOT EXISTS ${REPO_PATH})
     message(STATUS "glm not found. Clone it.")
@@ -10,7 +22,7 @@ if (NOT EXISTS ${REPO_PATH})
     execute_process(COMMAND git checkout --force ${REPO_COMMIT}
             COMMAND_ERROR_IS_FATAL ANY
             WORKING_DIRECTORY ${REPO_PATH})
-endif()
+endif ()
 
 if (SINGLEBIN)
     set(BUILD_SHARED_LIBS OFF)
@@ -36,8 +48,6 @@ elseif (USE_AVX2)
     set(GLM_ENABLE_SIMD_AVX2 ON CACHE BOOL "Enable AVX2 instructions")
 endif ()
 
-cmake_policy(SET CMP0077 NEW)
-
 set(GLM_ENABLE_CXX_98 ON CACHE BOOL "Enable C++98")
 set(GLM_ENABLE_CXX_11 ON CACHE BOOL "Enable C++11")
 set(GLM_ENABLE_CXX_14 ON CACHE BOOL "Enable C++14")
@@ -53,4 +63,4 @@ target_compile_options(glm PRIVATE ${YAGE_CXX_COMPILE_FLAGS} ${Vc_ARCHITECTURE_F
 target_link_options(glm PRIVATE ${YAGE_CXX_LINK_FLAGS})
 if (NOT SINGLEBIN)
     target_compile_options(glm PRIVATE -fPIC)
-endif()
+endif ()
