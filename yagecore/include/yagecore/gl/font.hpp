@@ -15,6 +15,7 @@
 #include "yagecore/graphics/font.hpp"
 #include "yagecore/gl/graphics.hpp"
 #include "yagecore/gl/util.hpp"
+#include "yagecore/gl/texture.hpp"
 
 namespace yc::gl
 {
@@ -26,7 +27,9 @@ class font final : public yc::graphics::font
   /* Shortcut for GL specific graphics */
   std::shared_ptr<yc::gl::graphics> ctx;
 
-  GLuint id {};
+  /* Attention: this asset is not handled by factory,
+   * we need to unload it manually */
+  std::shared_ptr<yc::gl::texture> atlas {};
 
   void
   draw(const char_cache & c,
