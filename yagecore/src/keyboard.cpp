@@ -208,7 +208,7 @@ static const std::unordered_map<yc::key, key_descriptor> key_descriptors = {
 };
 
 /* Shared functions ========================================================= */
-std::string yc::key_to_string(yc::key k)
+std::string yc::to_string(yc::key k)
 {
   auto it = key_descriptors.find(k);
   if (it == key_descriptors.end())

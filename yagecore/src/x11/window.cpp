@@ -408,6 +408,8 @@ yc::error yc::x11::window::open()
     xim = XOpenIM(display, nullptr, nullptr, nullptr);
   }
 
+  XAutoRepeatOff(display);
+
   /* Show the window */
   XClearWindow(display, win);
   XMapRaised(display, win);

@@ -35,7 +35,7 @@ enum class mouse
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-std::string mouse_to_string(mouse b);
+std::string to_string(mouse b);
 mouse       mouse_from_string(const std::string & str);
 
 }

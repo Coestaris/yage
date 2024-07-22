@@ -40,7 +40,7 @@ static const std::unordered_map<yc::mouse, mouse_descriptor> mouse_descriptors
         };
 
 /* Shared functions ========================================================= */
-std::string yc::mouse_to_string(yc::mouse b)
+std::string yc::to_string(yc::mouse b)
 {
   auto it = mouse_descriptors.find(b);
   if (it == mouse_descriptors.end())

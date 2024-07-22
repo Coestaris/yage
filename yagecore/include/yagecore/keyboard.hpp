@@ -199,7 +199,7 @@ enum class key
 
 /* Variables ================================================================ */
 /* Prototypes =============================================================== */
-std::string key_to_string(key k);
+std::string to_string(key k);
 char        key_to_char(key k);
 key         key_from_string(const std::string & str);
 
