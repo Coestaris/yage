@@ -17,6 +17,9 @@ else ()
 endif ()
 add_library(${PROJECT_NAME} ${sources})
 
+include(${PROJECT_DIR}/cmake/OptimizeForArchitecture.cmake)
+OptimizeForArchitecture()
+
 if (NOT BACKEND_X11_GL AND NOT BACKEND_WAYLAND_GL AND NOT BACKEND_DARWIN AND NOT BACKEND_WIN_GL AND NOT BACKEND_WIN_DX)
     message(STATUS "No platform specified, using auto-detection")
     if (UNIX)
@@ -68,8 +71,8 @@ set(cxx_flags
         -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-private-field
         -Wno-unused-const-variable -Wno-unused-value -Wno-unused-local-typedefs -Werror=old-style-cast
 )
-target_compile_options(${PROJECT_NAME} PRIVATE ${YAGE_CXX_COMPILE_FLAGS} ${cxx_flags})
-target_link_options(${PROJECT_NAME} PRIVATE ${YAGE_CXX_LINK_FLAGS})
+target_compile_options(${PROJECT_NAME} PRIVATE ${YAGE_CXX_COMPILE_FLAGS} ${cxx_flags} ${Vc_ARCHITECTURE_FLAGS})
+target_link_options(${PROJECT_NAME} PRIVATE ${YAGE_CXX_LINK_FLAGS} ${Vc_ARCHITECTURE_FLAGS})
 
 # Setup common source files
 set(SRC_FILES
