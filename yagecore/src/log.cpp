@@ -44,7 +44,8 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 static const char * level_specifiers[]
-      = { COLOR_BOLD              COLOR_MAGENTA "debug" COLOR_RESET,
+      = { COLOR_BOLD              COLOR_BLUE "trace" COLOR_RESET,
+          COLOR_BOLD              COLOR_MAGENTA "debug" COLOR_RESET,
           COLOR_BOLD              COLOR_CYAN " info" COLOR_RESET,
           COLOR_BOLD              COLOR_YELLOW " warn" COLOR_RESET,
           COLOR_BOLD              COLOR_RED "error" COLOR_RESET,
@@ -103,8 +104,14 @@ void yc::logger::format(
 void yc::logger::_log(
       yc::log_level level, const char * fmt, const char * file, int line, ...)
 {
+#if YAGE_STATIC_LOG_FILTERING
+  /* If level is compile-time constant, we can filter it out */
+  if (level < YAGE_LOG_LEVEL)
+    return;
+#else
   if (level < this->min_level)
     return;
+#endif
 
   char buff[1024];
 
@@ -118,12 +125,24 @@ void yc::logger::_log(
 
 void yc::logger::set_level(yc::log_level level)
 {
+#if YAGE_STATIC_LOG_FILTERING
+  throw std::runtime_error("Cannot change log level in static build");
+#else
   this->min_level = level;
+#endif
 }
 
-yc::log_level yc::logger::get_level() const
+#if YAGE_STATIC_LOG_FILTERING
+constexpr
+#endif
+      yc::log_level
+      yc::logger::get_level()
 {
+#if YAGE_STATIC_LOG_FILTERING
+  return YAGE_LOG_LEVEL;
+#else
   return this->min_level;
+#endif
 }
 
 void yc::set_global_logger(yc::logger * logger)

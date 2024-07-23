@@ -63,7 +63,7 @@ static void log_pfd(PIXELFORMATDESCRIPTOR * pdf)
 yc::error yc::win_gl::window::open()
 {
   logging(
-        LOG_INFO, "Opening window: %s. Geometry: %d %d. Fullscreen: %s",
+        LOG_INFO, "Opening window: '%s'. Geometry: %d %d. Fullscreen: %s",
         settings.title.c_str(), settings.width, settings.height,
         yc::graphics::to_string(settings.win_mode).c_str());
 

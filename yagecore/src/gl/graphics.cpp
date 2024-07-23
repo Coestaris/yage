@@ -222,7 +222,7 @@ void yc::gl::graphics::print_extensions()
       os << std::setw(40) << extensions[i + j] << " ";
     }
     logging(
-          LOG_DEBUG, " [%4" PRIuPTR "-%4" PRIuPTR "] %s", i, i + MAX_EXTENSIONS,
+          LOG_TRACE, " [%4" PRIuPTR "-%4" PRIuPTR "] %s", i, i + MAX_EXTENSIONS,
           buf.str().c_str());
   }
 }
@@ -270,10 +270,10 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
   glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, &length);
   std::vector<GLint> formats(length);
   glGetIntegerv(GL_PROGRAM_BINARY_FORMATS, formats.data());
-  logging(LOG_INFO, "Detected %d binary formats", length);
+  logging(LOG_DEBUG, "Detected %d binary formats", length);
   for (auto & format : formats)
   {
-    logging(LOG_INFO, "  Binary format: 0x%x", format);
+    logging(LOG_DEBUG, "  Binary format: 0x%x", format);
   }
 
   glShadeModel(GL_SMOOTH); // Enable Smooth Shading

@@ -67,7 +67,7 @@ void yc::graphics::font::set_sources(const data & _sources)
 {
   if (!(sources == _sources))
   {
-    logging(LOG_INFO, "Font %s marked to reload", name.c_str());
+    logging(LOG_INFO, "Font '%s' marked to reload", name.c_str());
     sources = _sources;
     live    = false;
   }

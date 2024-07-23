@@ -56,13 +56,13 @@ void * yc::gl::gl_lookup(const char * func, bool required)
     }
     else
     {
-      logging(LOG_ERROR, "Function %s not found", func);
+      logging(LOG_ERROR, "Function '%s' not found", func);
     }
 
     return nullptr;
   }
 
-  logging(LOG_DEBUG, "Function %s found: %p", func, proc);
+  logging(LOG_TRACE, "Function '%s' found: %p", func, proc);
   cache[func] = proc;
   return proc;
 }

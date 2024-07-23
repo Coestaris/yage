@@ -272,7 +272,7 @@ class PackHandler:
             if glb:
                 fast_copy(glb, dst_dir)
 
-            logging.info("Added %s model '%s'", "GLTF" if gltf else "GLB", basename)
+            logging.info("Added '%s' model '%s'", "GLTF" if gltf else "GLB", basename)
             return True
 
     PROCESSORS = [

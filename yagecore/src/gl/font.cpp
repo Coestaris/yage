@@ -9,7 +9,11 @@
 /* Includes ================================================================= */
 #include "yagecore/gl/font.hpp"
 
+#if __has_include("freetype2/ft2build.h")
+#include "freetype2/ft2build.h"
+#else
 #include "freetype/include/ft2build.h"
+#endif
 #include FT_FREETYPE_H
 
 /* Defines ================================================================== */
@@ -57,7 +61,7 @@ yc::error yc::gl::font::load()
   sources.get_uri().read(ttf_binary);
   if (ttf_binary.empty())
   {
-    logging(LOG_ERROR, "Cannot load font %s", name.c_str());
+    logging(LOG_ERROR, "Cannot load font '%s'", name.c_str());
     return yc::INVALID_ARGUMENT;
   }
 
@@ -91,8 +95,7 @@ yc::error yc::gl::font::load()
   for (int c = sources.get_parameters().get_start_char();
        c <= sources.get_parameters().get_end_char(); ++c)
   {
-    if (auto ft_err
-        = FT_Load_Char(face, FT_Get_Char_Index(face, c), FT_LOAD_RENDER))
+    if (auto ft_err = FT_Load_Char(face, c, FT_LOAD_RENDER))
     {
       logging(LOG_ERROR, "Cannot load glyph: %s", FT_Error_String(ft_err));
       FT_Done_Face(face);
@@ -105,13 +108,10 @@ yc::error yc::gl::font::load()
           atlas_height, static_cast<size_t>(face->glyph->bitmap.rows));
   }
 
-  struct vertex
-  {
-    glm::vec2 pos;
-    glm::vec2 uv;
-  };
-  std::vector<vertex> vertices;
-  std::vector<size_t> indices;
+  /* 2 floats pos, 2 floats uv.
+   * 4 vertices per quad */
+  std::vector<float>  vertices;
+  std::vector<GLuint> indices;
 
   size_t               x_offset = 0;
   std::vector<uint8_t> atlas_data(atlas_width * atlas_height, 0);
@@ -119,7 +119,7 @@ yc::error yc::gl::font::load()
        c <= sources.get_parameters().get_end_char(); ++c)
   {
     /* Render glyph */
-    FT_Load_Char(face, FT_Get_Char_Index(face, c), FT_LOAD_RENDER);
+    FT_Load_Char(face, c, FT_LOAD_RENDER);
     if (auto ft_err = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL))
     {
       logging(LOG_ERROR, "Cannot render glyph: %s", FT_Error_String(ft_err));
@@ -142,50 +142,45 @@ yc::error yc::gl::font::load()
       src += src_stride;
     }
 
-    vertex v0 = {
-      .pos = glm::vec2(0, 0),
-      .uv  = glm::vec2(x_offset / atlas_width, 0),
+    const uint8_t rectangle_indicies[] = {
+      0, 1, 2, 2, 3, 0,
     };
-    vertex v1 = {
-      .pos = glm::vec2(face->glyph->bitmap.width, 0),
-      .uv  = glm::vec2((x_offset + face->glyph->bitmap.width) / atlas_width, 0),
-    };
-    vertex v2 = {
-      .pos = glm::vec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-      .uv  = glm::vec2(
-            (x_offset + face->glyph->bitmap.width) / atlas_width,
-            face->glyph->bitmap.rows / atlas_height),
-    };
-    vertex v3 = {
-      .pos = glm::vec2(0, face->glyph->bitmap.rows),
-      .uv  = glm::vec2(
-            x_offset / atlas_width, face->glyph->bitmap.rows / atlas_height),
-    };
-    vertices.push_back(v0);
-    vertices.push_back(v1);
-    vertices.push_back(v2);
-    vertices.push_back(v3);
+    const size_t start_index = vertices.size();
+    for (size_t i = 0; i < 6; ++i)
+    {
+      indices.push_back(start_index + rectangle_indicies[i]);
+    }
 
-    indices.push_back(vertices.size() - 4);
-    indices.push_back(vertices.size() - 3);
-    indices.push_back(vertices.size() - 2);
-    indices.push_back(vertices.size() - 4);
-    indices.push_back(vertices.size() - 2);
-    indices.push_back(vertices.size() - 1);
+    float w = face->glyph->bitmap.width;
+    float h = face->glyph->bitmap.rows;
+
+    /* Add quad */
+    const float quad[] = {
+      /* pos             uv */
+      0.0f, 0.0f, 0.0f, 0.0f, /* 0 */
+      w,    0.0f, 1.0f, 0.0f, /* 1 */
+      w,    h,    1.0f, 1.0f, /* 2 */
+      0.0f, h,    0.0f, 1.0f, /* 3 */
+    };
+    for (size_t i = 0; i < std::size(quad); ++i)
+    {
+      vertices.push_back(quad[i]);
+    }
 
     size_t cache_index = c - sources.get_parameters().get_start_char();
     cache[cache_index].x_advance      = face->glyph->advance.x >> 6;
     cache[cache_index].x_bearing      = face->glyph->bitmap_left;
     cache[cache_index].y_advance      = face->glyph->advance.y >> 6;
     cache[cache_index].y_bearing      = face->glyph->bitmap_top;
-    cache[cache_index].internal_index = indices.size() - 6;
+    cache[cache_index].internal_index = start_index;
 
-    x_offset += face->glyph->bitmap.width;
+    x_offset += w;
   }
 
   if (x_offset != atlas_width)
   {
-    logging(LOG_ERROR, "Atlas width mismatch");
+    logging(
+          LOG_ERROR, "Atlas width mismatch: %lu != %lu", x_offset, atlas_width);
     FT_Done_Face(face);
     FT_Done_FreeType(library);
     return yc::INVALID_ARGUMENT;
@@ -195,11 +190,18 @@ yc::error yc::gl::font::load()
   // atlas = std::make_shared<yc::gl::texture>(name + "_atlas", cacher, ctx);
   glGenTextures(1, &id);
   glBindTexture(GL_TEXTURE_2D, id);
-  /* DIsable alignment */
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(
+        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glTexImage2D(
         GL_TEXTURE_2D, 0, GL_RED, atlas_width, atlas_height, 0, GL_RED,
         GL_UNSIGNED_BYTE, atlas_data.data());
+  yc::gl::glGenerateMipmap(GL_TEXTURE_2D);
 
   /* Generate buffers */
   glGenVertexArrays(1, &vao);
@@ -209,20 +211,19 @@ yc::error yc::gl::font::load()
   glBindVertexArray(vao);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(
-        GL_ARRAY_BUFFER, vertices.size() * sizeof(vertex), vertices.data(),
+        GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(),
         GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
   glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(size_t),
+        GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
         indices.data(), GL_STATIC_DRAW);
 
-  glVertexAttribPointer(
-        0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), reinterpret_cast<void *>(0));
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(
-        1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex),
-        reinterpret_cast<void *>((sizeof(glm::vec2))));
+        1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+        reinterpret_cast<void *>(2 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
   glBindVertexArray(0);

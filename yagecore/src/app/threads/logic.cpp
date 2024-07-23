@@ -105,7 +105,7 @@ void yc::app::threads::logic::run()
     app->common_data.post_frame_sync.wait();
 
     /* We have nothing to do here, so process statistics */
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
     app->stats.log_instances_count(instances_count);
     app->stats.log_update_time(profiler->get_diff(
           PROF_POINT_LOGIC_INPUT, PROF_POINT_LOGIC_UPDATE_PARTICLES));

@@ -126,7 +126,7 @@ void yc::graphics::shader::set_sources(data & _sources)
 {
   if (!(sources == _sources))
   {
-    logging(LOG_INFO, "Shader %s marked to reload", name.c_str());
+    logging(LOG_INFO, "Shader '%s' marked to reload", name.c_str());
     sources = _sources;
     live    = false;
   }

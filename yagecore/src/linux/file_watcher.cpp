@@ -128,7 +128,7 @@ bool yc::file_watcher::wait_for_changes(uint32_t timeout_ms)
           /* get filename */
           std::string filename(event->name, event->len);
           filename.shrink_to_fit();
-          logging(LOG_INFO, "File %s was modified", filename.c_str());
+          logging(LOG_INFO, "File '%s' was modified", filename.c_str());
 
           /* Using c-style compare, because filename
            * may contain null-terminator */

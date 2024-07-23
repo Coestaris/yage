@@ -34,6 +34,7 @@ namespace yc
   } while (0)
 #endif
 
+#define LOG_TRACE yc::LOG_LEVEL_TRACE
 #define LOG_DEBUG yc::LOG_LEVEL_DEBUG
 #define LOG_INFO  yc::LOG_LEVEL_INFO
 #define LOG_WARN  yc::LOG_LEVEL_WARN
@@ -43,11 +44,12 @@ namespace yc
 /* Types ==================================================================== */
 enum log_level
 {
-  LOG_LEVEL_DEBUG = 0,
-  LOG_LEVEL_INFO  = 1,
-  LOG_LEVEL_WARN  = 2,
-  LOG_LEVEL_ERROR = 3,
-  LOG_LEVEL_FATAL = 4,
+  LOG_LEVEL_TRACE = 0,
+  LOG_LEVEL_DEBUG = 1,
+  LOG_LEVEL_INFO  = 2,
+  LOG_LEVEL_WARN  = 3,
+  LOG_LEVEL_ERROR = 4,
+  LOG_LEVEL_FATAL = 5,
 };
 
 class logger
@@ -70,20 +72,25 @@ private:
 public:
   virtual ~logger() = default;
 
-  void      set_level(log_level level);
-  log_level get_level() const;
+  void set_level(log_level level);
+
+#if YAGE_STATIC_LOG_FILTERING
+  [[nodiscard]] constexpr static
+#endif
+        log_level
+        get_level();
 
   __attribute__((format(printf, 3, 6))) void
   _log(log_level level, const char * fmt, const char * file, int line, ...);
+
   virtual void flush() = 0;
 };
 
 class stdout_logger : public logger
 {
-private:
   void print(const char * msg) override
   {
-    printf("%s\n\r", msg);
+    puts(msg);
     fflush(stdout);
   }
 

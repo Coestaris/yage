@@ -158,13 +158,13 @@ std::string yc::get_temp_dir(const std::string & prefix)
     if (!CreateDirectory(temp_dir_str.c_str(), nullptr))
     {
       logging(
-            LOG_ERROR, "Failed to create temp directory: %s",
+            LOG_ERROR, "Failed to create temp directory: '%s'",
             temp_dir_str.c_str());
       return {};
     }
   }
 
-  logging(LOG_DEBUG, "Temp directory: %s", temp_dir_str.c_str());
+  logging(LOG_DEBUG, "Temp directory: '%s'", temp_dir_str.c_str());
   return temp_dir_str;
 }
 
@@ -190,13 +190,13 @@ std::string yc::get_cache_dir(const std::string & prefix)
     if (!CreateDirectory(cache_dir.c_str(), nullptr))
     {
       logging(
-            LOG_ERROR, "Failed to create cache directory: %s",
+            LOG_ERROR, "Failed to create cache directory: '%s'",
             cache_dir.c_str());
       return {};
     }
   }
 
-  logging(LOG_DEBUG, "Cache directory: %s", cache_dir.c_str());
+  logging(LOG_DEBUG, "Cache directory: '%s'", cache_dir.c_str());
   return cache_dir;
 }
 
@@ -209,7 +209,7 @@ yc::list_files(const std::string & path, const std::string & pattern)
   HANDLE hFind = FindFirstFile((path + "\\" + pattern).c_str(), &findFileData);
   if (hFind == INVALID_HANDLE_VALUE)
   {
-    logging(LOG_ERROR, "Failed to list files in directory: %s", path.c_str());
+    logging(LOG_ERROR, "Failed to list files in directory: '%s'", path.c_str());
     return files;
   }
 

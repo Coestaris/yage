@@ -23,7 +23,7 @@ yc::graphics::render_pass::render_pass(std::string name, type type)
 
 void yc::graphics::render_pass::begin()
 {
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
   drawn_meshes_imm    = 0;
   drawn_triangles_imm = 0;
   start_time          = yc::get_ms();
@@ -36,7 +36,7 @@ void yc::graphics::render_pass::end()
 {
   on_end();
 
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
   draw_time       = yc::get_ms() - start_time;
   drawn_meshes    = drawn_meshes_imm;
   drawn_triangles = drawn_triangles_imm;

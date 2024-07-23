@@ -44,7 +44,7 @@ class font final : public yc::graphics::font
   GLuint                           id;
   GLuint                           vao, vbo, ebo;
 
-  std::shared_ptr<char_renderer> char_renderer;
+  std::shared_ptr<yc::gl::char_renderer> char_renderer;
 
   void draw_begin(glm::vec4 color) override;
   void draw_end() override;

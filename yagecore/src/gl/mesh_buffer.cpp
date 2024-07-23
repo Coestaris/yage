@@ -38,7 +38,7 @@ void yc::gl::mesh_buffer::unload()
     yc::gl::glDeleteBuffers(1, &indicies.ebo);
 }
 
-inline yc::graphics::draw_result yc::gl::mesh_buffer::draw(
+yc::graphics::draw_result yc::gl::mesh_buffer::draw(
       const std::shared_ptr<yc::graphics::render_pass> & pass)
 {
   if (pass && !pass->on_mesh(*this, material))

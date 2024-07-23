@@ -17,7 +17,7 @@
 /* Shared functions ========================================================= */
 yc::graphics::draw_result::draw_result(
       size_t drawn_meshes, size_t drawn_triangles)
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
 : drawn_meshes(drawn_meshes)
 , drawn_triangles(drawn_triangles) {};
 #else
@@ -27,7 +27,7 @@ yc::graphics::draw_result::draw_result(
 yc::graphics::draw_result
 yc::graphics::draw_result::operator+=(const draw_result & other)
 {
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
   drawn_meshes += other.drawn_meshes;
   drawn_triangles += other.drawn_triangles;
 #endif
@@ -36,7 +36,7 @@ yc::graphics::draw_result::operator+=(const draw_result & other)
 
 size_t yc::graphics::draw_result::get_drawn_meshes() const
 {
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
   return drawn_meshes;
 #else
   return 0;
@@ -45,7 +45,7 @@ size_t yc::graphics::draw_result::get_drawn_meshes() const
 
 size_t yc::graphics::draw_result::get_drawn_triangles() const
 {
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
   return drawn_triangles;
 #else
   return 0;

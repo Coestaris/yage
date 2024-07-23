@@ -65,7 +65,7 @@ void yc::graphics::node::set_sources(const data & _sources)
 {
   if (!(sources == _sources))
   {
-    logging(LOG_INFO, "Node %s marked to reload", name.c_str());
+    logging(LOG_INFO, "Node '%s' marked to reload", name.c_str());
     sources = _sources;
     live    = false;
   }

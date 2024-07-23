@@ -79,7 +79,7 @@ template <typename T> void yc::gl::shader::uniform<T>::reload()
   int new_loc = shader.lock()->get_uniform_location(name);
 
   logging(
-        LOG_INFO, "Reloading uniform %s. %d->%d", name.c_str(), old_loc,
+        LOG_INFO, "Reloading uniform '%s'. %d->%d", name.c_str(), old_loc,
         new_loc);
 
   location = new_loc;
@@ -92,6 +92,15 @@ template <typename T> void yc::gl::shader::uniform<T>::set(T value)
   prev_value = value;
   internal_set(location, value);
 }
+
+template class yc::gl::shader::uniform<int>;
+template class yc::gl::shader::uniform<float>;
+template class yc::gl::shader::uniform<glm::vec2>;
+template class yc::gl::shader::uniform<glm::vec3>;
+template class yc::gl::shader::uniform<glm::vec4>;
+template class yc::gl::shader::uniform<glm::mat2>;
+template class yc::gl::shader::uniform<glm::mat3>;
+template class yc::gl::shader::uniform<glm::mat4>;
 
 yc::error yc::gl::shader::load()
 {
@@ -126,7 +135,7 @@ yc::error yc::gl::shader::load()
   }
   else
   {
-    logging(LOG_DEBUG, "Loaded shader from cache (key: %s)", hash.c_str());
+    logging(LOG_DEBUG, "Loaded shader from cache (key: '%s')", hash.c_str());
   }
 
   return load_from_binary(binary);
@@ -156,7 +165,7 @@ yc::error yc::gl::shader::load_from_binary(const std::vector<uint8_t> & binary)
     std::string log(length, '\0');
     yc::gl::glGetProgramInfoLog(id, length, nullptr, log.data());
 
-    logging(LOG_ERROR, "Failed to link program: %s", log.c_str());
+    logging(LOG_ERROR, "Failed to link program: '%s'", log.c_str());
     return yc::error::EXTERNAL_API_ERROR;
   }
 
@@ -219,7 +228,7 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
     return yc::error::EMPTY;
   }
 
-  logging(LOG_DEBUG, "Loading shader: %s", name.c_str());
+  logging(LOG_DEBUG, "Loading shader: '%s'", name.c_str());
 
   auto program = yc::gl::glCreateProgram();
 
@@ -231,7 +240,7 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
 
     if (source.empty())
     {
-      logging(LOG_ERROR, "Failed to read shader source: %s", type.c_str());
+      logging(LOG_ERROR, "Failed to read shader source: '%s'", type.c_str());
       return yc::error::EXTERNAL_API_ERROR;
     }
 
@@ -246,7 +255,7 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
     }
     else
     {
-      logging(LOG_ERROR, "Unknown shader type %s", type.c_str());
+      logging(LOG_ERROR, "Unknown shader type '%s'", type.c_str());
       return yc::error::INVALID_ARGUMENT;
     }
 
@@ -280,11 +289,11 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
         if (message.find("ERROR") != std::string::npos
             || message.find("error") != std::string::npos)
         {
-          logging(LOG_ERROR, "Shader compilation error: %s", message.c_str());
+          logging(LOG_ERROR, "Shader compilation error: '%s'", message.c_str());
         }
         else
         {
-          logging(LOG_INFO, "Shader compilation info: %s", message.c_str());
+          logging(LOG_INFO, "Shader compilation info: '%s'", message.c_str());
         }
       }
 
@@ -294,7 +303,7 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
 
     if (status == GL_FALSE)
     {
-      logging(LOG_ERROR, "Failed to compile shader of type %s", type.c_str());
+      logging(LOG_ERROR, "Failed to compile shader of type '%s'", type.c_str());
       return yc::error::EXTERNAL_API_ERROR;
     }
 
@@ -324,11 +333,11 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
       if (message.find("ERROR") != std::string::npos
           || message.find("error") != std::string::npos)
       {
-        logging(LOG_ERROR, "Shader linking error: %s", message.c_str());
+        logging(LOG_ERROR, "Shader linking error: '%s'", message.c_str());
       }
       else
       {
-        logging(LOG_INFO, "Shader linking info: %s", message.c_str());
+        logging(LOG_INFO, "Shader linking info: '%s'", message.c_str());
       }
     }
 

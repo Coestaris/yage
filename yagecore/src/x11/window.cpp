@@ -298,7 +298,7 @@ yc::error yc::x11::window::open()
       glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLES, &samples);
 
       logging(
-            LOG_DEBUG,
+            LOG_TRACE,
             "Matching fbconfig %d, visual ID 0x%2lx: SAMPLE_BUFFERS = %d,"
             " SAMPLES = %d",
             i, vi->visualid, samp_buf, samples);
@@ -515,7 +515,7 @@ yc::error yc::x11::window::set_title(std::string title)
     return yc::error::INVALID_THREAD;
   }
 
-  logging(LOG_DEBUG, "Setting window title to %s", title.c_str());
+  logging(LOG_DEBUG, "Setting window title to '%s'", title.c_str());
 
   settings.title = title;
 
@@ -587,6 +587,9 @@ yc::error yc::x11::window::close()
 
   logging(LOG_DEBUG, "Destroying X11 window");
   glXDestroyContext(display, glx_context);
+
+  /* Restore X11 state */
+  XAutoRepeatOn(display);
 
   logging(LOG_DEBUG, "Closing X11 display");
   XFree(visual);

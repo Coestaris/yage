@@ -45,7 +45,7 @@ std::string app::application::lookup_asset_path()
     for (const auto & extension : extensions)
     {
       std::string path = yc::join_path(variant, "assets" + extension);
-      logging(LOG_DEBUG, "Checking for %s", path.c_str());
+      logging(LOG_DEBUG, "Checking for '%s'", path.c_str());
       if (yc::file_exists(path))
       {
         return path;
@@ -61,10 +61,8 @@ int app::application::run()
   auto events = std::make_shared<yc::os_events>();
 
   yc::stdout_logger logger;
-#if USE_DEBUG
-  logger.set_level(LOG_DEBUG);
-#else
-  logger.set_level(LOG_WARN);
+#if !YAGE_STATIC_LOG_FILTERING
+  logger.set_level(YAGE_LOG_LEVEL);
 #endif
 
   set_global_logger(&logger);

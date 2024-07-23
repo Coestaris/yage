@@ -31,7 +31,7 @@ bool yc::graphics::texture::load_image(
   if (image_data.empty())
   {
     logging(
-          LOG_ERROR, "Failed to read image data from URI: %s",
+          LOG_ERROR, "Failed to read image data from URI: '%s'",
           uri.get_uri().c_str());
     return false;
   }
@@ -197,7 +197,7 @@ void yc::graphics::texture::set_sources(const data & _sources)
   if (sources.empty())
   //    if (!(sources == _sources))
   {
-    logging(LOG_INFO, "Texture %s marked to reload", name.c_str());
+    logging(LOG_INFO, "Texture '%s' marked to reload", name.c_str());
     sources = _sources;
     live    = false;
   }

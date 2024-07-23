@@ -160,11 +160,11 @@ yc::error yc::gl::node::load()
 
   live = true;
 
-  logging(LOG_DEBUG, "Loading GLTF node: %s", get_name().c_str());
+  logging(LOG_DEBUG, "Loading GLTF node: '%s'", get_name().c_str());
 
   if (!load_gltf(sources.get_uri()))
   {
-    logging(LOG_ERROR, "Failed to load GLTF node: %s", get_name().c_str());
+    logging(LOG_ERROR, "Failed to load GLTF node: '%s'", get_name().c_str());
     return yc::error::EXTERNAL_API_ERROR;
   }
 
@@ -214,7 +214,7 @@ bool yc::gl::node::load_gltf(const yc::util::uri & uri)
   if (auto error = data.error(); error != fastgltf::Error::None)
   {
     logging(
-          LOG_ERROR, "Failed to read GLTF data from URI: %s",
+          LOG_ERROR, "Failed to read GLTF data from URI: '%s'",
           uri.get_uri().c_str());
     success = false;
   }
@@ -230,7 +230,7 @@ bool yc::gl::node::load_gltf(const yc::util::uri & uri)
   if (auto error = asset_error.error(); error != fastgltf::Error::None)
   {
     logging(
-          LOG_ERROR, "Failed to parse GLTF data from URI: %s",
+          LOG_ERROR, "Failed to parse GLTF data from URI: '%s'",
           uri.get_uri().c_str());
     success = false;
   }
@@ -301,7 +301,7 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
           if (!gltf_primitive.indicesAccessor.has_value())
           {
             logging(
-                  LOG_ERROR, "No indices found in GLTF node: %s",
+                  LOG_ERROR, "No indices found in GLTF node: '%s'",
                   get_name().c_str());
             return false;
           }
@@ -340,7 +340,7 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
       if (!node->mesh)
       {
         logging(
-              LOG_ERROR, "Failed to create mesh buffer for GLTF node: %s",
+              LOG_ERROR, "Failed to create mesh buffer for GLTF node: '%s'",
               get_name().c_str());
         return false;
       }
@@ -367,14 +367,14 @@ bool yc::gl::node::process_position(
     if (layout.required(attr_layout_item::type::POSITION))
     {
       logging(
-            LOG_ERROR, "No positions found in GLTF node: %s",
+            LOG_ERROR, "No positions found in GLTF node: '%s'",
             get_name().c_str());
       return false;
     }
 
     logging(
           LOG_WARN,
-          "No positions found in GLTF node: %s. All vectors will "
+          "No positions found in GLTF node: '%s'. All vectors will "
           "be zeroed",
           get_name().c_str());
     return true;
@@ -414,13 +414,13 @@ bool yc::gl::node::process_normal(
     if (layout.required(attr_layout_item::type::NORMAL))
     {
       logging(
-            LOG_ERROR, "No normals found in GLTF node: %s", get_name().c_str());
+            LOG_ERROR, "No normals found in GLTF node: '%s'", get_name().c_str());
       return false;
     }
 
     logging(
           LOG_WARN,
-          "No normals found in GLTF node: %s. All vectors will "
+          "No normals found in GLTF node: '%s'. All vectors will "
           "be zeroed",
           get_name().c_str());
     return true;
@@ -477,7 +477,7 @@ bool yc::gl::node::process_texcoord(
 
     logging(
           LOG_WARN,
-          "No texture coordinates found in GLTF node: %s. All vectors will "
+          "No texture coordinates found in GLTF node: '%s'. All vectors will "
           "be zeroed",
           get_name().c_str());
     return true;
@@ -512,13 +512,13 @@ bool yc::gl::node::process_color(
     if (layout.required(attr_layout_item::type::COLOR))
     {
       logging(
-            LOG_ERROR, "No colors found in GLTF node: %s", get_name().c_str());
+            LOG_ERROR, "No colors found in GLTF node: '%s'", get_name().c_str());
       return false;
     }
 
     logging(
           LOG_WARN,
-          "No colors found in GLTF node: %s. All vectors will "
+          "No colors found in GLTF node: '%s'. All vectors will "
           "be zeroed",
           get_name().c_str());
     return true;

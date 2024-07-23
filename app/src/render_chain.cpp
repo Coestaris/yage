@@ -312,7 +312,6 @@ public:
   void end() override
   {
     yc::gl::glBindVertexArray(0);
-    yc::gl::glBindTexture(GL_TEXTURE_2D, 0);
   }
 
   void

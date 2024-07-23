@@ -47,7 +47,6 @@ else ()
     set(ELZIP_BUILD_STATIC ON)
 endif ()
 set(SKIP_INSTALL_ALL ON)
-set(MZ_FORCE_FETCH_LIBS ON)
 
 set(MESSAGE_QUIET ON)
 add_subdirectory(${REPO_PATH})

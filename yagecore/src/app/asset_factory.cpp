@@ -40,7 +40,7 @@ yc::app::asset_factory::load_asset(const std::string & name, bool required)
   {
     if (asset->load() != yc::OK)
     {
-      logging(LOG_ERROR, "Failed to load asset %s", name.c_str());
+      logging(LOG_ERROR, "Failed to load asset '%s'", name.c_str());
 
       if (required)
       {

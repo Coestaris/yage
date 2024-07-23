@@ -69,7 +69,7 @@ void yc::app::threads::renderer::run()
   auto passes
         = app->create_render_chain(graphics, app->render_data.asset_factory);
 
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
   std::vector<size_t> statistcs_passes;
   statistcs_passes.reserve(passes.size());
 #endif
@@ -77,7 +77,7 @@ void yc::app::threads::renderer::run()
   for (const auto & pass : passes)
   {
     pass->before_loop();
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
     statistcs_passes.push_back(app->stats.register_pass(pass->get_name()));
 #endif
   }
@@ -163,7 +163,7 @@ void yc::app::threads::renderer::run()
      * important to call from rendering thread too. */
     app->render_data.asset_factory->poll_assets();
 
-#if COLLECT_DRAW_STATISTICS
+#if YAGE_COLLECT_DRAW_STATS
     app->stats.log_draw_time(profiler->get_diff(
           PROF_POINT_RENDERER_DRAW_START, PROF_POINT_RENDERER_DRAW_END));
     app->stats.log_draw_time(profiler->get_diff(
