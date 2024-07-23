@@ -110,10 +110,21 @@ yc::error yc::gl::font::load()
 
   /* 2 floats pos, 2 floats uv.
    * 4 vertices per quad */
-  std::vector<float>  vertices;
+  struct __attribute__((packed)) quad
+  {
+    float a_pos[2];
+    float a_uv[2];
+    float b_pos[2];
+    float b_uv[2];
+    float c_pos[2];
+    float c_uv[2];
+    float d_pos[2];
+    float d_uv[2];
+  };
+  std::vector<quad>   quads;
   std::vector<GLuint> indices;
 
-  size_t               x_offset = 0;
+  size_t               atlas_offset = 0;
   std::vector<uint8_t> atlas_data(atlas_width * atlas_height, 0);
   for (int c = sources.get_parameters().get_start_char();
        c <= sources.get_parameters().get_end_char(); ++c)
@@ -129,7 +140,7 @@ yc::error yc::gl::font::load()
     }
 
     /* Blit glyph to atlas */
-    uint8_t *    dst        = atlas_data.data() + x_offset;
+    uint8_t *    dst        = atlas_data.data() + atlas_offset;
     uint8_t *    src        = face->glyph->bitmap.buffer;
     const size_t dst_stride = atlas_width;
     const size_t src_stride = face->glyph->bitmap.width;
@@ -142,45 +153,50 @@ yc::error yc::gl::font::load()
       src += src_stride;
     }
 
-    const uint8_t rectangle_indicies[] = {
-      0, 1, 2, 2, 3, 0,
+    const size_t rectangle_indicies[] = {
+      0, 1, 2, 0, 2, 3,
     };
-    const size_t start_index = vertices.size();
+    const size_t start_index = indices.size();
     for (size_t i = 0; i < 6; ++i)
     {
-      indices.push_back(start_index + rectangle_indicies[i]);
+      /* *4 because 4 vertices per quad */
+      indices.push_back(quads.size() * 4 + rectangle_indicies[i]);
     }
 
     float w = face->glyph->bitmap.width;
     float h = face->glyph->bitmap.rows;
 
+    float xpos = face->glyph->bitmap_left;
+    float ypos = h - face->glyph->bitmap_top;
+
     /* Add quad */
-    const float quad[] = {
-      /* pos             uv */
-      0.0f, 0.0f, 0.0f, 0.0f, /* 0 */
-      w,    0.0f, 1.0f, 0.0f, /* 1 */
-      w,    h,    1.0f, 1.0f, /* 2 */
-      0.0f, h,    0.0f, 1.0f, /* 3 */
-    };
-    for (size_t i = 0; i < std::size(quad); ++i)
-    {
-      vertices.push_back(quad[i]);
-    }
+    quads.push_back({
+          .a_pos = { xpos, ypos + h },
+          .a_uv  = { 0, 0 },
+
+          .b_pos = { xpos, ypos },
+          .b_uv  = { 0, 1 },
+
+          .c_pos = { xpos + w, ypos },
+          .c_uv  = { 1, 1 },
+
+          .d_pos = { xpos + w, ypos + h },
+          .d_uv  = { 1, 0 },
+    });
 
     size_t cache_index = c - sources.get_parameters().get_start_char();
     cache[cache_index].x_advance      = face->glyph->advance.x >> 6;
-    cache[cache_index].x_bearing      = face->glyph->bitmap_left;
     cache[cache_index].y_advance      = face->glyph->advance.y >> 6;
-    cache[cache_index].y_bearing      = face->glyph->bitmap_top;
     cache[cache_index].internal_index = start_index;
 
-    x_offset += w;
+    atlas_offset += face->glyph->bitmap.width;
   }
 
-  if (x_offset != atlas_width)
+  if (atlas_offset != atlas_width)
   {
     logging(
-          LOG_ERROR, "Atlas width mismatch: %lu != %lu", x_offset, atlas_width);
+          LOG_ERROR, "Atlas width mismatch: %lu != %lu", atlas_offset,
+          atlas_width);
     FT_Done_Face(face);
     FT_Done_FreeType(library);
     return yc::INVALID_ARGUMENT;
@@ -211,9 +227,8 @@ yc::error yc::gl::font::load()
   glBindVertexArray(vao);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(
-        GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(),
+        GL_ARRAY_BUFFER, quads.size() * sizeof(quad), quads.data(),
         GL_STATIC_DRAW);
-
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
   glBufferData(
         GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
@@ -221,9 +236,7 @@ yc::error yc::gl::font::load()
 
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(
-        1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-        reinterpret_cast<void *>(2 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
   glBindVertexArray(0);

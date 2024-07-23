@@ -346,7 +346,7 @@ public:
 
   void on_begin() override
   {
-    f->draww("Hello world", glm::vec2(10.0f, 10.0f));
+    f->draww("Hello world", { 100, 100 }, { 1.0f, 1.0f, 1.0f, 1.0f });
   }
 
   void on_end() override

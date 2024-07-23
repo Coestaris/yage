@@ -52,10 +52,7 @@ public:
   struct char_cache
   {
     unsigned int x_advance;
-    unsigned int x_bearing;
-
     unsigned int y_advance;
-    unsigned int y_bearing;
 
     size_t internal_index;
   };
