@@ -110,18 +110,13 @@ yc::error yc::gl::font::load()
 
   /* 2 floats pos, 2 floats uv.
    * 4 vertices per quad */
-  struct __attribute__((packed)) quad
+  struct __attribute__((packed)) vertex
   {
     float a_pos[2];
     float a_uv[2];
-    float b_pos[2];
-    float b_uv[2];
-    float c_pos[2];
-    float c_uv[2];
-    float d_pos[2];
-    float d_uv[2];
   };
-  std::vector<quad>   quads;
+
+  std::vector<vertex> vertices;
   std::vector<GLuint> indices;
 
   size_t               atlas_offset = 0;
@@ -144,8 +139,8 @@ yc::error yc::gl::font::load()
     uint8_t *    src        = face->glyph->bitmap.buffer;
     const size_t dst_stride = atlas_width;
     const size_t src_stride = face->glyph->bitmap.width;
-    size_t       y          = face->glyph->bitmap.rows;
-    while (y--)
+    size_t       rows       = face->glyph->bitmap.rows;
+    while (rows--)
     {
       /* Blit row */
       memcpy(dst, src, src_stride);
@@ -153,42 +148,37 @@ yc::error yc::gl::font::load()
       src += src_stride;
     }
 
-    const size_t rectangle_indicies[] = {
-      0, 1, 2, 0, 2, 3,
-    };
+    /* Cache glyph for future use parameters */
     const size_t start_index = indices.size();
-    for (size_t i = 0; i < 6; ++i)
+    size_t       cache_index = c - sources.get_parameters().get_start_char();
+    cache[cache_index].x_advance     = face->glyph->advance.x >> 6;
+    cache[cache_index].y_advance     = face->glyph->advance.y >> 6;
+    cache[cache_index].__vert_offset = start_index * sizeof(GLuint);
+    cache[cache_index].__vert_count  = 6;
+
+    /* Add quad indices */
+    constexpr size_t rectangle_indicies[] = { 0, 1, 2, 1, 3, 2 };
+    for (const auto i : rectangle_indicies)
     {
-      /* *4 because 4 vertices per quad */
-      indices.push_back(quads.size() * 4 + rectangle_indicies[i]);
+      indices.push_back(vertices.size() + i);
     }
 
-    float w = face->glyph->bitmap.width;
-    float h = face->glyph->bitmap.rows;
+    /* Add quad vertices */
+    const auto x = static_cast<float>(face->glyph->bitmap_left);
+    const auto y = -static_cast<float>(face->glyph->bitmap_top);
+    const auto w = static_cast<float>(face->glyph->bitmap.width);
+    const auto h = static_cast<float>(face->glyph->bitmap.rows);
+    const auto tx
+          = static_cast<float>(atlas_offset) / static_cast<float>(atlas_width);
+    const auto tw = w / static_cast<float>(atlas_width);
+    const auto th = h / static_cast<float>(atlas_height);
 
-    float xpos = face->glyph->bitmap_left;
-    float ypos = h - face->glyph->bitmap_top;
+    vertices.push_back({ x, -y, tx, 0 });
+    vertices.push_back({ x + w, -y, tx + tw, 0 });
+    vertices.push_back({ x, -y - h, tx, th });
+    vertices.push_back({ x + w, -y - h, tx + tw, th });
 
-    /* Add quad */
-    quads.push_back({
-          .a_pos = { xpos, ypos + h },
-          .a_uv  = { 0, 0 },
-
-          .b_pos = { xpos, ypos },
-          .b_uv  = { 0, 1 },
-
-          .c_pos = { xpos + w, ypos },
-          .c_uv  = { 1, 1 },
-
-          .d_pos = { xpos + w, ypos + h },
-          .d_uv  = { 1, 0 },
-    });
-
-    size_t cache_index = c - sources.get_parameters().get_start_char();
-    cache[cache_index].x_advance      = face->glyph->advance.x >> 6;
-    cache[cache_index].y_advance      = face->glyph->advance.y >> 6;
-    cache[cache_index].internal_index = start_index;
-
+    /* Process next glyph */
     atlas_offset += face->glyph->bitmap.width;
   }
 
@@ -220,26 +210,28 @@ yc::error yc::gl::font::load()
   yc::gl::glGenerateMipmap(GL_TEXTURE_2D);
 
   /* Generate buffers */
-  glGenVertexArrays(1, &vao);
-  glGenBuffers(1, &vbo);
-  glGenBuffers(1, &ebo);
+  yc::gl::glGenVertexArrays(1, &vao);
+  yc::gl::glGenBuffers(1, &vbo);
+  yc::gl::glGenBuffers(1, &ebo);
 
-  glBindVertexArray(vao);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(
-        GL_ARRAY_BUFFER, quads.size() * sizeof(quad), quads.data(),
+  yc::gl::glBindVertexArray(vao);
+  yc::gl::glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  yc::gl::glBufferData(
+        GL_ARRAY_BUFFER, vertices.size() * sizeof(vertex), vertices.data(),
         GL_STATIC_DRAW);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(
+  yc::gl::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  yc::gl::glBufferData(
         GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
         indices.data(), GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
-  glEnableVertexAttribArray(1);
+  yc::gl::glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+  yc::gl::glEnableVertexAttribArray(0);
+  yc::gl::glVertexAttribPointer(
+        1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+        reinterpret_cast<void *>(2 * sizeof(float)));
+  yc::gl::glEnableVertexAttribArray(1);
 
-  glBindVertexArray(0);
+  yc::gl::glBindVertexArray(0);
 
   /* Dump atlas for debugging */
   FILE * atlas_file = fopen("atlas.raw", "wb");
@@ -271,6 +263,15 @@ void yc::gl::font::unload()
   {
     atlas->unload();
   }
+
+  if (id)
+    glDeleteTextures(1, &id);
+  if (vao)
+    yc::gl::glDeleteVertexArrays(1, &vao);
+  if (vbo)
+    yc::gl::glDeleteBuffers(1, &vbo);
+  if (ebo)
+    yc::gl::glDeleteBuffers(1, &ebo);
 
   cache.clear();
 

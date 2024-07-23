@@ -18,6 +18,12 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
+static yc::milliseconds wma(yc::milliseconds a, yc::milliseconds b)
+{
+#define WEIGHT 0.5f
+  return static_cast<yc::milliseconds>(a * WEIGHT + b * (1.0f - WEIGHT));
+}
+
 /* Shared functions ========================================================= */
 void yc::app::statistics::log_instances_count(size_t count)
 {
@@ -26,42 +32,42 @@ void yc::app::statistics::log_instances_count(size_t count)
 
 void yc::app::statistics::log_update_time(yc::milliseconds time)
 {
-  update_time = time;
+  update_time = wma(update_time, time);
 }
 
 void yc::app::statistics::log_particles_time(yc::milliseconds time)
 {
-  particles_time = time;
+  particles_time = wma(particles_time, time);
 }
 
 void yc::app::statistics::log_physics_time(yc::milliseconds time)
 {
-  physics_time = time;
+  physics_time = wma(physics_time, time);
 }
 
 void yc::app::statistics::log_ai_time(yc::milliseconds time)
 {
-  ai_time = time;
+  ai_time = wma(ai_time, time);
 }
 
 void yc::app::statistics::log_sound_time(yc::milliseconds time)
 {
-  sound_time = time;
+  sound_time = wma(sound_time, time);
 }
 
 void yc::app::statistics::log_fps(yc::milliseconds _fps)
 {
-  fps = _fps;
+  fps = wma(fps, _fps);
 }
 
 void yc::app::statistics::log_draw_time(yc::milliseconds time)
 {
-  draw_time = time;
+  draw_time = wma(draw_time, time);
 }
 
 void yc::app::statistics::log_copy_time(yc::milliseconds time)
 {
-  copy_time = time;
+  copy_time = wma(copy_time, time);
 }
 
 size_t yc::app::statistics::register_pass(const std::string & name)
@@ -81,7 +87,16 @@ void yc::app::statistics::log_pass(
     return;
   }
 #endif
-  passes_time[pass] = time;
+  auto & t = passes_time[pass];
+
+  t.draw_time       = wma(t.draw_time, time.draw_time);
+  t.drawn_meshes    = time.drawn_meshes;
+  t.drawn_triangles = time.drawn_triangles;
+}
+
+size_t yc::app::statistics::get_instances_count() const
+{
+  return instances_count;
 }
 
 yc::milliseconds yc::app::statistics::get_update_time() const

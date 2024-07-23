@@ -62,6 +62,7 @@ public:
 
   /* Getters */
   /* Logic */
+  [[nodiscard]] size_t get_instances_count() const;
   [[nodiscard]] yc::milliseconds get_update_time() const;
   [[nodiscard]] yc::milliseconds get_particles_time() const;
   [[nodiscard]] yc::milliseconds get_physics_time() const;

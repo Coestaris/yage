@@ -281,6 +281,8 @@ yc::error yc::gl::graphics::init(int bits_per_pixel, int width, int height)
   glDepthFunc(GL_LEQUAL);  // The Type Of Depth Testing To Do
   glEnable(GL_MULTISAMPLE);
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   return yc::error::OK;
 }

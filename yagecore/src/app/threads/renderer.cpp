@@ -74,12 +74,16 @@ void yc::app::threads::renderer::run()
   statistcs_passes.reserve(passes.size());
 #endif
 
+#if YAGE_COLLECT_DRAW_STATS
+  for (const auto & pass : passes)
+  {
+    statistcs_passes.push_back(app->stats.register_pass(pass->get_name()));
+  }
+#endif
+
   for (const auto & pass : passes)
   {
     pass->before_loop();
-#if YAGE_COLLECT_DRAW_STATS
-    statistcs_passes.push_back(app->stats.register_pass(pass->get_name()));
-#endif
   }
 
   while (true)

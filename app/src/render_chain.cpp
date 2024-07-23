@@ -26,6 +26,8 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 
+#include <cinttypes>
+
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
@@ -319,15 +321,17 @@ public:
   {
     u_model->set(model);
     yc::gl::glDrawElements(
-          GL_TRIANGLES, 6, GL_UNSIGNED_INT,
-          reinterpret_cast<void *>(c.internal_index));
+          GL_TRIANGLES, c.__vert_count, GL_UNSIGNED_INT,
+          reinterpret_cast<void *>(c.__vert_offset));
   }
 };
 
 class draw_hud_pass : public final_pass,
                       public std::enable_shared_from_this<draw_hud_pass>
 {
-  std::shared_ptr<font> f;
+  std::shared_ptr<font>                   f;
+  uint16_t                                height = 0;
+  std::unordered_map<size_t, std::string> pass_names;
 
 public:
   draw_hud_pass(
@@ -342,11 +346,46 @@ public:
   void before_loop() override
   {
     f->set_char_renderer(std::make_shared<custom_char_render>(app, program));
+
+    for (size_t i = 0; i < app->stats.get_passes_count(); i++)
+    {
+      pass_names[i] = app->stats.get_pass_name(i);
+    }
+
+    height = app->get_geometry().height;
   }
 
   void on_begin() override
   {
-    f->draww("Hello world", { 100, 100 }, { 1.0f, 1.0f, 1.0f, 1.0f });
+    char text[256];
+#define LINE_HEIGHT 15
+#define OFFSET      20
+    snprintf(
+          text, sizeof(text), "Renderer: %.1f. %.1f, %.1f", app->stats.get_fps(),
+          app->stats.get_draw_time(), app->stats.get_copy_time());
+    f->draww(text, { 10, height - OFFSET }, glm::vec4(1.0f, 0.8f, 1.0f, 1.0f));
+
+    snprintf(
+          text, sizeof(text),
+          "Logic: %" PRIu64 ", %.1f, %.1f, %.1f, %.1f, %.1f",
+          app->stats.get_instances_count(), app->stats.get_update_time(),
+          app->stats.get_particles_time(), app->stats.get_physics_time(),
+          app->stats.get_ai_time(), app->stats.get_sound_time());
+    f->draww(
+          text, { 10, height - OFFSET - LINE_HEIGHT },
+          glm::vec4(1.0f, 0.8f, 1.0f, 1.0f));
+
+    for (size_t i = 0; i < app->stats.get_passes_count(); i++)
+    {
+      snprintf(
+            text, sizeof(text), "%s: %.1f, %" PRIu64 ", %" PRIu64 "k",
+            pass_names[i].c_str(), app->stats.get_pass_info(i).draw_time,
+            app->stats.get_pass_info(i).drawn_meshes,
+            app->stats.get_pass_info(i).drawn_triangles / 1000);
+      f->draww(
+            text, { 10, height - OFFSET - LINE_HEIGHT * (i + 3) },
+            glm::vec4(1.0f, 1.0f, 0.8f, 1.0f));
+    }
   }
 
   void on_end() override
@@ -378,7 +417,7 @@ app::application::create_render_chain(
           graphics),
     std::make_shared<draw_hud_pass>(
           asset_factory->load_asset<shader>("text"), shared_from_this(),
-          asset_factory->load_asset<font>("raleway"), graphics),
+          asset_factory->load_asset<font>("SpaceMono"), graphics),
   };
 
   return passes;

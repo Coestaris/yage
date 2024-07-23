@@ -1,0 +1,8 @@
+{
+  "type": "font",
+  "font_type": "TTF",
+  "uri": "SpaceMono.ttf",
+  "size": 16,
+  "start_char": 32,
+  "end_char": 127
+}

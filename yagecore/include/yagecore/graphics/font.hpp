@@ -54,7 +54,8 @@ public:
     unsigned int x_advance;
     unsigned int y_advance;
 
-    size_t internal_index;
+    size_t __vert_offset; /* In bytes */
+    size_t __vert_count;
   };
 
 protected:
@@ -66,11 +67,9 @@ protected:
        std::shared_ptr<yc::app::asset_cacher>  cacher,
        std::shared_ptr<yc::graphics::graphics> graphics);
 
-  virtual void draw_begin(glm::vec4 color) = 0;
-  virtual void draw_end()                  = 0;
-  virtual void
-  draw(const char_cache & c, glm::vec2 pos)
-        = 0;
+  virtual void draw_begin(glm::vec4 color)               = 0;
+  virtual void draw_end()                                = 0;
+  virtual void draw(const char_cache & c, glm::vec2 pos) = 0;
 
 public:
   void set_sources(const data & _sources);
