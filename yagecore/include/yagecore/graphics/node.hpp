@@ -43,15 +43,15 @@ public:
 
   class data
   {
-    yc::uri uri {};
-    std::string   work_dir {};
+    yc::data_source src {};
+    std::string     work_dir {};
 
   public:
     void set_work_dir(const std::string & work_dir);
-    void set_uri(yc::uri uri);
+    void set_uri(yc::data_source src);
 
-    [[nodiscard]] yc::uri get_uri() const;
-    [[nodiscard]] std::string get_work_dir() const;
+    [[nodiscard]] yc::data_source get_src() const;
+    [[nodiscard]] std::string     get_work_dir() const;
 
     bool operator==(const data & other) const;
     bool empty() const;
@@ -65,12 +65,12 @@ protected:
 
   /* These texture are handled by the node itself.
    * Any asset factory has no idea about them. */
-  std::vector<std::shared_ptr<yc::graphics::texture>>     textures;
-  std::vector<std::shared_ptr<yc::graphics::material>>    materials;
-  std::shared_ptr<yc::graphics::mesh_buffer> mesh;
+  std::vector<std::shared_ptr<yc::graphics::texture>>  textures;
+  std::vector<std::shared_ptr<yc::graphics::material>> materials;
+  std::shared_ptr<yc::graphics::mesh_buffer>           mesh;
   // std::shared_ptr<yc::graphics::mesh_buffer> light;
   // std::shared_ptr<yc::graphics::mesh_buffer> camera;
-  std::vector<std::shared_ptr<node>>                      children;
+  std::vector<std::shared_ptr<node>> children;
 
   /* Transformation matrix for the meshes.
    * Note, that this matrix IS used to render meshes directly.
@@ -86,7 +86,7 @@ protected:
 public:
   void set_sources(const data & _sources);
 
-  type get_type() const;
+  type        get_type() const;
   draw_result draw(const std::shared_ptr<yc::graphics::render_pass> & pass);
 
   virtual yc::graphics::aabb get_aabb() const = 0;

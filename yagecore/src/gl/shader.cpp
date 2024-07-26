@@ -117,8 +117,8 @@ yc::error yc::gl::shader::load()
     return yc::error::INVALID_ARGUMENT;
   }
 
-  std::string          hash = sources.get_hash(name);
-  std::vector<uint8_t> binary;
+  std::string            hash = sources.get_hash(name);
+  std::vector<std::byte> binary;
   if (cacher->get_cached_asset(hash, binary) != yc::error::OK)
   {
     yc::error error = compile_binary(binary);
@@ -141,14 +141,15 @@ yc::error yc::gl::shader::load()
   return load_from_binary(binary);
 }
 
-yc::error yc::gl::shader::load_from_binary(const std::vector<uint8_t> & binary)
+yc::error
+yc::gl::shader::load_from_binary(const std::vector<std::byte> & binary)
 {
   /* Create program */
   id = yc::gl::glCreateProgram();
 
   /* First 4 bytes of binary are shader type */
   GLenum type
-        = *reinterpret_cast<GLenum *>(const_cast<uint8_t *>(binary.data()));
+        = *reinterpret_cast<GLenum *>(const_cast<std::byte *>(binary.data()));
 
   /* Need to skip 4 bytes */
   yc::gl::glProgramBinary(
@@ -220,7 +221,7 @@ GLint yc::gl::shader::get_attribute_location(
   return location;
 }
 
-yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
+yc::error yc::gl::shader::compile_binary(std::vector<std::byte> & binary)
 {
   if (sources.empty())
   {
@@ -361,8 +362,8 @@ yc::error yc::gl::shader::compile_binary(std::vector<uint8_t> & binary)
 
   /* Prepend binary format (4 bytes) */
   binary.insert(
-        binary.begin(), reinterpret_cast<uint8_t *>(&binary_format),
-        reinterpret_cast<uint8_t *>(&binary_format) + sizeof(binary_format));
+        binary.begin(), reinterpret_cast<std::byte *>(&binary_format),
+        reinterpret_cast<std::byte *>(&binary_format) + sizeof(binary_format));
 
   logging(LOG_INFO, "Shader compiled successfully: %d bytes", binary_length);
 

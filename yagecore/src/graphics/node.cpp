@@ -20,14 +20,14 @@ void yc::graphics::node::data::set_work_dir(const std::string & _work_dir)
   work_dir = _work_dir;
 }
 
-void yc::graphics::node::data::set_uri(yc::data_source _uri)
+void yc::graphics::node::data::set_uri(yc::data_source _src)
 {
-  uri = _uri;
+  src = _src;
 }
 
-yc::data_source yc::graphics::node::data::get_uri() const
+yc::data_source yc::graphics::node::data::get_src() const
 {
-  return uri;
+  return src;
 }
 
 std::string yc::graphics::node::data::get_work_dir() const
@@ -37,12 +37,12 @@ std::string yc::graphics::node::data::get_work_dir() const
 
 bool yc::graphics::node::data::operator==(const data & other) const
 {
-  return uri == other.uri;
+  return src == other.src;
 }
 
 bool yc::graphics::node::data::empty() const
 {
-  return uri.empty();
+  return src.empty();
 }
 
 yc::graphics::node::node(

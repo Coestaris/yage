@@ -212,23 +212,23 @@ bool yc::gl::node::load_gltf(const yc::data_source & source)
 {
   fastgltf::Parser parser;
 
-  std::vector<uint8_t> data;
+  std::vector<std::byte> data;
   source.read(data);
   if (!source.empty())
   {
-    logging(LOG_ERROR, "Failed to read GLTF data from URI: '%s'", source.string().c_str());
+    logging(
+          LOG_ERROR, "Failed to read GLTF data from URI: '%s'",
+          source.string().c_str());
     return false;
   }
 
-  auto data    = fastgltf::MappedGltfFile::FromPath(uri.get_uri());
   bool success = true;
-  if (auto error = data.error(); error != fastgltf::Error::None)
-  {
-    logging(
-          LOG_ERROR, "Failed to read GLTF data from URI: '%s'",
-          uri.get_uri().c_str());
-    success = false;
-  }
+  auto buffer  = fastgltf::GltfDataBuffer::FromBytes(
+        reinterpret_cast<const std::byte *>(data.data()), data.size());
+  auto asset_error = parser.loadGltf(
+        data, yc::basedir(source.string()),
+        fastgltf::Options::LoadExternalBuffers);
+
   if (!success)
   {
     return false;
@@ -256,7 +256,7 @@ bool yc::gl::node::load_gltf(const yc::data_source & source)
 void gltf_datasource(
       const fastgltf::Asset &      asset,
       const fastgltf::DataSource & source,
-      std::vector<uint8_t> &       out,
+      std::vector<std::byte> &       out,
       fastgltf::MimeType &         out_type)
 {
   std::visit(
@@ -267,7 +267,7 @@ void gltf_datasource(
             auto & buffer_view = asset.bufferViews[arg.bufferViewIndex];
             auto & buffer      = asset.buffers[buffer_view.bufferIndex];
 
-            std::vector<uint8_t> buffer_data;
+            std::vector<std::byte> buffer_data;
             fastgltf::MimeType   buffer_mime;
             gltf_datasource(asset, buffer.data, buffer_data, buffer_mime);
 
@@ -324,7 +324,7 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
     if (gltf_texture.imageIndex)
     {
       auto & gltf_image = asset.images[gltf_texture.imageIndex.value()];
-      std::vector<uint8_t> image_data;
+      std::vector<std::byte> image_data;
       fastgltf::MimeType   image_type;
       gltf_datasource(asset, gltf_image.data, image_data, image_type);
 
@@ -358,7 +358,7 @@ bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
       yc::data_source uri(image_data, mime);
       auto texture = std::make_shared<yc::gl::texture>(name, cacher, graphics);
       yc::gl::texture::data data;
-      data.add_uri(uri);
+      data.add_src(uri);
       yc::graphics::texture_param params;
       params.set_type(yc::graphics::tex_type::TEXTURE_2D);
       params.set_min_filter(yc::graphics::tex_filter::LINEAR);
@@ -788,7 +788,7 @@ std::shared_ptr<yc::gl::mesh_buffer> yc::gl::node::make_buffer(
   };
   std::vector<attr_descr> attrs;
 
-  std::vector<uint8_t> data;
+  std::vector<std::byte> data;
   data.resize(verticies.size() * stride);
 
   size_t offset = 0; /* In bytes */

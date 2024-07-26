@@ -56,9 +56,9 @@ yc::data_source::data_source(data_source && other)
 , mime(std::move(other.mime))
 , data(std::move(other.data)) {};
 yc::data_source::data_source(
-      const std::vector<uint8_t> & data, const std::string & mime)
-: data(data)
-, mime(mime) {};
+      const std::vector<std::byte> & data, const std::string & mime)
+: mime(mime)
+, data(data) {};
 
 bool yc::data_source::operator==(const data_source & other) const
 {
@@ -85,7 +85,7 @@ bool yc::data_source::empty() const
   return true;
 }
 
-void yc::data_source::read(std::vector<uint8_t> & data) const
+void yc::data_source::read(std::vector<std::byte> & data) const
 {
   data.clear();
 

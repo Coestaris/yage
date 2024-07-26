@@ -52,8 +52,8 @@ yc::error yc::gl::texture::load()
         return yc::INVALID_ARGUMENT;
       }
 
-      std::vector<uint8_t> image_data;
-      size_t               image_width, image_height;
+      std::vector<std::byte> image_data;
+      size_t                 image_width, image_height;
       if (!load_image(uris[0], image_data, image_width, image_height))
       {
         logging(LOG_ERROR, "Cannot load pixels of image %s", name.c_str());

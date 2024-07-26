@@ -23,7 +23,7 @@ yc::graphics::shader::data::data(std::string language)
 std::string yc::graphics::shader::data::get_hash(const std::string & name)
 {
   yc::fast_hasher hasher;
-  for (const auto & [type, uri] : sources)
+  for (const auto & [type, uri] : data_sources)
   {
     hasher.add(type);
     hasher.add(get_source(type));
@@ -40,25 +40,25 @@ void yc::graphics::shader::data::set_work_dir(const std::string & dir)
 void yc::graphics::shader::data::add_source(
       const std::string & type, const yc::data_source & src)
 {
-  sources[type] = src;
+  data_sources[type] = src;
 }
 
 bool yc::graphics::shader::data::operator==(data & other)
 {
   /* Compare URI by content, not as a string */
-  if (uris.size() != other.uris.size())
+  if (data_sources.size() != other.data_sources.size())
   {
     return false;
   }
 
-  for (const auto & [type, uri] : uris)
+  for (const auto & [type, src] : data_sources)
   {
-    if (other.uris.find(type) == other.uris.end())
+    if (other.data_sources.find(type) == other.data_sources.end())
     {
       return false;
     }
 
-    if (uri != other.uris.at(type))
+    if (src != other.data_sources.at(type))
     {
       return false;
     }
@@ -78,7 +78,7 @@ bool yc::graphics::shader::data::operator==(data & other)
 std::vector<std::string> yc::graphics::shader::data::get_types() const
 {
   std::vector<std::string> types;
-  for (const auto & [type, uri] : uris)
+  for (const auto & [type, uri] : data_sources)
   {
     types.push_back(type);
   }
@@ -93,19 +93,19 @@ std::string yc::graphics::shader::data::get_work_dir() const
 
 std::string yc::graphics::shader::data::get_source(const std::string & type)
 {
-  if (sources.find(type) == sources.end())
+  if (content_cache.find(type) == content_cache.end())
   {
-    std::vector<uint8_t> data;
-    uris.at(type).read(data);
-    sources[type] = std::string(data.begin(), data.end());
+    std::vector<std::byte> data;
+    data_sources.at(type).read(data);
+    content_cache[type] = std::string(data.begin(), data.end());
   }
 
-  return sources.at(type);
+  return content_cache.at(type);
 }
 
 bool yc::graphics::shader::data::empty() const
 {
-  return uris.empty();
+  return data_sources.empty();
 }
 
 std::string yc::graphics::shader::data::get_language() const

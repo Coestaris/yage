@@ -23,23 +23,23 @@ namespace yc
 class hasher
 {
 public:
-  hasher()          = default;
+           hasher() = default;
   virtual ~hasher() = default;
 
   virtual void add(const void * data, size_t size) = 0;
   virtual void add(const char * data)              = 0;
   virtual void add(const std::string & data)       = 0;
 
-  virtual std::string          as_string() const = 0;
-  virtual std::vector<uint8_t> as_bytes() const  = 0;
+  virtual std::string            as_string() const = 0;
+  virtual std::vector<std::byte> as_bytes() const  = 0;
 };
 
 class fast_hasher : public hasher
 {
-  std::vector<uint8_t> bytes;
+  std::vector<std::byte> bytes;
 
 public:
-  fast_hasher()          = default;
+           fast_hasher() = default;
   virtual ~fast_hasher() = default;
 
   void add(const void * data, size_t size) override;
@@ -47,8 +47,8 @@ public:
   void add(const std::string & data) override;
   void add(int data);
 
-  std::string as_string() const override;
-  std::vector<uint8_t> as_bytes() const override;
+  std::string            as_string() const override;
+  std::vector<std::byte> as_bytes() const override;
 };
 
 /* Variables ================================================================ */

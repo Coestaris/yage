@@ -195,7 +195,7 @@ yagepack::asset_factory::pack_parser::parse_texture_sources(
 
   for (const auto & uri : root["uris"])
   {
-    sources.add_uri(resolve_uri(dir, uri.asString()));
+    sources.add_src(resolve_uri(dir, uri.asString()));
   }
 
   return sources;
@@ -408,7 +408,7 @@ yc::error yagepack::asset_factory::destroy()
 }
 
 yc::error yagepack::asset_factory::asset_cacher::cache_asset(
-      const std::string & key, const std::vector<uint8_t> & data)
+      const std::string & key, const std::vector<std::byte> & data)
 {
   /* save keys as files */
   std::string   dst = yc::join_path(cache_path, key);
@@ -427,7 +427,7 @@ yc::error yagepack::asset_factory::asset_cacher::cache_asset(
 }
 
 yc::error yagepack::asset_factory::asset_cacher::get_cached_asset(
-      const std::string & key, std::vector<uint8_t> & data)
+      const std::string & key, std::vector<std::byte> & data)
 {
   std::string   src = yc::join_path(cache_path, key);
   std::ifstream ifs(src, std::ios::binary);

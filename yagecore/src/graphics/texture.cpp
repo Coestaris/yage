@@ -21,18 +21,16 @@
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
 bool yc::graphics::texture::load_image(
-      const yc::data_source &  uri,
-      std::vector<uint8_t> & out_data,
-      size_t &               out_w,
-      size_t &               out_h)
+      const yc::data_source &  src,
+      std::vector<std::byte> & out_data,
+      size_t &                 out_w,
+      size_t &                 out_h)
 {
-  std::vector<uint8_t> image_data;
-  uri.read(image_data);
+  std::vector<std::byte> image_data;
+  src.read(image_data);
   if (image_data.empty())
   {
-    logging(
-          LOG_ERROR, "Failed to read image data from URI: '%s'",
-          uri.get_uri().c_str());
+    logging(LOG_ERROR, "Failed to data source: '%s'", src.string().c_str());
     return false;
   }
 
@@ -62,8 +60,8 @@ bool yc::graphics::texture::load_image(
   /* Set up the input control */
   struct ReadPngData
   {
-    const std::vector<uint8_t> * data;
-    size_t                       offset;
+    const std::vector<std::byte> * data;
+    size_t                         offset;
   };
 
   auto read_png_data = [](png_structp png_ptr, png_bytep outBytes,
@@ -125,25 +123,25 @@ bool yc::graphics::texture::load_image(
 
   // Allocate memory for the image data
   out_data.resize(width * height * 4); // 4 bytes per pixel for RGBA
-  png_bytep * row_pointers = new png_bytep[height];
+  std::vector<png_bytep> row_pointers(height);
   for (png_uint_32 y = 0; y < height; y++)
   {
-    row_pointers[y] = out_data.data() + y * width * 4;
+    row_pointers[y]
+          = reinterpret_cast<png_byte *>(out_data.data()) + y * width * 4;
   }
 
   // Read the image data
-  png_read_image(png_ptr, row_pointers);
+  png_read_image(png_ptr, row_pointers.data());
 
   // Cleanup
-  delete[] row_pointers;
   png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
 
   return true;
 }
 
-void yc::graphics::texture::data::add_uri(yc::data_source uri)
+void yc::graphics::texture::data::add_src(yc::data_source src)
 {
-  uris.push_back(uri);
+  sources.push_back(src);
 }
 
 void yc::graphics::texture::data::set_parameters(
@@ -159,17 +157,17 @@ void yc::graphics::texture::data::set_work_dir(const std::string & dir)
 
 bool yc::graphics::texture::data::operator==(const data & other) const
 {
-  return uris == other.uris && parameters == other.parameters;
+  return sources == other.sources && parameters == other.parameters;
 }
 
 bool yc::graphics::texture::data::empty() const
 {
-  return uris.empty();
+  return sources.empty();
 }
 
-std::vector<yc::data_source> yc::graphics::texture::data::get_uris() const
+std::vector<yc::data_source> yc::graphics::texture::data::get_sources() const
 {
-  return uris;
+  return sources;
 }
 
 std::string yc::graphics::texture::data::get_work_dir() const

@@ -37,8 +37,8 @@ public:
 
     /* type -> source url */
     std::unordered_map<std::string, yc::data_source> data_sources;
-    /* Cache for loaded sources */
-    std::unordered_map<std::string, std::string> sources;
+    /* Cache for loaded sources. type -> content */
+    std::unordered_map<std::string, std::string> content_cache;
 
   public:
     data() = default;

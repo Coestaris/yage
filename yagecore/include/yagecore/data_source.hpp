@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <memory>
 #include <optional>
 
 namespace yc
@@ -21,9 +22,9 @@ namespace yc
 /* Types ==================================================================== */
 class data_source
 {
-  std::optional<std::string>          uri {};
-  std::optional<std::string>          mime {};
-  std::optional<std::vector<uint8_t>> data {};
+  std::optional<std::string>            uri {};
+  std::optional<std::string>            mime {};
+  std::optional<std::vector<std::byte>> data {};
 
   static std::string mime_from_uri(const std::string & uri);
 
@@ -33,7 +34,7 @@ public:
   data_source(const char * uri);
   data_source(const data_source & other);
   data_source(data_source && other);
-  data_source(const std::vector<uint8_t> & data, const std::string & mime);
+  data_source(const std::vector<std::byte> & data, const std::string & mime);
 
   data_source & operator=(const data_source & other) = default;
   bool          operator==(const data_source & other) const;
@@ -44,7 +45,7 @@ public:
 
   bool empty() const;
 
-  void read(std::vector<uint8_t> & data) const;
+  void read(std::vector<std::byte> & data) const;
 };
 
 /* Variables ================================================================ */

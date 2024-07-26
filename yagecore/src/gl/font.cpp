@@ -57,7 +57,7 @@ yc::error yc::gl::font::load()
         - sources.get_parameters().get_start_char() + 1);
 
   /* Load font */
-  std::vector<uint8_t> ttf_binary;
+  std::vector<std::byte> ttf_binary;
   sources.get_uri().read(ttf_binary);
   if (ttf_binary.empty())
   {
@@ -119,8 +119,8 @@ yc::error yc::gl::font::load()
   std::vector<vertex> vertices;
   std::vector<GLuint> indices;
 
-  size_t               atlas_offset = 0;
-  std::vector<uint8_t> atlas_data(atlas_width * atlas_height, 0);
+  size_t                 atlas_offset = 0;
+  std::vector<std::byte> atlas_data(atlas_width * atlas_height, 0);
   for (int c = sources.get_parameters().get_start_char();
        c <= sources.get_parameters().get_end_char(); ++c)
   {
@@ -135,8 +135,8 @@ yc::error yc::gl::font::load()
     }
 
     /* Blit glyph to atlas */
-    uint8_t *    dst        = atlas_data.data() + atlas_offset;
-    uint8_t *    src        = face->glyph->bitmap.buffer;
+    std::byte * dst = atlas_data.data() + atlas_offset;
+    std::byte * src = reinterpret_cast<std::byte *>(face->glyph->bitmap.buffer);
     const size_t dst_stride = atlas_width;
     const size_t src_stride = face->glyph->bitmap.width;
     size_t       rows       = face->glyph->bitmap.rows;
@@ -224,7 +224,8 @@ yc::error yc::gl::font::load()
         GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
         indices.data(), GL_STATIC_DRAW);
 
-  yc::gl::glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+  yc::gl::glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
   yc::gl::glEnableVertexAttribArray(0);
   yc::gl::glVertexAttribPointer(
         1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),

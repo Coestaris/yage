@@ -33,7 +33,7 @@ public:
    * @param key Unique key to identify the cache entry.
    * @param data Asset data to cache. */
   virtual yc::error
-  cache_asset(const std::string & key, const std::vector<uint8_t> & data)
+  cache_asset(const std::string & key, const std::vector<std::byte> & data)
         = 0;
 
   /** Retrieves cached asset data.
@@ -41,7 +41,7 @@ public:
    * @param data Asset data to retrieve.
    * @return Returns non-zero error code if the cache entry is not found. */
   virtual yc::error
-  get_cached_asset(const std::string & key, std::vector<uint8_t> & data)
+  get_cached_asset(const std::string & key, std::vector<std::byte> & data)
         = 0;
 };
 

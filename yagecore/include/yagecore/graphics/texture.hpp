@@ -30,21 +30,21 @@ class texture : public yc::app::asset
 public:
   class data
   {
-    std::vector<yc::uri> uris {};
-    std::string                work_dir {};
-    texture_param              parameters {};
+    std::vector<yc::data_source> sources {};
+    std::string                  work_dir {};
+    texture_param                parameters {};
 
   public:
-    void add_uri(yc::uri uri);
+    void add_src(yc::data_source src);
 
     void set_parameters(const texture_param & parameters);
     void set_work_dir(const std::string & dir);
 
     bool operator==(const data & other) const;
 
-    [[nodiscard]] std::vector<yc::uri> get_uris() const;
-    [[nodiscard]] std::string                get_work_dir() const;
-    [[nodiscard]] texture_param              get_parameters() const;
+    [[nodiscard]] std::vector<yc::data_source> get_sources() const;
+    [[nodiscard]] std::string                  get_work_dir() const;
+    [[nodiscard]] texture_param                get_parameters() const;
 
     bool empty() const;
   };
@@ -53,10 +53,10 @@ protected:
   /* little helper to load image,
    * so backends do not reinvent the wheel */
   static bool load_image(
-        const yc::uri &  uri,
-        std::vector<uint8_t> & out_data,
-        size_t &               out_w,
-        size_t &               out_h);
+        const yc::data_source &  src,
+        std::vector<std::byte> & out_data,
+        size_t &                 out_w,
+        size_t &                 out_h);
 
   std::shared_ptr<yc::graphics::graphics> graphics;
   data                                    sources;

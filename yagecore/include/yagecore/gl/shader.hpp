@@ -85,8 +85,8 @@ protected:
   GLint                                    id {};
   std::vector<std::shared_ptr<reloadable>> uniforms {};
 
-  yc::error load_from_binary(const std::vector<uint8_t> & binary);
-  yc::error compile_binary(std::vector<uint8_t> & binary);
+  yc::error load_from_binary(const std::vector<std::byte> & binary);
+  yc::error compile_binary(std::vector<std::byte> & binary);
 
 public:
   ~        shader() override = default;
