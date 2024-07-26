@@ -15,7 +15,7 @@
 
 #include "yagecore/graphics/window.hpp"
 #include "yagecore/gl/graphics.hpp"
-#include "yagecore/util/named_thread.hpp"
+#include "yagecore/named_thread.hpp"
 #include "yagecore/error.hpp"
 
 namespace yc::x11
@@ -39,14 +39,14 @@ private:
   GLXContext      glx_context = nullptr;
   bool            opened      = false;
 
-  class event_loop : public yc::util::named_thread
+  class event_loop : public yc::named_thread
   {
   private:
     window * win;
 
   public:
     event_loop(window * win)
-    : yc::util::named_thread("event_loop")
+    : yc::named_thread("event_loop")
     , win(win)
     {
     }

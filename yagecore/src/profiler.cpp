@@ -8,7 +8,7 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "yagecore/util/profiler.hpp"
+#include "yagecore/profiler.hpp"
 
 #include <mutex>
 
@@ -18,7 +18,7 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-yc::util::simple_profiler::simple_profiler(size_t max_points)
+yc::simple_profiler::simple_profiler(size_t max_points)
 {
   prev_points.resize(max_points);
   points.resize(max_points);
@@ -30,11 +30,11 @@ yc::util::simple_profiler::simple_profiler(size_t max_points)
   this->max_points = max_points;
 }
 
-void yc::util::simple_profiler::flush()
+void yc::simple_profiler::flush()
 {
 }
 
-void yc::util::simple_profiler::start_cycle()
+void yc::simple_profiler::start_cycle()
 {
   std::lock_guard<std::mutex> lock(mutex);
 
@@ -45,17 +45,17 @@ void yc::util::simple_profiler::start_cycle()
   std::fill(points.begin(), points.end(), 0);
 }
 
-void yc::util::simple_profiler::passed(point point)
+void yc::simple_profiler::passed(point point)
 {
   points[point] = yc::get_ns();
 }
 
-yc::milliseconds yc::util::simple_profiler::get_cycle_time()
+yc::milliseconds yc::simple_profiler::get_cycle_time()
 {
   throw std::runtime_error("Not implemented");
 }
 
-yc::milliseconds yc::util::simple_profiler::get_diff(point a, point b)
+yc::milliseconds yc::simple_profiler::get_diff(point a, point b)
 {
   std::lock_guard<std::mutex> lock(mutex);
   if (prev_points[b] == 0 || prev_points[a] == 0)
@@ -71,7 +71,7 @@ yc::milliseconds yc::util::simple_profiler::get_diff(point a, point b)
   return static_cast<float>(diff / 1000ll) / 1000.0f;
 }
 
-size_t yc::util::file_profiler::find_point(size_t start, point point)
+size_t yc::file_profiler::find_point(size_t start, point point)
 {
   size_t pos = start;
   for (size_t i = max_records; i > 0; --i)
@@ -92,7 +92,7 @@ size_t yc::util::file_profiler::find_point(size_t start, point point)
   return -1;
 }
 
-yc::util::file_profiler::file_profiler(
+yc::file_profiler::file_profiler(
       size_t max_records, const std::string & filename)
 {
   this->max_records = max_records;
@@ -105,13 +105,13 @@ yc::util::file_profiler::file_profiler(
   }
 }
 
-yc::util::file_profiler::~file_profiler()
+yc::file_profiler::~file_profiler()
 {
   flush();
   fclose(file);
 }
 
-void yc::util::file_profiler::flush()
+void yc::file_profiler::flush()
 {
   for (size_t i = 0; i < current_record; ++i)
   {
@@ -119,7 +119,7 @@ void yc::util::file_profiler::flush()
   }
 }
 
-void yc::util::file_profiler::passed(point point)
+void yc::file_profiler::passed(point point)
 {
   std::lock_guard<std::mutex> lock(mutex);
 
@@ -135,7 +135,7 @@ void yc::util::file_profiler::passed(point point)
   }
 }
 
-yc::milliseconds yc::util::file_profiler::get_cycle_time()
+yc::milliseconds yc::file_profiler::get_cycle_time()
 {
   return static_cast<float>(
                (records[current_record].time - records[cycle_start].time)
@@ -143,7 +143,7 @@ yc::milliseconds yc::util::file_profiler::get_cycle_time()
          / 1000.0f;
 }
 
-yc::milliseconds yc::util::file_profiler::get_diff(point a, point b)
+yc::milliseconds yc::file_profiler::get_diff(point a, point b)
 {
   std::lock_guard<std::mutex> lock(mutex);
 

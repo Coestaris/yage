@@ -31,16 +31,16 @@ class font : public yc::app::asset
 public:
   class data
   {
-    yc::util::uri            uri {};
+    yc::data_source          src {};
     std::string              work_dir {};
     yc::graphics::font_param parameters {};
 
   public:
     void set_work_dir(const std::string & work_dir);
-    void set_uri(yc::util::uri uri);
+    void set_uri(const yc::data_source& src);
     void set_parameters(const yc::graphics::font_param & parameters);
 
-    [[nodiscard]] yc::util::uri            get_uri() const;
+    [[nodiscard]] yc::data_source          get_src() const;
     [[nodiscard]] yc::graphics::font_param get_parameters() const;
     [[nodiscard]] std::string              get_work_dir() const;
 

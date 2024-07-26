@@ -20,9 +20,9 @@ void yc::graphics::font::data::set_work_dir(const std::string & _work_dir)
   work_dir = _work_dir;
 }
 
-void yc::graphics::font::data::set_uri(yc::util::uri _uri)
+void yc::graphics::font::data::set_uri(const yc::data_source & _src)
 {
-  uri = _uri;
+  src = _src;
 }
 
 void yc::graphics::font::data::set_parameters(
@@ -31,9 +31,9 @@ void yc::graphics::font::data::set_parameters(
   parameters = _parameters;
 }
 
-yc::util::uri yc::graphics::font::data::get_uri() const
+yc::data_source yc::graphics::font::data::get_src() const
 {
-  return uri;
+  return src;
 }
 
 yc::graphics::font_param yc::graphics::font::data::get_parameters() const
@@ -48,12 +48,12 @@ std::string yc::graphics::font::data::get_work_dir() const
 
 bool yc::graphics::font::data::operator==(const data & other) const
 {
-  return uri == other.uri && parameters == other.parameters;
+  return src == other.src && parameters == other.parameters;
 }
 
 bool yc::graphics::font::data::empty() const
 {
-  return uri.empty();
+  return src.empty();
 }
 
 yc::graphics::font::font(

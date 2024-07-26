@@ -22,6 +22,8 @@
 #include "fastgltf/tools.hpp"
 
 #include <numeric>
+#include <yagecore/keyboard.hpp>
+#include <yagecore/gl/texture.hpp>
 #pragma GCC diagnostic pop
 
 /* Defines ================================================================== */
@@ -206,11 +208,20 @@ void yc::gl::node::unload()
   loaded = false;
 }
 
-bool yc::gl::node::load_gltf(const yc::util::uri & uri)
+bool yc::gl::node::load_gltf(const yc::data_source & source)
 {
   fastgltf::Parser parser;
-  auto             data    = fastgltf::MappedGltfFile::FromPath(uri.get_uri());
-  bool             success = true;
+
+  std::vector<uint8_t> data;
+  source.read(data);
+  if (!source.empty())
+  {
+    logging(LOG_ERROR, "Failed to read GLTF data from URI: '%s'", source.string().c_str());
+    return false;
+  }
+
+  auto data    = fastgltf::MappedGltfFile::FromPath(uri.get_uri());
+  bool success = true;
   if (auto error = data.error(); error != fastgltf::Error::None)
   {
     logging(
@@ -242,8 +253,182 @@ bool yc::gl::node::load_gltf(const yc::util::uri & uri)
   return parse_gltf(asset_error.get());
 }
 
+void gltf_datasource(
+      const fastgltf::Asset &      asset,
+      const fastgltf::DataSource & source,
+      std::vector<uint8_t> &       out,
+      fastgltf::MimeType &         out_type)
+{
+  std::visit(
+        [&asset, &out, &out_type](auto && arg) {
+          using T = std::decay_t<decltype(arg)>;
+          if constexpr (std::is_same_v<T, fastgltf::sources::BufferView>)
+          {
+            auto & buffer_view = asset.bufferViews[arg.bufferViewIndex];
+            auto & buffer      = asset.buffers[buffer_view.bufferIndex];
+
+            std::vector<uint8_t> buffer_data;
+            fastgltf::MimeType   buffer_mime;
+            gltf_datasource(asset, buffer.data, buffer_data, buffer_mime);
+
+            out.resize(buffer_view.byteLength);
+            std::memcpy(
+                  out.data(), buffer_data.data() + buffer_view.byteOffset,
+                  buffer_view.byteLength);
+
+            out_type = arg.mimeType;
+          }
+          else if constexpr (std::is_same_v<T, fastgltf::sources::URI>)
+          {
+            logging(LOG_DEBUG, "URI: %s", arg.uri.c_str());
+          }
+          else if constexpr (std::is_same_v<T, fastgltf::sources::Array>)
+          {
+            out.resize(arg.bytes.size());
+            std::memcpy(out.data(), arg.bytes.data(), arg.bytes.size());
+            out_type = arg.mimeType;
+          }
+          else if constexpr (std::is_same_v<T, fastgltf::sources::Vector>)
+          {
+            out.resize(arg.bytes.size());
+            std::memcpy(out.data(), arg.bytes.data(), arg.bytes.size());
+            out_type = arg.mimeType;
+          }
+          else if constexpr (std::is_same_v<T, fastgltf::sources::CustomBuffer>)
+          {
+            logging(LOG_DEBUG, "CustomBuffer");
+          }
+          else if constexpr (std::is_same_v<T, fastgltf::sources::ByteView>)
+          {
+            logging(LOG_DEBUG, "ByteView");
+          }
+          else if constexpr (std::is_same_v<T, fastgltf::sources::Fallback>)
+          {
+            logging(LOG_DEBUG, "Fallback");
+            return;
+          }
+          else
+          {
+            logging(LOG_DEBUG, "Unknown");
+            return;
+          }
+        },
+        source);
+}
+
 bool yc::gl::node::parse_gltf(const fastgltf::Asset & asset)
 {
+  /* Load textures */
+  for (auto & gltf_texture : asset.textures)
+  {
+    if (gltf_texture.imageIndex)
+    {
+      auto & gltf_image = asset.images[gltf_texture.imageIndex.value()];
+      std::vector<uint8_t> image_data;
+      fastgltf::MimeType   image_type;
+      gltf_datasource(asset, gltf_image.data, image_data, image_type);
+
+      std::string mime;
+      if (image_type == fastgltf::MimeType::None)
+      {
+        logging(
+              LOG_WARN, "Texture '%s' has no mime type",
+              gltf_texture.name.c_str());
+        mime = "image/png";
+      }
+      else
+      {
+        mime = fastgltf::getMimeTypeString(image_type);
+      }
+
+      std::string name;
+      if (!gltf_texture.name.empty())
+      {
+        name = get_name() + "_" + std::string(gltf_texture.name);
+      }
+      else if (!gltf_image.name.empty())
+      {
+        name = get_name() + "_" + std::string(gltf_image.name);
+      }
+      else
+      {
+        name = get_name() + "_texture_" + std::to_string(textures.size());
+      }
+
+      yc::data_source uri(image_data, mime);
+      auto texture = std::make_shared<yc::gl::texture>(name, cacher, graphics);
+      yc::gl::texture::data data;
+      data.add_uri(uri);
+      yc::graphics::texture_param params;
+      params.set_type(yc::graphics::tex_type::TEXTURE_2D);
+      params.set_min_filter(yc::graphics::tex_filter::LINEAR);
+      params.set_mag_filter(yc::graphics::tex_filter::LINEAR);
+      params.set_wrap_s(yc::graphics::tex_wrap::REPEAT);
+      params.set_wrap_t(yc::graphics::tex_wrap::REPEAT);
+      params.set_format(yc::graphics::tex_pixel_format::RGB);
+      data.set_parameters(params);
+      texture->set_sources(data);
+      textures.push_back(texture);
+    }
+    else
+    {
+      logging(
+            LOG_WARN, "Texture '%s' has no image index",
+            gltf_texture.name.c_str());
+    }
+  }
+
+  for (auto & texture : textures)
+  {
+    texture->load();
+  }
+
+  for (auto & material : asset.materials)
+  {
+    auto mat = std::make_shared<yc::graphics::material>(
+          material.name.c_str(), cacher, graphics);
+    materials.push_back(mat);
+
+    mat->pbr.base_color_factor = glm::vec3(
+          material.pbrData.baseColorFactor[0],
+          material.pbrData.baseColorFactor[1],
+          material.pbrData.baseColorFactor[2]);
+    if (material.pbrData.baseColorTexture)
+    {
+      mat->pbr.base_color_texture
+            = textures[material.pbrData.baseColorTexture->textureIndex];
+    }
+
+    mat->pbr.metallic_factor  = material.pbrData.metallicFactor;
+    mat->pbr.roughness_factor = material.pbrData.roughnessFactor;
+    if (material.pbrData.metallicRoughnessTexture)
+    {
+      mat->pbr.metallic_roughness_texture
+            = textures[material.pbrData.metallicRoughnessTexture->textureIndex];
+    }
+
+    if (material.normalTexture)
+    {
+      mat->normal_scale   = material.normalTexture->scale;
+      mat->normal_texture = textures[material.normalTexture->textureIndex];
+    }
+
+    if (material.occlusionTexture)
+    {
+      mat->occlusion_strength = material.occlusionTexture->strength;
+      mat->occlusion_texture
+            = textures[material.occlusionTexture->textureIndex];
+    }
+
+    if (material.emissiveTexture)
+    {
+      mat->emissive_factor = glm::vec3(
+            material.emissiveFactor[0], material.emissiveFactor[1],
+            material.emissiveFactor[2]);
+      mat->emissive_texture = textures[material.emissiveTexture->textureIndex];
+    }
+  }
+
   for (auto & gltf_scene : asset.scenes)
   {
     auto scene = std::make_shared<yc::gl::node>(
@@ -414,7 +599,8 @@ bool yc::gl::node::process_normal(
     if (layout.required(attr_layout_item::type::NORMAL))
     {
       logging(
-            LOG_ERROR, "No normals found in GLTF node: '%s'", get_name().c_str());
+            LOG_ERROR, "No normals found in GLTF node: '%s'",
+            get_name().c_str());
       return false;
     }
 
@@ -512,7 +698,8 @@ bool yc::gl::node::process_color(
     if (layout.required(attr_layout_item::type::COLOR))
     {
       logging(
-            LOG_ERROR, "No colors found in GLTF node: '%s'", get_name().c_str());
+            LOG_ERROR, "No colors found in GLTF node: '%s'",
+            get_name().c_str());
       return false;
     }
 

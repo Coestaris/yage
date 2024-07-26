@@ -30,25 +30,26 @@ protected:
   float alpha_cutoff {};
   bool  double_sided {};
 
+public:
   struct
   {
-    glm::vec3 base_color_factor;
-    GLuint    base_color_texture;
+    glm::vec3                              base_color_factor;
+    std::shared_ptr<yc::graphics::texture> base_color_texture;
 
-    float  metallic_factor;
-    float  roughness_factor;
-    GLuint metallic_roughness_texture;
+    float                                  metallic_factor;
+    float                                  roughness_factor;
+    std::shared_ptr<yc::graphics::texture> metallic_roughness_texture;
 
   } pbr {};
 
-  GLuint normal_texture {};
-  float  normal_scale {};
+  std::shared_ptr<yc::graphics::texture> normal_texture {};
+  float                                  normal_scale {};
 
-  GLuint occlusion_texture {};
-  float  occlusion_strength {};
+  std::shared_ptr<yc::graphics::texture> occlusion_texture {};
+  float                                  occlusion_strength {};
 
-  glm::vec3 emissive_factor {};
-  GLuint    emissive_texture {};
+  std::shared_ptr<yc::graphics::texture> emissive_texture {};
+  glm::vec3                              emissive_factor {};
 
 public:
   material(

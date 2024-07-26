@@ -15,7 +15,7 @@
 #include <functional>
 
 #include "json/json.h"
-#include "yagecore/util/named_thread.hpp"
+#include "yagecore/named_thread.hpp"
 #include "yagecore/fs.hpp"
 
 #include "yagecore/graphics/shader.hpp"
@@ -117,7 +117,7 @@ private:
   };
 
 #if USE_DEBUG
-  class pack_watchdog : public yc::util::named_thread
+  class pack_watchdog : public yc::named_thread
   {
   private:
     bool             should_stop = false;

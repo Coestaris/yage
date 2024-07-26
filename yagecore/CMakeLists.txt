@@ -81,7 +81,6 @@ set(SRC_FILES
     src/app/*.cpp
     src/app/threads/*.cpp
     src/graphics/*.cpp
-    src/util/*.cpp
 )
 
 # Add platform specific files

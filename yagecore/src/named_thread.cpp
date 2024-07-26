@@ -7,18 +7,18 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "yagecore/util/named_thread.hpp"
+#include "yagecore/named_thread.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 std::unordered_map<std::thread::id, std::string>
-      yc::util::named_thread::thread_names {};
+      yc::named_thread::thread_names {};
 
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-std::string yc::util::named_thread::get_thread_name(
+std::string yc::named_thread::get_thread_name(
       std::thread::id id)
 {
   auto it = named_thread::thread_names.find(id);
@@ -29,23 +29,23 @@ std::string yc::util::named_thread::get_thread_name(
   return "unknown";
 }
 
-yc::util::named_thread::named_thread(std::string name)
+yc::named_thread::named_thread(std::string name)
 : name(std::move(name))
 {
 }
 
-std::string yc::util::named_thread::get_name() const
+std::string yc::named_thread::get_name() const
 {
   return name;
 }
 
-void yc::util::named_thread::start()
+void yc::named_thread::start()
 {
   thread = std::make_unique<std::thread>(&named_thread::start_inplace, this);
   set_port_name();
 }
 
-void yc::util::named_thread::start_inplace()
+void yc::named_thread::start_inplace()
 {
   named_thread::thread_names[std::this_thread::get_id()] = name;
   logging(LOG_INFO, "Thread '%s' started", name.c_str());
@@ -53,7 +53,7 @@ void yc::util::named_thread::start_inplace()
   logging(LOG_INFO, "Thread '%s' finished", name.c_str());
 }
 
-void yc::util::named_thread::join()
+void yc::named_thread::join()
 {
   if (thread && thread->joinable())
   {

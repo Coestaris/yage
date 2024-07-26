@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file updater.cpp
+ * @file logic.cpp
  * @date 18-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
@@ -9,8 +9,8 @@
 /* Includes ================================================================= */
 #include <vector>
 #include <mutex>
-#include "../../../include/yagecore/app/threads/logic.hpp"
-#include "../../../include/yagecore/app/application.hpp"
+#include "yagecore/app/threads/logic.hpp"
+#include "yagecore/app/application.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -32,8 +32,8 @@ enum
 /* Shared functions ========================================================= */
 yc::app::threads::logic::logic(
       std::shared_ptr<yc::app::application> app,
-      std::shared_ptr<yc::util::profiler>   profiler)
-: yc::util::named_thread("logic")
+      std::shared_ptr<yc::profiler>   profiler)
+: yc::named_thread("logic")
 , app(std::move(app))
 , profiler(std::move(profiler)) {};
 

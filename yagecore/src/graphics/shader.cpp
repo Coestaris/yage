@@ -23,7 +23,7 @@ yc::graphics::shader::data::data(std::string language)
 std::string yc::graphics::shader::data::get_hash(const std::string & name)
 {
   yc::fast_hasher hasher;
-  for (const auto & [type, uri] : uris)
+  for (const auto & [type, uri] : sources)
   {
     hasher.add(type);
     hasher.add(get_source(type));
@@ -38,9 +38,9 @@ void yc::graphics::shader::data::set_work_dir(const std::string & dir)
 }
 
 void yc::graphics::shader::data::add_source(
-      const std::string & type, const yc::util::uri & url)
+      const std::string & type, const yc::data_source & src)
 {
-  uris[type] = url;
+  sources[type] = src;
 }
 
 bool yc::graphics::shader::data::operator==(data & other)

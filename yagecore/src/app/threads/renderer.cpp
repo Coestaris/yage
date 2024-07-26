@@ -33,8 +33,8 @@ enum
 /* Shared functions ========================================================= */
 yc::app::threads::renderer::renderer(
       std::shared_ptr<yc::app::application> app,
-      std::shared_ptr<yc::util::profiler>   profiler)
-: yc::util::named_thread("renderer")
+      std::shared_ptr<yc::profiler>   profiler)
+: yc::named_thread("renderer")
 , app(app)
 , profiler(std::move(profiler))
 {

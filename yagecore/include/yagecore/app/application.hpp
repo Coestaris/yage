@@ -14,8 +14,8 @@
 #include <utility>
 
 #include "yagecore/os_events.hpp"
-#include "yagecore/util/sync_point.hpp"
-#include "yagecore/util/profiler.hpp"
+#include "yagecore/sync_point.hpp"
+#include "yagecore/profiler.hpp"
 #include "yagecore/graphics/window.hpp"
 #include "yagecore/app/object.hpp"
 #include "yagecore/app/input_manager.hpp"
@@ -43,8 +43,8 @@ public:
   class common_data
   {
     std::vector<std::shared_ptr<yc::app::object>> objects;
-    yc::util::sync_point pre_frame_sync { 2 };
-    yc::util::sync_point post_frame_sync { 2 };
+    yc::sync_point pre_frame_sync { 2 };
+    yc::sync_point post_frame_sync { 2 };
 
     friend class yc::app::threads::logic;
     friend class yc::app::threads::renderer;

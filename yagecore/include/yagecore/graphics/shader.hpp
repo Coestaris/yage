@@ -18,7 +18,7 @@
 #include "yagecore/log.hpp"
 #include "yagecore/app/asset_cacher.hpp"
 #include "yagecore/hash.hpp"
-#include "yagecore/util/uri.hpp"
+#include "yagecore/data_source.hpp"
 
 namespace yc::graphics
 {
@@ -36,7 +36,7 @@ public:
     std::string work_dir {};
 
     /* type -> source url */
-    std::unordered_map<std::string, yc::util::uri> uris;
+    std::unordered_map<std::string, yc::data_source> data_sources;
     /* Cache for loaded sources */
     std::unordered_map<std::string, std::string> sources;
 
@@ -47,7 +47,7 @@ public:
     std::string get_hash(const std::string & name);
 
     void set_work_dir(const std::string & dir);
-    void add_source(const std::string & type, const yc::util::uri & url);
+    void add_source(const std::string & type, const yc::data_source & src);
 
     bool operator==(data & other);
 

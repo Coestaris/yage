@@ -17,7 +17,7 @@
 #include <mutex>
 #include <vector>
 
-namespace yc::util
+namespace yc
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -69,7 +69,7 @@ class file_profiler : public profiler
 
   struct record
   {
-    yc::util::profiler::point point;
+    yc::profiler::point point;
     yc::nano_seconds          time;
   };
 

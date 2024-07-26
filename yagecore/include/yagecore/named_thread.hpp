@@ -1,6 +1,6 @@
 /** ========================================================================
  *
- * @file sync_point.hpp
+ * @file threads.hpp
  * @date 07-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
@@ -9,32 +9,43 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include <mutex>
-#include <condition_variable>
-
+#include <algorithm>
+#include <string>
+#include <thread>
+#include <unordered_map>
 #include "yagecore/log.hpp"
 
-namespace yc::util
+namespace yc
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-class sync_point
+class named_thread
 {
-private:
-  std::mutex              m;
-  std::condition_variable cv;
-  int                     counter = 0;
-  int                     waiting = 0;
-  int                     thread_count;
+  static std::unordered_map<std::thread::id, std::string> thread_names;
 
-  bool closed = false;
+  std::unique_ptr<std::thread> thread;
+  std::string                  name;
+
+  virtual void run() = 0;
+
+  /* C++ does not provide a way to get the name of
+   * the current thread, so we have to set it manually,
+   * for each platform. */
+  void set_port_name();
 
 public:
-  sync_point(int count);
+  static std::string
+  get_thread_name(std::thread::id id = std::this_thread::get_id());
 
-  void wait();
-  void shutdown();
+  virtual ~named_thread() = default;
+           named_thread(std::string name);
+
+  [[nodiscard]] std::string get_name() const;
+
+  void start();
+  void start_inplace();
+  void join();
 };
 
 /* Variables ================================================================ */

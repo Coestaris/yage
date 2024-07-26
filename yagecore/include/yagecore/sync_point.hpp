@@ -1,7 +1,7 @@
 /** ========================================================================
  *
- * @file uri.hpp
- * @date 07-07-2024
+ * @file sync_point.hpp
+ * @date 07-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
  *  ========================================================================= */
@@ -9,40 +9,32 @@
 #pragma once
 
 /* Includes ================================================================= */
-#include <string>
-#include <fstream>
-#include <utility>
-#include <vector>
-#include <cstdint>
+#include <mutex>
+#include <condition_variable>
 
-namespace yc::util
+#include "yagecore/log.hpp"
+
+namespace yc
 {
 /* Defines ================================================================== */
 /* Macros =================================================================== */
 /* Types ==================================================================== */
-
-class uri
+class sync_point
 {
 private:
-  std::string uri_;
+  std::mutex              m;
+  std::condition_variable cv;
+  int                     counter = 0;
+  int                     waiting = 0;
+  int                     thread_count;
+
+  bool closed = false;
 
 public:
-  uri() = default;
-  uri(std::string uri);
-  uri(const char * uri);
-  uri(const uri & other);
-  uri(uri && other);
+  sync_point(int count);
 
-  uri & operator=(const uri & other);
-  bool  operator==(const uri & other) const;
-  bool  operator!=(const uri & other) const;
-
-  [[nodiscard]] std::string get_uri() const;
-  [[nodiscard]] std::string get_mime() const;
-
-  bool empty() const;
-
-  void read(std::vector<uint8_t> & data) const;
+  void wait();
+  void shutdown();
 };
 
 /* Variables ================================================================ */

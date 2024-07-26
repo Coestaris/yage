@@ -106,7 +106,7 @@ private:
 
   yc::graphics::aabb aabb {};
 
-  bool load_gltf(const yc::util::uri & uri);
+  bool load_gltf(const yc::data_source & source);
   bool parse_gltf(const fastgltf::Asset & asset);
 
   bool process_position(

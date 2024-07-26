@@ -20,12 +20,12 @@ void yc::graphics::node::data::set_work_dir(const std::string & _work_dir)
   work_dir = _work_dir;
 }
 
-void yc::graphics::node::data::set_uri(yc::util::uri _uri)
+void yc::graphics::node::data::set_uri(yc::data_source _uri)
 {
   uri = _uri;
 }
 
-yc::util::uri yc::graphics::node::data::get_uri() const
+yc::data_source yc::graphics::node::data::get_uri() const
 {
   return uri;
 }

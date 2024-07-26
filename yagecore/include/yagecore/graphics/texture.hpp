@@ -16,7 +16,7 @@
 #include "yagecore/graphics/texture_param.hpp"
 #include "yagecore/log.hpp"
 #include "yagecore/app/asset.hpp"
-#include "yagecore/util/uri.hpp"
+#include "yagecore/data_source.hpp"
 
 namespace yc::graphics
 {
@@ -30,19 +30,19 @@ class texture : public yc::app::asset
 public:
   class data
   {
-    std::vector<yc::util::uri> uris {};
+    std::vector<yc::uri> uris {};
     std::string                work_dir {};
     texture_param              parameters {};
 
   public:
-    void add_uri(yc::util::uri uri);
+    void add_uri(yc::uri uri);
 
     void set_parameters(const texture_param & parameters);
     void set_work_dir(const std::string & dir);
 
     bool operator==(const data & other) const;
 
-    [[nodiscard]] std::vector<yc::util::uri> get_uris() const;
+    [[nodiscard]] std::vector<yc::uri> get_uris() const;
     [[nodiscard]] std::string                get_work_dir() const;
     [[nodiscard]] texture_param              get_parameters() const;
 
@@ -53,7 +53,7 @@ protected:
   /* little helper to load image,
    * so backends do not reinvent the wheel */
   static bool load_image(
-        const yc::util::uri &  uri,
+        const yc::uri &  uri,
         std::vector<uint8_t> & out_data,
         size_t &               out_w,
         size_t &               out_h);

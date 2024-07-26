@@ -18,7 +18,7 @@
 #include "yagecore/graphics/material.hpp"
 #include "yagecore/graphics/mesh_buffer.hpp"
 #include "yagecore/app/asset.hpp"
-#include "yagecore/util/uri.hpp"
+#include "yagecore/data_source.hpp"
 #include "yagecore/graphics/graphics.hpp"
 #include "yagecore/graphics/texture.hpp"
 #include "yagecore/graphics/aabb.hpp"
@@ -43,14 +43,14 @@ public:
 
   class data
   {
-    yc::util::uri uri {};
+    yc::uri uri {};
     std::string   work_dir {};
 
   public:
     void set_work_dir(const std::string & work_dir);
-    void set_uri(yc::util::uri uri);
+    void set_uri(yc::uri uri);
 
-    [[nodiscard]] yc::util::uri get_uri() const;
+    [[nodiscard]] yc::uri get_uri() const;
     [[nodiscard]] std::string get_work_dir() const;
 
     bool operator==(const data & other) const;

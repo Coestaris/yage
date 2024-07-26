@@ -27,13 +27,13 @@ app::objects::suzanne::suzanne(std::shared_ptr<app::application> app)
         glm::vec3(
               glm::linearRand(-8.0f, 8.0f), glm::linearRand(-8.0f, 8.0f),
               glm::linearRand(-8.0f, 8.0f)));
-  start_pos = glm::scale(start_pos, glm::vec3(0.5f));
+  start_pos = glm::scale(start_pos, glm::vec3(10.0f));
 };
 
 void app::objects::suzanne::on_ready(
       const std::shared_ptr<yc::app::asset_factory> & factory)
 {
-  set_node(factory->load_asset<yc::graphics::node>("Suzanne"));
+  set_node(factory->load_asset<yc::graphics::node>("Avocado"));
   set_visible(true);
 }
 

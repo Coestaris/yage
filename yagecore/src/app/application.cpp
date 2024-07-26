@@ -1,18 +1,18 @@
 /** ========================================================================
  *
- * @file threads.cpp
+ * @file application.cpp
  * @date 18-06-2024
  * @author Maxim Kurylko <vk_vm@ukr.net>
  *
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "../../include/yagecore/app/application.hpp"
-#include "../../include/yagecore/app/threads/renderer.hpp"
-#include "../../include/yagecore/app/threads/logic.hpp"
-#include "../../include/yagecore/util/sync_point.hpp"
-#include "../../include/yagecore/util/profiler.hpp"
-#include "../../include/yagecore/error.hpp"
+#include "yagecore/app/application.hpp"
+#include "yagecore/app/threads/renderer.hpp"
+#include "yagecore/app/threads/logic.hpp"
+#include "yagecore/sync_point.hpp"
+#include "yagecore/profiler.hpp"
+#include "yagecore/error.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -99,11 +99,11 @@ yc::error yc::app::application::start()
    * Renderer:   ||  Start drawing scene   |              || Copy objects data
    * Logic:      ||  Process input | Update objects | etc ||
    */
-  auto renderer_profiler = std::make_shared<yc::util::simple_profiler>();
+  auto renderer_profiler = std::make_shared<yc::simple_profiler>();
   auto renderer_thread   = std::make_shared<yc::app::threads::renderer>(
         shared_from_this(), renderer_profiler);
 
-  auto logic_profiler = std::make_shared<yc::util::simple_profiler>();
+  auto logic_profiler = std::make_shared<yc::simple_profiler>();
   auto logic_thread   = std::make_shared<yc::app::threads::logic>(
         shared_from_this(), logic_profiler);
 

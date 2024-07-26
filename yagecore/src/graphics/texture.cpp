@@ -21,7 +21,7 @@
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
 bool yc::graphics::texture::load_image(
-      const yc::util::uri &  uri,
+      const yc::data_source &  uri,
       std::vector<uint8_t> & out_data,
       size_t &               out_w,
       size_t &               out_h)
@@ -141,7 +141,7 @@ bool yc::graphics::texture::load_image(
   return true;
 }
 
-void yc::graphics::texture::data::add_uri(yc::util::uri uri)
+void yc::graphics::texture::data::add_uri(yc::data_source uri)
 {
   uris.push_back(uri);
 }
@@ -167,7 +167,7 @@ bool yc::graphics::texture::data::empty() const
   return uris.empty();
 }
 
-std::vector<yc::util::uri> yc::graphics::texture::data::get_uris() const
+std::vector<yc::data_source> yc::graphics::texture::data::get_uris() const
 {
   return uris;
 }

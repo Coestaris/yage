@@ -7,11 +7,11 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "../../include/yagecore/app/statistics.hpp"
+#include "yagecore/app/statistics.hpp"
+#include "yagecore/log.hpp"
 
 #include <cinttypes>
 #include <stdexcept>
-#include <../../include/yagecore/log.hpp>
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */

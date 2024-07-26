@@ -7,7 +7,7 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "yagecore/util/named_thread.hpp"
+#include "yagecore/named_thread.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -15,7 +15,7 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-void yc::util::named_thread::set_port_name()
+void yc::named_thread::set_port_name()
 {
   /* Note that this function is not portable, and
    * should be implemented for each platform separately. */

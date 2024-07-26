@@ -7,7 +7,7 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "yagecore/util/sync_point.hpp"
+#include "yagecore/sync_point.hpp"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -15,12 +15,12 @@
 /* Variables ================================================================ */
 /* Static functions ========================================================= */
 /* Shared functions ========================================================= */
-yc::util::sync_point::sync_point(int count)
+yc::sync_point::sync_point(int count)
 : thread_count(count)
 {
 }
 
-void yc::util::sync_point::wait()
+void yc::sync_point::wait()
 {
   if (closed)
   {
@@ -42,7 +42,7 @@ void yc::util::sync_point::wait()
   lk.unlock();
 }
 
-void yc::util::sync_point::shutdown()
+void yc::sync_point::shutdown()
 {
   cv.notify_all();
   counter = thread_count;

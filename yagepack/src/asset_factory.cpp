@@ -158,7 +158,7 @@ yc::error yagepack::asset_factory::pack_parser::parse(
   return yc::error::OK;
 }
 
-yc::util::uri resolve_uri(const std::string & dir, const std::string & uri)
+yc::data_source resolve_uri(const std::string & dir, const std::string & uri)
 {
   if (uri.empty())
   {
