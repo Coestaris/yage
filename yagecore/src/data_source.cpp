@@ -85,7 +85,12 @@ bool yc::data_source::empty() const
   return true;
 }
 
-void yc::data_source::read(std::vector<std::byte> & data) const
+yc::error read(std::string & data) const
+{
+
+}
+
+yc::error yc::data_source::read(std::vector<std::byte> & data) const
 {
   data.clear();
 
@@ -99,7 +104,7 @@ void yc::data_source::read(std::vector<std::byte> & data) const
     std::ifstream file(uri.value(), std::ios::binary);
     if (!file.is_open())
     {
-      return;
+      return yc::error::FILE_NOT_FOUND;
     }
 
     file.seekg(0, std::ios::end);
@@ -110,6 +115,8 @@ void yc::data_source::read(std::vector<std::byte> & data) const
 
     file.close();
   }
+
+
 }
 
 std::string yc::data_source::get_mime() const

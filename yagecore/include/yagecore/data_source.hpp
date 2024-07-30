@@ -9,6 +9,8 @@
 #pragma once
 
 /* Includes ================================================================= */
+#include "error.hpp"
+
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -45,7 +47,9 @@ public:
 
   bool empty() const;
 
-  void read(std::vector<std::byte> & data) const;
+  yc::error read(std::vector<std::byte> & data) const;
+  /** Read and try to encode data as UTF-8 string */
+  yc::error read(std::string & data) const;
 };
 
 /* Variables ================================================================ */
